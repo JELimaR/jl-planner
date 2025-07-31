@@ -5,7 +5,7 @@
 /coverage
 
 # nuxt
-/.nuxt/
+/.nuxt
 /out/
 
 # production
