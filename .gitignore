@@ -4,8 +4,8 @@
 # testing
 /coverage
 
-# next.js
-/.next/
+# nuxt
+/.nuxt/
 /out/
 
 # production
