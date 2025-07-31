@@ -343,7 +343,9 @@ const renderAll = () => {
 }
 
 onMounted(async () => {
-  if (process.client) {
+  // Check if code is running in browser environment
+  // This is needed because some features only work in the browser, not during server-side rendering
+  if (typeof window !== 'undefined') {
     // Initialize Bootstrap modals
     const { $bootstrap } = useNuxtApp()
     addModalInstance = ($bootstrap as any).Modal.getOrCreateInstance(addModal.value)
