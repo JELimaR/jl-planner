@@ -1,0 +1,419 @@
+{
+  "title": "6",
+  "subtitle": "SSMT",
+  "startDate": "2025-07-16T18:50:03.406Z",
+  "items": [
+    {
+      "id": 1000,
+      "name": "start",
+      "processId": 1001,
+      "predecessorIds": [],
+      "type": "milestone"
+    },
+    {
+      "id": 1,
+      "name": "Otros - cliente",
+      "detail": "",
+      "processId": 1001,
+      "predecessorIds": [
+        1000
+      ],
+      "type": "process",
+      "children": [
+        {
+          "id": 11,
+          "name": "Pago de carpeta",
+          "detail": "",
+          "processId": 1,
+          "predecessorIds": [
+            1000,
+            22
+          ],
+          "type": "milestone"
+        },
+        {
+          "id": 12,
+          "name": "DAR",
+          "detail": "",
+          "processId": 1,
+          "predecessorIds": [
+            1000,
+            324,
+            421,
+            422,
+            42
+          ],
+          "type": "milestone"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Proyectos",
+      "detail": "",
+      "processId": 1001,
+      "predecessorIds": [
+        1000
+      ],
+      "type": "process",
+      "children": [
+        {
+          "id": 21,
+          "name": "Informe Tecnico",
+          "detail": "Informe Técnico + Envío a Estudios",
+          "processId": 2,
+          "predecessorIds": [
+            1000
+          ],
+          "type": "task",
+          "duration": 5
+        },
+        {
+          "id": 22,
+          "name": "Presupuesto",
+          "detail": "",
+          "processId": 2,
+          "predecessorIds": [
+            1000,
+            21
+          ],
+          "type": "task",
+          "duration": 10
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Local para Subestación",
+      "detail": "",
+      "processId": 1001,
+      "predecessorIds": [
+        1000
+      ],
+      "type": "process",
+      "children": [
+        {
+          "id": 31,
+          "name": "Visto Bueno Proyectos",
+          "detail": "",
+          "processId": 3,
+          "predecessorIds": [
+            21,
+            1000
+          ],
+          "type": "process",
+          "children": [
+            {
+              "id": 311,
+              "name": "Aprobación proyecto",
+              "detail": "Aprobación proyecto civil/albañilería",
+              "processId": 31,
+              "predecessorIds": [
+                1000,
+                21
+              ],
+              "type": "task",
+              "duration": 10
+            },
+            {
+              "id": 312,
+              "name": "Aprobación proy SPAT",
+              "detail": "",
+              "processId": 31,
+              "predecessorIds": [
+                1000,
+                21
+              ],
+              "type": "task",
+              "duration": 10
+            }
+          ]
+        },
+        {
+          "id": 32,
+          "name": "Visto Bueno Obras",
+          "detail": "",
+          "processId": 3,
+          "predecessorIds": [
+            21,
+            1000
+          ],
+          "type": "process",
+          "children": [
+            {
+              "id": 321,
+              "name": "Obra Civil del Local",
+              "detail": "",
+              "processId": 32,
+              "predecessorIds": [
+                21,
+                1000
+              ],
+              "type": "task",
+              "duration": 60
+            },
+            {
+              "id": 322,
+              "name": "Medidas de TP y TC",
+              "detail": "Medidas de tensión de paso y contacto.",
+              "processId": 32,
+              "predecessorIds": [
+                21,
+                321,
+                1000
+              ],
+              "type": "task",
+              "duration": 5
+            },
+            {
+              "id": 323,
+              "name": "Presentación de documentación",
+              "detail": "",
+              "processId": 32,
+              "predecessorIds": [
+                21,
+                311,
+                312,
+                31,
+                321,
+                322,
+                1000
+              ],
+              "type": "task",
+              "duration": 5
+            },
+            {
+              "id": 324,
+              "name": "Visto bueno local OB",
+              "detail": "",
+              "processId": 32,
+              "predecessorIds": [
+                21,
+                311,
+                312,
+                31,
+                323,
+                1000
+              ],
+              "type": "milestone"
+            }
+          ]
+        },
+        {
+          "id": 33,
+          "name": "Contrato Comodato",
+          "detail": "",
+          "processId": 3,
+          "predecessorIds": [
+            1000,
+            21
+          ],
+          "type": "task",
+          "duration": 45
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Instalación enlace MT",
+      "detail": "Obras eléctricas",
+      "processId": 1001,
+      "predecessorIds": [
+        1000
+      ],
+      "type": "process",
+      "children": [
+        {
+          "id": 41,
+          "name": "Envío correo PCV",
+          "detail": "Se envía al cliente los reuqerimientos tecnicos para la puesta en servicio de su instalacion interior.\nCeldas UTE\nEnsayos requeridos en CMT",
+          "processId": 4,
+          "predecessorIds": [
+            1000,
+            11
+          ],
+          "type": "task",
+          "duration": 5
+        },
+        {
+          "id": 42,
+          "name": "Cliente levanta PCV",
+          "detail": "",
+          "processId": 4,
+          "predecessorIds": [
+            1000,
+            41
+          ],
+          "type": "process",
+          "children": [
+            {
+              "id": 421,
+              "name": "CMT y Terminales",
+              "detail": "Cliente debe:\nobtener materiales\nrealizar tendido del CMT y montaje de terminales",
+              "processId": 42,
+              "predecessorIds": [
+                1000,
+                41
+              ],
+              "type": "task",
+              "duration": 15
+            },
+            {
+              "id": 422,
+              "name": "Aprobación ensayo CMT",
+              "detail": "Coordinación de ensayos y presentación de informe",
+              "processId": 42,
+              "predecessorIds": [
+                41,
+                421,
+                1000
+              ],
+              "type": "task",
+              "duration": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Obras",
+      "detail": "",
+      "processId": 1001,
+      "predecessorIds": [
+        1000,
+        11
+      ],
+      "type": "process",
+      "children": [
+        {
+          "id": 51,
+          "name": "Montaje SB",
+          "detail": "",
+          "processId": 5,
+          "predecessorIds": [
+            1000,
+            11,
+            324
+          ],
+          "type": "task",
+          "duration": 5
+        },
+        {
+          "id": 52,
+          "name": "Otros (tendidos)",
+          "detail": "",
+          "processId": 5,
+          "predecessorIds": [
+            1000,
+            11
+          ],
+          "type": "task",
+          "duration": 10
+        },
+        {
+          "id": 53,
+          "name": "Corte-(Energización/Conexión)",
+          "detail": "",
+          "processId": 5,
+          "predecessorIds": [
+            1000,
+            11,
+            33,
+            51,
+            52
+          ],
+          "type": "task",
+          "duration": 1
+        },
+        {
+          "id": 54,
+          "name": "Act 78",
+          "detail": "",
+          "processId": 5,
+          "predecessorIds": [
+            1000,
+            11,
+            12,
+            53,
+            62
+          ],
+          "type": "milestone"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Protecciones - Comercial",
+      "detail": "",
+      "processId": 1001,
+      "predecessorIds": [
+        1000
+      ],
+      "type": "process",
+      "children": [
+        {
+          "id": 61,
+          "name": "Configuración Relé CCC",
+          "detail": "",
+          "processId": 6,
+          "predecessorIds": [
+            1000,
+            11
+          ],
+          "type": "task",
+          "duration": 5
+        },
+        {
+          "id": 62,
+          "name": "Relevamiento medida",
+          "detail": "",
+          "processId": 6,
+          "predecessorIds": [
+            1000,
+            11
+          ],
+          "type": "task",
+          "duration": 1
+        }
+      ]
+    },
+    {
+      "id": 1002,
+      "name": "end",
+      "processId": 1001,
+      "predecessorIds": [
+        1,
+        11,
+        12,
+        2,
+        21,
+        22,
+        3,
+        31,
+        311,
+        312,
+        32,
+        321,
+        322,
+        323,
+        324,
+        33,
+        4,
+        41,
+        42,
+        421,
+        422,
+        5,
+        51,
+        52,
+        53,
+        54,
+        6,
+        61,
+        62
+      ],
+      "type": "milestone"
+    }
+  ]
+}

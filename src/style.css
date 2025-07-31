@@ -1,0 +1,314 @@
+/* Adjustments for Bootstrap's table styling if needed */
+#task-table-container {
+  padding: 1rem;
+  border-bottom: 2px solid #ccc;
+  background-color: #fafafa;
+}
+.custom_table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  font-family: sans-serif;
+  font-size: 12px;
+  background-color: white;
+}
+
+.custom_table th,
+.custom_table td {
+  border: 1px solid #ccc;
+  padding: 9px;
+  text-align: left;
+}
+
+.custom_table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.custom_table td {
+  /*white-space: nowrap; /* ← que no se haga multilinea */
+  overflow: hidden; /* ← oculta texto que se sale */
+  text-overflow: ellipsis; /* ← muestra puntos suspensivos */
+  /*max-width: 250px; /* ← opcional: evita columnas gigantes */
+}
+
+.custom_table tr {
+  /* los bordes entre filas comparten la misma línea */
+  border-bottom: 1px solid #ccc;
+}
+
+.custom_table th:first-child,
+.custom_table td:first-child {
+  border-left: none;
+}
+
+.custom_table th:last-child,
+.custom_table td:last-child {
+  border-right: none;
+}
+
+/* === Estilos base para Gantt === */
+.gantt-wrapper {
+  display: flex;
+  position: relative;
+  font-family: monospace;
+}
+
+/* === Columna de etiquetas (izquierda) === */
+.gantt-labels {
+  width: 400px;
+  flex-shrink: 0;
+}
+
+.label-column {
+  width: 400px;
+  border-right: 1px solid #ccc;
+}
+
+.gantt-label-header {
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #ccc;
+  font-weight: bold;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+
+.label-row {
+  height: 25px;
+  display: flex;
+  align-items: center;
+  padding-left: 1;
+  font-size: 14px;
+  border-bottom: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* === Gráfico (derecha) === */
+.gantt-chart {
+  flex-grow: 1;
+  overflow-x: auto;
+  position: relative;
+}
+
+.gantt-dates {
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-dates-year-row {
+  display: flex;
+  height: 22px;
+  border-bottom: 1px solid #ccc;
+}
+
+.gantt-dates-sub-row {
+  display: flex;
+  height: 18px;
+}
+
+.year-block,
+.date-tick {
+  flex-shrink: 0;
+  border-right: 1px solid #ccc;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.year-block {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.date-tick {
+  font-size: 0.6rem;
+  background-color: #fafafa;
+  border-bottom: 1px solid #ccc;
+}
+
+/* === Ajustes generales === */
+svg {
+  display: block;
+}
+
+/* Asegurar que filas y celdas estén alineadas perfectamente */
+.label-row,
+.bar-row,
+.gantt-row {
+  height: 25px;
+  line-height: 25px;
+  box-sizing: border-box;
+}
+
+/* Opcional: líneas de guía horizontales */
+.gantt-row-line {
+  stroke: #eee;
+  stroke-width: 1px;
+}
+
+/* Para evitar doble borde entre filas */
+.label-row + .label-row,
+.date-tick + .date-tick {
+  border-top: none;
+}
+
+/* Sombra ligera de separación */
+.gantt-chart .date-tick:last-child {
+  border-right: none;
+}
+
+/* Responsive wrapper opcional */
+.gantt-wrapper-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+/*********/
+td.action-buttons {
+  white-space: nowrap;
+}
+td.action-buttons button {
+  margin-right: 4px;
+}
+
+/* ========== Estilo para badges de camino crítico ========== */
+#critical-paths .badge {
+  background-color: #333;
+  color: white;
+  margin: 2px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+/* ========== Reporte: Ocultar elementos no deseados ========== */
+.report-mode .btn,
+.report-mode .form-control,
+.report-mode #scale-selector,
+.report-mode #add-item-container,
+.report-mode #project-start-date,
+.report-mode #load-project-button,
+.report-mode #save-project-button,
+.report-mode #export-pdf-button,
+.report-mode #new-project-button,
+.report-mode #reset-actual-start-dates,
+.report-mode #change-start-date-button,
+.report-mode #new-start-date-input,
+.report-mode .modal,
+.report-mode .btn-close {
+  display: none !important;
+}
+
+/* ========== Estilo de impresión ========== */
+.print-mode .btn,
+.print-mode .form-control,
+.print-mode select,
+.print-mode input,
+.print-mode .modal,
+.print-mode .btn-close {
+  display: none !important;
+}
+
+.print-mode .container,
+.print-mode .card,
+.print-mode .modal-content {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Espaciado para impresión y PDF 
+.report-mode #task-table-container,
+.report-mode #gantt,
+.report-mode #critical-paths,
+.print-mode #task-table-container,
+.print-mode #gantt,
+.print-mode #critical-paths {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+*/
+/* Gantt limpio para exportación/impresión */
+.report-mode #gantt-container,
+.report-mode #gantt_here,
+.print-mode #gantt-container,
+.print-mode #gantt_here {
+  background-color: #fff !important;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+/* Títulos */
+.report-mode h2,
+.print-mode h2 {
+  font-size: 16px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  margin-top: 20px;
+}
+
+/* Camino crítico en impresión */
+.print-mode #critical-paths .badge,
+.report-mode #critical-paths .badge {
+  font-size: 13px;
+  background-color: #000;
+}
+
+/* Forzar saltos de página */
+.page-break {
+  page-break-after: always;
+}
+
+/* ========== Estilos específicos para impresión física ========== */
+@media print {
+  /*body {
+    background: white;
+    color: black;
+  }*/
+
+  .btn,
+  select,
+  input,
+  .form-control,
+  .modal,
+  .btn-close {
+    display: none !important;
+  }
+
+  #gantt-container,
+  #gantt_here {
+    page-break-inside: avoid;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+}
+
+.page-break {
+  page-break-after: always;
+}
+
+#project-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+#project-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
