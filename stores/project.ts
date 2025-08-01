@@ -4,6 +4,7 @@ import type { Item } from '../src/models/Item'
 import type { Scale } from '../src/views/ganttHelpers'
 import { getFormItemValues, clearAddItemForm } from '../src/controllers/addItemValues'
 import { itemToFormValues } from '../src/controllers/dataHelpers'
+import { setProjectItemsColors } from '../src/views/colors'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
