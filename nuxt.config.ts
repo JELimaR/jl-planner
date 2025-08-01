@@ -9,6 +9,9 @@ export default defineNuxtConfig({
   plugins: [
     '~/plugins/bootstrap.client.ts'
   ],
+  modules: [
+    '@pinia/nuxt',
+  ],
   typescript: {
     strict: true
   },
