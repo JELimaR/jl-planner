@@ -29,6 +29,7 @@
               <button
                 class="btn btn-sm btn-primary"
                 @click="editItem(item)"
+                v-if="item !== projectStore.controller.getProject().getStartMilestone() || item !== projectStore.controller.getProject().getEndMilestone()"
               >✏️</button>
               <button
                 class="btn btn-sm btn-danger"
@@ -52,7 +53,6 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useProjectStore } from '../stores/project'
-import { useUIStore } from '../stores/ui'
 import { Task } from '../src/models/Task'
 import { processColorMap } from '../src/views/colors'
 import type { Item } from '../src/models/Item'
@@ -110,7 +110,7 @@ const getPredecessors = (item: Item): string => {
 
 // Editar un item
 const editItem = (item: Item) => {
-  projectStore.setupItemForEdit(item)
+  projectStore.setupItemForEdit(item.id)
   uiStore.openAddModal()
 }
 
@@ -126,6 +126,3 @@ watch(() => projectStore.projectStartDate, () => {
 })
 </script>
 
-defineEmits<{
-  openAddModal: []
-}>();

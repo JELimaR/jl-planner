@@ -1,6 +1,9 @@
 import { Item } from './Item';
 
 export class Process extends Item {
+  hasActualStartDate(): boolean {
+    return false
+  }
   getCalculatedStartDate(): Date | undefined {
     throw new Error('Method not implemented.');
   }

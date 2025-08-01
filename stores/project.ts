@@ -2,8 +2,7 @@ import { defineStore } from 'pinia'
 import ProjectController from '../src/controllers/ProjectController'
 import type { Item } from '../src/models/Item'
 import type { Scale } from '../src/views/ganttHelpers'
-import { getFormItemValues, clearAddItemForm } from '../src/controllers/addItemValues'
-import { itemToFormValues } from '../src/controllers/dataHelpers'
+import { FormItemValues } from '../src/controllers/addItemValues'
 import { setProjectItemsColors } from '../src/views/colors'
 
 export const useProjectStore = defineStore('project', {
@@ -13,8 +12,9 @@ export const useProjectStore = defineStore('project', {
     projectEndDate: new Date(),
     newStartDate: new Date().toISOString().split('T')[0],
     currentScale: 'week' as Scale,
-    isEditing: false,
-    itemToDelete: null as number | null,
+    isEditing: false, // eliminar
+    itemToEdit: undefined as number | undefined,
+    itemToDelete: undefined as number | undefined,
     isInitialized: false
   }),
   
@@ -81,18 +81,14 @@ export const useProjectStore = defineStore('project', {
       console.log('Export PDF functionality to be implemented')
     },
     
-    addNewItem() {
-      const formValues = getFormItemValues()
-      this.controller.addNewItem(formValues)
-      clearAddItemForm(this.controller.getProject())
+    addNewItem(itemFrom: FormItemValues) {
+      this.controller.addNewItem(itemFrom)
       this.renderAll()
     },
     
-    editItem(item: Item) {
+    editItem(itemFrom: FormItemValues) {
       // Esta función se llamará desde el componente
-      const formValues = getFormItemValues()
-      this.controller.editItem(item.id, formValues)
-      clearAddItemForm(this.controller.getProject())
+      this.controller.editItem(itemFrom.id, itemFrom)
       this.renderAll()
     },
     
@@ -102,6 +98,10 @@ export const useProjectStore = defineStore('project', {
         this.itemToDelete = null
         this.renderAll()
       }
+    },
+
+    saveTitle(newTitle: string, newSubtitle: string) {
+      this.controller.saveTitle(newTitle, newSubtitle)
     },
     
     renderAll() {
@@ -114,10 +114,10 @@ export const useProjectStore = defineStore('project', {
       // Actualizar colores de los items
       setProjectItemsColors(this.controller.getProject())
     },
-    
-    setupItemForEdit(item: Item) {
-      this.isEditing = true
-      // Aquí puedes preparar el formulario para editar
+    // eliminar
+    setupItemForEdit(iid: number) {
+      this.isEditing = true;
+      this.itemToEdit = iid;
     }
   }
 })

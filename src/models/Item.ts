@@ -53,6 +53,9 @@ export abstract class Item {
   abstract setActualStartDate(date: Date | undefined): void;
 
   /** */
+  abstract hasActualStartDate(): boolean;
+
+  /** */
   abstract getDelayInDays(): number;
 
   /** */

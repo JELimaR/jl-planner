@@ -32,6 +32,22 @@ export class ProjectController {
     return this.project;
   }
 
+  getAllProcess(): Process[] {
+    const out: Process[] = []
+    this.project.getAllItems().forEach(item => {
+      if (item instanceof Process) {
+        out.push(item)
+      }
+    })
+
+    return out
+  }
+
+  saveTitle(newTitle: string, newSubtitle: string) {
+    this.project.setTitle(newTitle);
+    this.project.setSubtitle(newSubtitle)
+  }
+
   changeStartDate(newStartDate: Date): void {
     this.project.changeStartDate(newStartDate);
   }
@@ -236,7 +252,7 @@ export class ProjectController {
   /** Descarga el proyecto como archivo JSON */
   downloadProjectAsJSON(): void {
     const data = serializeProject(this.project);
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+    const blob = new Blob([JSON.stringify(data, null, 0)], {
       type: 'application/json',
     });
 

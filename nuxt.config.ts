@@ -4,13 +4,15 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: [
     'bootstrap/dist/css/bootstrap.min.css',
-    '~/assets/css/style.css'
+    '~/assets/css/style.css',
+    'vue-final-modal/style.css',
   ],
   plugins: [
     '~/plugins/bootstrap.client.ts'
   ],
   modules: [
     '@pinia/nuxt',
+    '@vue-final-modal/nuxt',
   ],
   typescript: {
     strict: true

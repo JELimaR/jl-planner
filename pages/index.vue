@@ -10,10 +10,10 @@
     <TaskTable />
 
     <!-- Modal: Agregar -->
-    <AddItemModal v-if="uiStore.addModalVisible" />
+    <AddItemModal />
 
     <!-- Modal: Eliminar -->
-    <DeleteModal v-if="uiStore.deleteModalVisible" />
+    <DeleteModal />
 
     <div class="page-break"></div>
     
@@ -32,15 +32,6 @@ import { onMounted, watch } from 'vue'
 import { useProjectStore } from '../stores/project'
 import { useUIStore } from '../stores/ui'
 import { setProjectItemsColors } from '../src/views/colors'
-
-// Importar componentes
-import ProjectToolbar from '../components/ProjectToolbar.vue'
-import ProjectDates from '../components/ProjectDates.vue'
-import TaskTable from '../components/TaskTable.vue'
-import AddItemModal from '../components/AddItemModal.vue'
-import DeleteModal from '../components/DeleteModal.vue'
-import GanttChart from '../components/GanttChart.vue'
-import CriticalPaths from '../components/CriticalPaths.vue'
 
 const projectStore = useProjectStore()
 const uiStore = useUIStore()

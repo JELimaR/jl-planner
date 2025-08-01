@@ -1,48 +1,80 @@
 <template>
-  <div class="modal fade" tabindex="-1" ref="modalRef">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">{{ projectStore.isEditing ? 'Editar' : 'Agregar' }} Item</h5>
-          <button type="button" class="btn-close" aria-label="Close" @click="uiStore.closeAddModal()"></button>
-        </div>
-        <div class="modal-body">
-          <form id="addForm"></form>
-          <div class="mt-3 d-flex justify-content-end">
-            <button type="button" class="btn btn-secondary me-2" @click="uiStore.closeAddModal()">Cancelar</button>
-            <button type="button" class="btn btn-primary" @click="projectStore.addNewItem()">Guardar</button>
-          </div>
-        </div>
+  <VueFinalModal 
+    :model-value="uiStore.addModalVisible"
+    :lock-scroll="true"
+    :click-to-close="false"
+    :esc-to-close="true"
+    :teleport-to="'body'"
+    overlay-class="modal-overlay"
+    content-class="modal-content"
+    @before-open="beforeOpen"
+    @closed="uiStore.closeAddModal()"
+  >
+    <div class="modal-header">
+      <h5 class="modal-title">{{ projectStore.isEditing ? 'Editar' : 'Agregar' }} Item</h5>
+      <button type="button" class="btn-close" aria-label="Close" @click="uiStore.closeAddModal()"></button>
+    </div>
+    
+    <div class="modal-body">
+      <ItemForm />
+      
+      <div class="mt-3 d-flex justify-content-end">
+        <button type="button" class="btn btn-secondary me-2" @click="uiStore.closeAddModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" @click="formItemStore.submitForm()">Guardar</button>
       </div>
     </div>
-  </div>
+  </VueFinalModal>
 </template>
 
-<script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import { useProjectStore } from '../stores/project'
-import { useUIStore } from '../stores/ui'
-import { setupAddFormHTML } from '../src/controllers/setupAddItemForm'
+<script setup>
+import { VueFinalModal } from 'vue-final-modal';
+import { useUIStore } from '../stores/ui';
+import { useProjectStore } from '../stores/project';
+import { useFormItemStore } from '../stores/formItem';
 
-const projectStore = useProjectStore()
-const uiStore = useUIStore()
+const uiStore = useUIStore();
+const projectStore = useProjectStore();
+const formItemStore = useFormItemStore();
 
-const modalRef = ref<HTMLElement>()
-
-// Observar cambios en la visibilidad del modal
-watch(() => uiStore.addModalVisible, (visible) => {
-  if (modalRef.value) {
-    if (visible) {
-      // Configurar el formulario cuando se abre el modal
-      const form = document.getElementById('addForm') as HTMLFormElement
-      if (form) {
-        setupAddFormHTML(form, projectStore.controller.getProject())
-      }
-    }
+// Esta función ahora contiene la lógica para preparar el formulario
+const beforeOpen = () => {
+  if (projectStore.itemForEdit) {
+    // Si estamos en modo edición, cargamos los datos del item
+    const item = projectStore.controller.getProject().getItemById(projectStore.itemForEdit);
+    console.log(item)
+    formItemStore.loadFormForEdit(item);
+  } else {
+    // Si estamos en modo agregar, reseteamos el formulario
+    formItemStore.resetForm();
   }
-})
-
-defineExpose({
-  modalRef
-})
+};
 </script>
+
+<style>
+/* Estilos para el modal, puedes ajustarlos a tus necesidades */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.btn-close {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+}
+</style>

@@ -18,9 +18,11 @@
   "dependencies": {
     "@pinia/nuxt": "^0.11.2",
     "@types/bootstrap": "^5.2.10",
+    "@vue-final-modal/nuxt": "^1.0.3",
     "bootstrap": "^5.3.7",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
-    "pinia": "^3.0.3"
+    "pinia": "^3.0.3",
+    "vue-final-modal": "^4.5.5"
   }
 }
