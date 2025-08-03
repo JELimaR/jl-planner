@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import ProjectController from '../src/controllers/ProjectController'
-import type { Item } from '../src/models/Item'
 import type { Scale } from '../src/views/ganttHelpers'
-import { FormItemValues } from '../src/controllers/addItemValues'
 import { setProjectItemsColors } from '../src/views/colors'
 
 export const useProjectStore = defineStore('project', {
@@ -12,9 +10,7 @@ export const useProjectStore = defineStore('project', {
     projectEndDate: new Date(),
     newStartDate: new Date().toISOString().split('T')[0],
     currentScale: 'week' as Scale,
-    isEditing: false, // eliminar
-    itemToEdit: undefined as number | undefined,
-    itemToDelete: undefined as number | undefined,
+    itemToDelete: null as number | null,
     isInitialized: false
   }),
   
@@ -81,15 +77,15 @@ export const useProjectStore = defineStore('project', {
       console.log('Export PDF functionality to be implemented')
     },
     
-    addNewItem(itemFrom: FormItemValues) {
-      this.controller.addNewItem(itemFrom)
+    addNewItem(formValues) {
+      this.controller.addNewItem(formValues)
       this.renderAll()
     },
     
-    editItem(itemFrom: FormItemValues) {
+    editItem(formValues) {
       // Esta función se llamará desde el componente
-      this.controller.editItem(itemFrom.id, itemFrom)
-      this.renderAll()
+      this.controller.editItem(formValues.id, formValues);
+      this.renderAll();
     },
     
     deleteItem() {
@@ -98,10 +94,6 @@ export const useProjectStore = defineStore('project', {
         this.itemToDelete = null
         this.renderAll()
       }
-    },
-
-    saveTitle(newTitle: string, newSubtitle: string) {
-      this.controller.saveTitle(newTitle, newSubtitle)
     },
     
     renderAll() {
@@ -114,10 +106,10 @@ export const useProjectStore = defineStore('project', {
       // Actualizar colores de los items
       setProjectItemsColors(this.controller.getProject())
     },
-    // eliminar
-    setupItemForEdit(iid: number) {
-      this.isEditing = true;
-      this.itemToEdit = iid;
+    
+    setupItemForEdit(id: number) {
+      this.itemToEdit = id
+      // Aquí puedes preparar el formulario para editar
     }
   }
 })

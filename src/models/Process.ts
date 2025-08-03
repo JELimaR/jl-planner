@@ -12,9 +12,54 @@ export class Process extends Item {
   }
   type: 'process' = 'process';
   private _children: Item[] = [];
+  private useManualCost: boolean = false; // Nuevo campo para indicar si usar costo manual
 
-  constructor(id: number, name: string, parent?: Process, detail?: string) {
-    super(id, 'milestone', name, parent, detail);
+  constructor(
+    id: number, 
+    name: string, 
+    parent?: Process, 
+    detail?: string,
+    cost: number = 0,
+    useManualCost: boolean = false // Agregar parámetro para usar costo manual
+  ) {
+    super(id, 'process', name, parent, detail, cost);
+    this.useManualCost = useManualCost;
+  }
+
+  /** Establece si debe usar el costo manual o calculado */
+  setUseManualCost(useManual: boolean): void {
+    this.useManualCost = useManual;
+  }
+
+  /** Obtiene si está usando costo manual */
+  getUseManualCost(): boolean {
+    return this.useManualCost;
+  }
+
+  /** Calcula el costo sumando los costos de los hijos */
+  private calculateChildrenCost(): number {
+    try {
+      return this._children.reduce((total, child) => {
+        return total + child.getTotalCost();
+      }, 0);
+    } catch (error) {
+      console.error('Error calculating children cost for process:', this.name, error);
+      return 0;
+    }
+  }
+
+  /** Implementación del costo total para Process (manual o calculado según configuración) */
+  getTotalCost(): number {
+    try {
+      if (this.useManualCost) {
+        return this.cost; // Usar costo manual
+      } else {
+        return this.calculateChildrenCost(); // Usar costo calculado (suma de hijos)
+      }
+    } catch (error) {
+      console.error('Error getting total cost for process:', this.name, error);
+      return 0;
+    }
   }
 
   get children(): Item[] {

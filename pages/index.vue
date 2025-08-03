@@ -1,57 +1,61 @@
 <template>
-  <div>
-    <!-- Barra de acciones del proyecto -->
-    <ProjectToolbar />
-
-    <!-- Fechas del proyecto -->
-    <ProjectDates />
-
-    <!-- Tabla de tareas -->
-    <TaskTable />
-
-    <!-- Modal: Agregar -->
-    <AddItemModal />
-
-    <!-- Modal: Eliminar -->
-    <DeleteModal />
-
-    <div class="page-break"></div>
-    
-    <!-- Diagrama de Gantt -->
-    <GanttChart />
-
-    <div class="page-break"></div>
-    
-    <!-- Caminos críticos -->
-    <CriticalPaths />
+  <div class="container mt-4">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <h1 class="text-center mb-4">Planner</h1>
+        <p class="text-center text-muted mb-5">Gestión de proyectos con diagramas de Gantt</p>
+        
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Proyectos</h5>
+            
+            <!-- Lista de proyectos (por ahora solo uno) -->
+            <div class="list-group">
+              <NuxtLink to="/project" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">Proyecto Principal</h6>
+                  <small>Último acceso: {{ new Date().toLocaleDateString() }}</small>
+                </div>
+                <p class="mb-1">Proyecto de ejemplo con tareas y milestones.</p>
+                <small>ID: project-001</small>
+              </NuxtLink>
+            </div>
+            
+            <!-- Botones de acción -->
+            <div class="mt-3">
+              <button class="btn btn-primary me-2" @click="createNewProject">
+                <i class="bi bi-plus-circle"></i> Nuevo Proyecto
+              </button>
+              <button class="btn btn-outline-secondary" @click="importProject">
+                <i class="bi bi-upload"></i> Importar Proyecto
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
-import { useProjectStore } from '../stores/project'
-import { useUIStore } from '../stores/ui'
-import { setProjectItemsColors } from '../src/views/colors'
-
-const projectStore = useProjectStore()
-const uiStore = useUIStore()
-
-onMounted(async () => {
-  // Inicializar el proyecto
-  await projectStore.initializeProject()
-  
-  // Configurar eventos globales si es necesario
-  if (typeof window !== 'undefined') {
-    window.addEventListener('openDeleteModal', (e: any) => {
-      projectStore.itemToDelete = e.detail.itemId
-      uiStore.openDeleteModal()
-    })
+import { useRouter } from 'vue-router';
+const createNewProject = () => {
+  try {
+    // Por ahora redirigir al proyecto principal
+    // En el futuro, crear un nuevo proyecto con ID único
+    const router = useRouter();
+    router.push('/project');
+  } catch (error) {
+    console.error('Error creating new project:', error);
   }
-})
+};
 
-// Escuchar eventos de renderizado global
-watch(() => [projectStore.projectStartDate, projectStore.projectEndDate], () => {
-  // Actualizar la interfaz cuando cambien las fechas del proyecto
-  setProjectItemsColors(projectStore.controller.getProject())
-})
+const importProject = () => {
+  try {
+    // Implementar lógica de importación
+    console.log('Import project functionality to be implemented');
+  } catch (error) {
+    console.error('Error importing project:', error);
+  }
+};
 </script>

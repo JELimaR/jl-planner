@@ -7,8 +7,19 @@ export class Milestone extends Item {
   private actualStartDate?: Date;
   type: 'milestone' = 'milestone';
 
-  constructor(id: number, name: string, parent?: Process, detail?: string) {
-    super(id, 'milestone', name, parent, detail);
+  constructor(
+    id: number, 
+    name: string, 
+    parent?: Process, 
+    detail?: string,
+    cost: number = 0 // Agregar cost al constructor
+  ) {
+    super(id, 'milestone', name, parent, detail, cost);
+  }
+
+  /** Implementación del costo total para Milestone (es su propio costo) */
+  getTotalCost(): number {
+    return this.cost;
   }
 
   /** Fecha mostrada (real o planificada) */

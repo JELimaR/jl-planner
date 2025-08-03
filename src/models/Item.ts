@@ -5,6 +5,7 @@ export abstract class Item {
   parent?: Item;
   detail?: string;
   color?: string;
+  cost: number = 0; // Nuevo campo cost
   _isCritical: boolean = false;
 
   // IDs de los ítems de los que depende este ítem
@@ -15,13 +16,15 @@ export abstract class Item {
     type: 'task' | 'milestone' | 'process',
     name: string,
     parent?: Item,
-    detail?: string
+    detail?: string,
+    cost: number = 0 // Agregar cost al constructor
   ) {
     this.id = id;
     this.type = type;
     this.name = name;
     this.parent = parent;
     this.detail = detail;
+    this.cost = cost;
   }
 
   setCritial() {
@@ -71,4 +74,12 @@ export abstract class Item {
     const diffMs = start.getTime() - calc.getTime();
     return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
   }*/
+
+  /** Método abstracto para obtener el costo total (implementado diferente en Process) */
+  abstract getTotalCost(): number;
+
+  /** Establece el costo del item */
+  setCost(cost: number): void {
+    this.cost = Math.max(0, cost); // Asegurar que no sea negativo
+  }
 }

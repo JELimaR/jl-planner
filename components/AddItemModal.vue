@@ -38,10 +38,9 @@ const formItemStore = useFormItemStore();
 
 // Esta función ahora contiene la lógica para preparar el formulario
 const beforeOpen = () => {
-  if (projectStore.itemForEdit) {
+  if (projectStore.itemToEdit) { // Usa itemToEdit en lugar de itemForEdit
     // Si estamos en modo edición, cargamos los datos del item
-    const item = projectStore.controller.getProject().getItemById(projectStore.itemForEdit);
-    console.log(item)
+    const item = projectStore.controller.getProject().getItemById(projectStore.itemToEdit);
     formItemStore.loadFormForEdit(item);
   } else {
     // Si estamos en modo agregar, reseteamos el formulario
@@ -56,7 +55,9 @@ const beforeOpen = () => {
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding: 2rem 0;
+  overflow-y: auto;
 }
 .modal-content {
   background: white;
@@ -64,12 +65,21 @@ const beforeOpen = () => {
   border-radius: 8px;
   width: 90%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto;
 }
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
 }
 .btn-close {
   cursor: pointer;

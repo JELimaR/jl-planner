@@ -80,126 +80,153 @@ export class ProjectController {
   }
 
   addNewItem(itemData: FormItemValues): Item {
-    const id = this.generateId(itemData.processId);
-    const item = formValuesToItem(id, itemData, this.project);
-    const parent = this.project.getItemById(itemData.processId);
+    try {
+      const id = this.generateId(itemData.processId);
+      const item = formValuesToItem(id, itemData, this.project);
+      const parent = this.project.getItemById(itemData.processId);
 
-    if (parent instanceof Process) {
-      this.project.addItem(item, parent);
-    } else {
-      throw new Error(
-        `Parent process with ID ${itemData.processId} not found.`
-      );
-    }
-
-    // Agregar relaciones de precedencia
-    itemData.predecessorIds.forEach((predId) => {
-      const pred = this.project.getItemById(predId);
-      if (pred) this.project.addRelation(pred, item);
-    });
-
-    this.normalizeItemIds();
-    return item;
-  }
-
-  editItem(id: number, itemData: FormItemValues): void {
-    let existingItem = this.project.getItemById(id);
-    if (!existingItem) throw new Error(`Item with ID ${id} not found.`);
-
-    const typeChanged =
-      (existingItem instanceof Task && itemData.type !== 'task') ||
-      (existingItem instanceof Milestone && itemData.type !== 'milestone') ||
-      (existingItem instanceof Process && itemData.type !== 'process');
-
-    if (existingItem instanceof Process && itemData.type !== 'process') {
-      if (existingItem.children.length > 0) {
+      if (parent instanceof Process) {
+        this.project.addItem(item, parent);
+      } else {
         throw new Error(
-          `No se puede cambiar el tipo de un proceso que contiene ítems hijos.`
+          `Parent process with ID ${itemData.processId} not found.`
         );
       }
-    }
 
-    if (typeChanged) {
-      this.deleteItem(id);
-      const newItem = formValuesToItem(id, itemData, this.project);
-      if (parent instanceof Process) {
-        this.project.addItem(newItem, parent);
-      } else {
-        this.project.addItem(newItem);
-      }
-
+      // Agregar relaciones de precedencia
       itemData.predecessorIds.forEach((predId) => {
         const pred = this.project.getItemById(predId);
-        if (pred) this.project.addRelation(pred, newItem);
+        if (pred) this.project.addRelation(pred, item);
       });
-      existingItem = newItem;
 
+      this.normalizeItemIds();
+      return item;
+    } catch (error) {
+      console.error('Error adding new item:', error);
+      throw new Error(`Error al agregar nuevo item: ${error.message}`);
+    }
+  }
+
+  // En el método editItem, agregar manejo de useManualCost
+  editItem(id: number, itemData: FormItemValues): void {
+    try {
+      let existingItem = this.project.getItemById(id);
+      if (!existingItem) throw new Error(`Item with ID ${id} not found.`);
+  
+      const typeChanged =
+        (existingItem instanceof Task && itemData.type !== 'task') ||
+        (existingItem instanceof Milestone && itemData.type !== 'milestone') ||
+        (existingItem instanceof Process && itemData.type !== 'process');
+  
+      if (existingItem instanceof Process && itemData.type !== 'process') {
+        if (existingItem.children.length > 0) {
+          throw new Error(
+            `No se puede cambiar el tipo de un proceso que contiene ítems hijos.`
+          );
+        }
+      }
+  
+      if (typeChanged) {
+        this.deleteItem(id);
+        const newItem = formValuesToItem(id, itemData, this.project);
+        const parent = this.project.getItemById(itemData.processId);
+        if (parent instanceof Process) {
+          this.project.addItem(newItem, parent);
+        } else {
+          this.project.addItem(newItem);
+        }
+  
+        itemData.predecessorIds.forEach((predId) => {
+          const pred = this.project.getItemById(predId);
+          if (pred) this.project.addRelation(pred, newItem);
+        });
+        existingItem = newItem;
+  
+        this.project.calculateItemDates();
+      }
+  
+      // Si no cambió el tipo
+      existingItem.name = itemData.name;
+      existingItem.detail = itemData.detail;
+      
+      // Actualizar cost si está disponible
+      if (itemData.cost !== undefined) {
+        existingItem.setCost(itemData.cost);
+      }
+  
+      // Actualizar useManualCost para procesos
+      if (existingItem instanceof Process && itemData.useManualCost !== undefined) {
+        existingItem.setUseManualCost(itemData.useManualCost);
+      }
+  
+      existingItem.predecessors.clear();
+      itemData.predecessorIds.forEach((predId) => {
+        const pred = this.project.getItemById(predId);
+        if (pred) this.project.addRelation(pred, existingItem);
+      });
+  
+      if (existingItem instanceof Task && itemData.type === 'task') {
+        existingItem.setManualDuration(itemData.duration!);
+        if (itemData.actualStartDate) {
+          existingItem.setActualStartDate(itemData.actualStartDate);
+        } else {
+          existingItem.setActualStartDate(undefined);
+        }
+      } else if (
+        existingItem instanceof Milestone &&
+        itemData.type === 'milestone'
+      ) {
+        if (itemData.actualStartDate) {
+          existingItem.setActualStartDate(itemData.actualStartDate);
+        } else {
+          existingItem.setActualStartDate(undefined);
+        }
+      }
+  
+      const newParent = itemData.processId
+        ? this.project.getItemById(itemData.processId)
+        : undefined;
+  
+      if (newParent instanceof Process && existingItem.parent !== newParent) {
+        (existingItem.parent as Process).removeChild(id);
+        newParent.addChild(existingItem);
+        existingItem.parent = newParent;
+      }
+  
+      this.normalizeItemIds();
       this.project.calculateItemDates();
+    } catch (error) {
+      console.error('Error editing item:', error);
+      throw new Error(`Error al editar item: ${error.message}`);
     }
-
-    // Si no cambió el tipo
-    existingItem.name = itemData.name;
-    existingItem.detail = itemData.detail;
-
-    existingItem.predecessors.clear();
-    itemData.predecessorIds.forEach((predId) => {
-      const pred = this.project.getItemById(predId);
-      if (pred) this.project.addRelation(pred, existingItem);
-    });
-
-    if (existingItem instanceof Task && itemData.type === 'task') {
-      existingItem.setManualDuration(itemData.duration!);
-      if (itemData.actualStartDate) {
-        existingItem.setActualStartDate(itemData.actualStartDate);
-      } else {
-        existingItem.setActualStartDate(undefined);
-      }
-    } else if (
-      existingItem instanceof Milestone &&
-      itemData.type === 'milestone'
-    ) {
-      if (itemData.actualStartDate) {
-        existingItem.setActualStartDate(itemData.actualStartDate);
-      } else {
-        existingItem.setActualStartDate(undefined);
-      }
-    }
-
-    const newParent = itemData.processId
-      ? this.project.getItemById(itemData.processId)
-      : undefined;
-
-    if (newParent instanceof Process && existingItem.parent !== newParent) {
-      (existingItem.parent as Process).removeChild(id);
-      newParent.addChild(existingItem);
-      existingItem.parent = newParent;
-    }
-
-    this.normalizeItemIds();
-    this.project.calculateItemDates();
   }
 
   deleteItem(id: number): void {
-    const item = this.project.getItemById(id);
-    if (!item) return;
+    try {
+      const item = this.project.getItemById(id);
+      if (!item) return;
 
-    // Si es un proceso, eliminar recursivamente sus hijos
-    if (item instanceof Process) {
-      for (const child of [...item.children]) {
-        this.deleteItem(child.id);
+      // Si es un proceso, eliminar recursivamente sus hijos
+      if (item instanceof Process) {
+        for (const child of [...item.children]) {
+          this.deleteItem(child.id);
+        }
       }
+
+      // Eliminar dependencias cruzadas
+      for (const otherItem of this.project.getAllItems().values()) {
+        otherItem.predecessors.delete(item);
+      }
+
+      (item.parent as Process).removeChild(id);
+      this.project.getAllItems().delete(id);
+
+      this.normalizeItemIds();
+      this.project.calculateItemDates();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      throw new Error(`Error al eliminar item: ${error.message}`);
     }
-
-    // Eliminar dependencias cruzadas
-    for (const otherItem of this.project.getAllItems().values()) {
-      otherItem.predecessors.delete(item);
-    }
-
-    (item.parent as Process).removeChild(id);
-    this.project.getAllItems().delete(id);
-
-    this.normalizeItemIds();
-    this.project.calculateItemDates();
   }
 
   private normalizeItemIds(): void {

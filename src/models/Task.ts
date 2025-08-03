@@ -15,10 +15,16 @@ export class Task extends Item {
     name: string,
     duration: number,
     parent?: Process,
-    detail?: string
+    detail?: string,
+    cost: number = 0 // Agregar cost al constructor
   ) {
-    super(id, 'task', name, parent, detail);
+    super(id, 'task', name, parent, detail, cost);
     this.calculatedDuration = duration;
+  }
+
+  /** Implementación del costo total para Task (es su propio costo) */
+  getTotalCost(): number {
+    return this.cost;
   }
 
   /** Fecha mostrada (actual o planificada) */

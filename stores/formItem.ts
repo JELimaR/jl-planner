@@ -1,10 +1,10 @@
-
-
 import { defineStore } from 'pinia';
 import { useProjectStore } from './project';
+import { useUIStore } from './ui';
 import type { FormItemValues } from '../src/controllers/addItemValues';
 import type { Item } from '../src/models/Item';
 import { Task } from '../src/models/Task';
+import { Process } from '../src/models/Process';
 
 // Define el estado inicial del formulario
 const initialFormState: FormItemValues = {
@@ -14,6 +14,8 @@ const initialFormState: FormItemValues = {
   duration: 1,
   predecessorIds: [],
   processId: 1001,
+  cost: 0,
+  useManualCost: false, // Agregar useManualCost con valor por defecto
 };
 
 export const useFormItemStore = defineStore('formItem', {
@@ -27,11 +29,15 @@ export const useFormItemStore = defineStore('formItem', {
      * Resetea el formulario a sus valores iniciales.
      */
     resetForm() {
-      this.form = { ...initialFormState };
-      // Opcional: inicializar el padre del proceso al root por defecto
-      const projectStore = useProjectStore();
-      if (projectStore.isInitialized) {
-        this.form.parentProcessId = projectStore.controller.getProject().rootProcess.id;
+      try {
+        this.form = { ...initialFormState };
+        // Opcional: inicializar el padre del proceso al root por defecto
+        const projectStore = useProjectStore();
+        if (projectStore.isInitialized) {
+          this.form.parentProcessId = projectStore.controller.getProject().rootProcess.id;
+        }
+      } catch (error) {
+        console.error('Error resetting form:', error);
       }
     },
 
@@ -40,16 +46,23 @@ export const useFormItemStore = defineStore('formItem', {
      * @param item El item a editar
      */
     loadFormForEdit(item: Item) {
-      this.form = {
-        type: item.type,
-        name: item.name,
-        detail: item.detail,
-        predecessors: item.predecessors,
-        parentProcessId: item.parent?.id,
-        duration: item instanceof Task ? item.duration : undefined,
-        actualStartDate: item.hasActualStartDate() ? item.getStartDate() : undefined
-      };
-      // Aquí puedes agregar más lógica específica si la necesitas
+      try {
+        this.form = {
+          id: item.id,
+          type: item.type,
+          name: item.name,
+          detail: item.detail,
+          predecessorIds: Array.from(item.predecessors).map(pred => pred.id),
+          parentProcessId: item.parent?.id,
+          duration: item instanceof Task ? item.duration : undefined,
+          actualStartDate: item.hasActualStartDate() ? item.getStartDate() : undefined,
+          cost: item.cost || 0,
+          useManualCost: item instanceof Process ? item.getUseManualCost() : false, // Incluir useManualCost para procesos
+        };
+      } catch (error) {
+        console.error('Error loading form for edit:', error);
+        throw new Error('Error al cargar los datos del item para edición');
+      }
     },
 
     /**
@@ -57,15 +70,26 @@ export const useFormItemStore = defineStore('formItem', {
      */
     submitForm() {
       const projectStore = useProjectStore();
-      if (projectStore.itemToEdit) {
-        // Lógica para editar un item
-        projectStore.editItem(this.form);
-      } else {
-        // Lógica para agregar un nuevo item
-        projectStore.addNewItem(this.form);
+      const uiStore = useUIStore();
+      
+      try {
+        if (this.form.id !== -1) {
+          // Lógica para editar un item existente
+          projectStore.editItem(this.form);
+        } else {
+          // Lógica para agregar un nuevo item
+          projectStore.addNewItem(this.form);
+        }
+        
+        // Llamar a resetForm para limpiar el formulario después del envío
+        this.resetForm();
+        
+        // Cerrar el modal después de guardar exitosamente
+        uiStore.closeAddModal();
+      } catch (error) {
+        console.error('Error al guardar el item:', error);
+        throw error; // Re-lanzar para que el componente pueda manejarlo
       }
-      // Llamar a resetForm para limpiar el formulario después del envío
-      this.resetForm();
     },
   },
 });

@@ -10,56 +10,72 @@ export interface FormItemValues {
   actualStartDate?: Date;
   processId: number;
   predecessorIds: number[];
+  cost?: number;
+  useManualCost?: boolean; // Nuevo campo para procesos
 }
 
 export function getFormItemValues(): FormItemValues {
-  const form = document.getElementById('addForm') as HTMLFormElement;
-  const idAttr = form.getAttribute('data-id');
-  const id = idAttr ? Number(idAttr) : -1; // -1 o undefined si es nuevo
+  try {
+    const form = document.getElementById('addForm') as HTMLFormElement;
+    const idAttr = form.getAttribute('data-id');
+    const id = idAttr ? Number(idAttr) : -1;
 
-  const type = (document.getElementById('addItemType') as HTMLSelectElement)
-    .value as 'task' | 'milestone' | 'process';
-  const name = (document.getElementById('addItemName') as HTMLInputElement)
-    .value;
-  const detail = (
-    document.getElementById('addItemDetail') as HTMLTextAreaElement
-  ).value;
+    const type = (document.getElementById('addItemType') as HTMLSelectElement)
+      .value as 'task' | 'milestone' | 'process';
+    const name = (document.getElementById('addItemName') as HTMLInputElement)
+      .value;
+    const detail = (
+      document.getElementById('addItemDetail') as HTMLTextAreaElement
+    ).value;
 
-  const durationInput = document.getElementById(
-    'addItemDuration'
-  ) as HTMLInputElement | null;
+    const durationInput = document.getElementById(
+      'addItemDuration'
+    ) as HTMLInputElement | null;
+    const duration = durationInput ? Number(durationInput.value) : undefined;
 
-  const duration = durationInput ? Number(durationInput.value) : undefined;
+    const actualStartInput = document.getElementById(
+      'addActualStartDate'
+    ) as HTMLInputElement | null;
+    const actualStartDate = actualStartInput?.value
+      ? new Date(actualStartInput.value)
+      : undefined;
 
-  const actualStartInput = document.getElementById(
-    'addActualStartDate'
-  ) as HTMLInputElement | null;
-  const actualStartDate = actualStartInput?.value
-    ? new Date(actualStartInput.value)
-    : undefined;
+    const parentProcessIdRaw = (
+      document.getElementById('addItemParentProcess') as HTMLSelectElement
+    ).value;
+    const processId = Number(parentProcessIdRaw);
 
-  const parentProcessIdRaw = (
-    document.getElementById('addItemParentProcess') as HTMLSelectElement
-  ).value;
-  const processId = Number(parentProcessIdRaw);
+    const predSelect = document.getElementById(
+      'addItemPredecessors'
+    ) as HTMLSelectElement;
+    const predecessorIds = Array.from(predSelect.selectedOptions).map((opt) =>
+      Number(opt.value)
+    );
 
-  const predSelect = document.getElementById(
-    'addItemPredecessors'
-  ) as HTMLSelectElement;
-  const predecessorIds = Array.from(predSelect.selectedOptions).map((opt) =>
-    Number(opt.value)
-  );
+    // Agregar campo cost
+    const costInput = document.getElementById('addItemCost') as HTMLInputElement | null;
+    const cost = costInput ? Number(costInput.value) || 0 : 0;
 
-  return {
-    id,
-    type,
-    name,
-    detail,
-    duration,
-    actualStartDate,
-    processId,
-    predecessorIds,
-  };
+    // Agregar campo useManualCost para procesos
+    const useManualCostInput = document.getElementById('addItemUseManualCost') as HTMLInputElement | null;
+    const useManualCost = useManualCostInput ? useManualCostInput.checked : false;
+
+    return {
+      id,
+      type,
+      name,
+      detail,
+      duration,
+      actualStartDate,
+      processId,
+      predecessorIds,
+      cost,
+      useManualCost, // Incluir useManualCost en el retorno
+    };
+  } catch (error) {
+    console.error('Error getting form item values:', error);
+    throw new Error('Error al obtener los valores del formulario');
+  }
 }
 
 export function clearAddItemForm(project: Project): void {
