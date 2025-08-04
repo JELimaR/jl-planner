@@ -6,7 +6,7 @@
 
 # nuxt
 /.nuxt
-/out/
+/.output
 
 # production
 /build
