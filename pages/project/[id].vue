@@ -47,10 +47,21 @@ const projectId = route.params.id as string
 onMounted(async () => {
   try {
     // Inicializar el proyecto con el ID específico
-    await projectStore.initializeProject(projectId)
+    switch (projectId) {
+      case 'p001':
+        await projectStore.newProject()
+        break;
+      case 'p002':
+        await projectStore.initializeProject(projectId)
+        break;
+      default:
+        await projectStore.newProject()
+        projectStore.newProject()
+        projectStore.controller.chargeExampleProject()
+    }
     
     // Configurar eventos globales si es necesario
-    if (typeof window !== 'undefined') {
+    /*if (typeof window !== 'undefined') {
       window.addEventListener('openDeleteModal', (e: any) => {
         try {
           projectStore.itemToDelete = e.detail.itemId
@@ -59,7 +70,7 @@ onMounted(async () => {
           console.error('Error opening delete modal:', error)
         }
       })
-    }
+    }*/
   } catch (error) {
     console.error('Error initializing project:', error)
   }

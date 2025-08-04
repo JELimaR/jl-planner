@@ -12,17 +12,17 @@ import { renderTaskTable } from '../src/views/tableRenderer';
 
 
 export const useProjectController = () => {
-  const controller = ProjectController.getInstance()
+  const controller = ProjectController.getInstance('ik')
   
   const initializeProject = async () => {
     try {
-      const response = await fetch('/project.json')
-      if (!response.ok) throw new Error('No se pudo cargar project.json')
-      const json = await response.json()
-      controller.loadProjectFromFile(json)
+      const response = await fetch('/template00.jlprj')
+      if (!response.ok) throw new Error('No se pudo cargar template00.jlprj')
+      const jlprj = await response.json()
+      controller.loadProjectFromFile(jlprj)
     } catch (err) {
-      console.warn('No se pudo cargar project.json:', err)
-      controller.createNewProject(new Date())
+      console.warn('No se pudo cargar template00.jlprj:', err)
+      controller.createNewProject('ik', new Date())
       controller.chargeExampleProject()
     }
   }

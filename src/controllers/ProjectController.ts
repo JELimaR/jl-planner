@@ -262,7 +262,7 @@ export class ProjectController {
     });
   }
 
-  /** Descarga el proyecto como archivo JSON */
+  /** Descarga el proyecto como archivo jlprj */
   downloadProjectAsJSON(): void {
     const data = serializeProject(this.project);
     const blob = new Blob([JSON.stringify(data, null, 0)], {
@@ -272,12 +272,12 @@ export class ProjectController {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'mi_proyecto.json';
+    a.download = `${this.project.getTitle()}.jlprj`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  /** Carga un proyecto desde un archivo JSON */
+  /** Carga un proyecto desde un archivo jlprj */
   async loadProjectFromFile(file: File | SerializedProject): Promise<void> {
     let json: SerializedProject;
     if (file instanceof File) {

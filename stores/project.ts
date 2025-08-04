@@ -27,12 +27,12 @@ export const useProjectStore = defineStore('project', {
           // Load default project or handle no project case
           console.log('Loading default project')
         }
-        const response = await fetch('/project.json')
-        if (!response.ok) throw new Error('No se pudo cargar project.json')
-        const json = await response.json()
-        this.controller.loadProjectFromFile(json)
+        const response = await fetch('/template00.jlprj')
+        if (!response.ok) throw new Error('No se pudo cargar template00.jlprj')
+        const JSON = await response.json()
+        this.controller.loadProjectFromFile(JSON)
       } catch (err) {
-        console.warn('No se pudo cargar project.json:', err)
+        console.warn('No se pudo cargar template00.jlprj:', err)
         this.controller.createNewProject('creato', new Date())
         this.controller.chargeExampleProject()
       }
@@ -75,7 +75,7 @@ export const useProjectStore = defineStore('project', {
     
     changeStartDate() {
       if (this.newStartDate) {
-        this.controller.changeStartDate(new Date(this.newStartDate))
+        this.controller.changeStartDate(textToDate(this.newStartDate))
         this.updateProjectDates()
         this.renderAll()
       }
@@ -122,3 +122,43 @@ export const useProjectStore = defineStore('project', {
     }
   }
 })
+
+/**
+ * Convierte una cadena de fecha con formato DD-MM-YYYY en un objeto Date.
+ *
+ * @param {string | undefined} dateString La fecha en formato "dd-mm-yyyy".
+ * @returns {Date | null} Un objeto Date o null si la cadena no es válida.
+ */
+const textToDate = (dateString: string | undefined): Date | null => {
+  if (!dateString) {
+    return null;
+  }
+
+  const parts = dateString.split('-');
+
+  if (parts.length !== 3) {
+    return null;
+  }
+  
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+
+  if (isNaN(day) || isNaN(month) || isNaN(year)) {
+    return null;
+  }
+  
+  // El mes en JavaScript es de 0 a 11, por eso se resta 1.
+  const newDate = new Date(year, month - 1, day);
+
+  // Validación final para evitar fechas incorrectas (ej. 30 de febrero).
+  if (
+    newDate.getFullYear() !== year || 
+    newDate.getMonth() !== month - 1 || 
+    newDate.getDate() !== day
+  ) {
+    return null;
+  }
+  
+  return newDate;
+};
