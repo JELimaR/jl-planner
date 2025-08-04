@@ -77,7 +77,7 @@
     <div class="mb-3">
       <label for="addItemPredecessors" class="form-label">Predecesores</label>
       <select multiple class="form-select" id="addItemPredecessors" v-model="formItemStore.form.predecessorIds">
-        <option v-for="option in projectStore.controller.getProject().getAllItems().values()" :key="option.id" :value="option.id">
+        <option v-for="option in projectStore.controller.getAllItems()" :key="option.id" :value="option.id">
           {{ option.name }} (#{{ option.id }})
         </option>
       </select>

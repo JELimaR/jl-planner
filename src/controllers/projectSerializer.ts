@@ -17,6 +17,7 @@ export interface SerializedItem {
 }
 
 export interface SerializedProject {
+  id: string;
   title: string;
   subtitle: string;
   startDate: string;
@@ -69,6 +70,7 @@ export function serializeProject(project: Project): SerializedProject {
   }
 
   return {
+    id: project.getId(),
     title: project.getTitle(),
     subtitle: project.getSubtitle(),
     startDate,
@@ -77,7 +79,7 @@ export function serializeProject(project: Project): SerializedProject {
 }
 
 export function deserializeProject(data: SerializedProject): Project {
-  const project = new Project(new Date(data.startDate));
+  const project = new Project(data.id, new Date(data.startDate));
   project.setTitle(data.title);
   project.setSubtitle(data.subtitle);
   data.items.forEach((serial: SerializedItem) => {
@@ -87,7 +89,7 @@ export function deserializeProject(data: SerializedProject): Project {
         serial.id == project.getStartMilestone().id
       )
     ) {
-      serial2Item(project, serial, project.rootProcess);
+      serial2Item(project, serial, project.getRoot());
     }
   });
 

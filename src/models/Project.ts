@@ -10,14 +10,24 @@ import { Milestone } from './Milestone';
 import { Process } from './Process';
 import { Task } from './Task';
 
+export interface IProjectData {
+  id: string;
+  title: string;
+  subTitle: string;
+
+}
+
 export class Project {
-  rootProcess: Process;
+  private id: string;
+  private rootProcess: Process;
   private projectStartDate: Date;
   private startMilestone: Milestone;
   private endMilestone: Milestone;
   private allItemsMap: Map<number, Item> = new Map();
 
-  constructor(startDate: Date) {
+  constructor(id: string, startDate: Date) {
+    this.id = id;
+
     this.projectStartDate = startDate;
 
     // Crear el proceso raíz
@@ -39,6 +49,10 @@ export class Project {
 
   title: string = 'Proyecto sin título';
   subtitle: string = '';
+
+  getId(): string {
+    return this.id;
+  }
 
   setTitle(title: string) {
     this.title = title;
@@ -263,4 +277,16 @@ export class Project {
       visit(child, 0, this.getRoot());
     }
   }
+
+  /**
+   * 
+   */
+  getData(): IProjectData {
+    return {
+      id: this.id,
+      title: this.getTitle(),
+      subTitle: this.getSubtitle()
+    }
+  }
+
 }

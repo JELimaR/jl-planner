@@ -2,13 +2,14 @@ import { defineStore } from 'pinia'
 import ProjectController from '../src/controllers/ProjectController'
 import type { Scale } from '../src/views/ganttHelpers'
 import { setProjectItemsColors } from '../src/views/colors'
+import { FormItemValues } from '../src/controllers/addItemValues'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
-    controller: ProjectController.getInstance(),
+    controller: ProjectController.getInstance(''),
     projectStartDate: new Date(),
     projectEndDate: new Date(),
-    newStartDate: new Date().toISOString().split('T')[0],
+    newStartDate: new Date(),
     currentScale: 'week' as Scale,
     itemToDelete: null as number | null,
     isInitialized: false
@@ -32,7 +33,7 @@ export const useProjectStore = defineStore('project', {
         this.controller.loadProjectFromFile(json)
       } catch (err) {
         console.warn('No se pudo cargar project.json:', err)
-        this.controller.createNewProject(new Date())
+        this.controller.createNewProject('creato', new Date())
         this.controller.chargeExampleProject()
       }
       
@@ -47,7 +48,7 @@ export const useProjectStore = defineStore('project', {
     },
     
     newProject() {
-      this.controller.createNewProject(new Date())
+      this.controller.createNewProject('idP', new Date())
       this.updateProjectDates()
       this.renderAll()
     },
@@ -84,13 +85,14 @@ export const useProjectStore = defineStore('project', {
       console.log('Export PDF functionality to be implemented')
     },
     
-    addNewItem(formValues) {
+    addNewItem(formValues: FormItemValues) {
       this.controller.addNewItem(formValues)
       this.renderAll()
     },
     
-    editItem(formValues) {
+    editItem(formValues: FormItemValues) {
       // Esta función se llamará desde el componente
+      console.log(formValues)
       this.controller.editItem(formValues.id, formValues);
       this.renderAll();
     },

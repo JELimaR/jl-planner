@@ -5,6 +5,7 @@ import type { FormItemValues } from '../src/controllers/addItemValues';
 import type { Item } from '../src/models/Item';
 import { Task } from '../src/models/Task';
 import { Process } from '../src/models/Process';
+import { itemToFormValues } from '../src/controllers/dataHelpers';
 
 // Define el estado inicial del formulario
 const initialFormState: FormItemValues = {
@@ -34,7 +35,7 @@ export const useFormItemStore = defineStore('formItem', {
         // Opcional: inicializar el padre del proceso al root por defecto
         const projectStore = useProjectStore();
         if (projectStore.isInitialized) {
-          this.form.parentProcessId = projectStore.controller.getProject().rootProcess.id;
+          this.form.processId = projectStore.controller.getProject().getRoot().id;
         }
       } catch (error) {
         console.error('Error resetting form:', error);
@@ -47,18 +48,7 @@ export const useFormItemStore = defineStore('formItem', {
      */
     loadFormForEdit(item: Item) {
       try {
-        this.form = {
-          id: item.id,
-          type: item.type,
-          name: item.name,
-          detail: item.detail,
-          predecessorIds: Array.from(item.predecessors).map(pred => pred.id),
-          parentProcessId: item.parent?.id,
-          duration: item instanceof Task ? item.duration : undefined,
-          actualStartDate: item.hasActualStartDate() ? item.getStartDate() : undefined,
-          cost: item.cost || 0,
-          useManualCost: item instanceof Process ? item.getUseManualCost() : false, // Incluir useManualCost para procesos
-        };
+        this.form = itemToFormValues(item)
       } catch (error) {
         console.error('Error loading form for edit:', error);
         throw new Error('Error al cargar los datos del item para edición');
@@ -75,6 +65,8 @@ export const useFormItemStore = defineStore('formItem', {
       try {
         if (this.form.id !== -1) {
           // Lógica para editar un item existente
+          if (!!this.form.actualStartDate)
+            this.form.actualStartDate = new Date(this.form.actualStartDate)
           projectStore.editItem(this.form);
         } else {
           // Lógica para agregar un nuevo item

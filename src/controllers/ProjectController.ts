@@ -1,4 +1,4 @@
-import { getProject } from '../models/getProject';
+import { getExampleProject } from '../models/getExampleProject';
 import type { Item } from '../models/Item';
 import { Milestone } from '../models/Milestone';
 import { Process } from '../models/Process';
@@ -6,30 +6,41 @@ import { Project } from '../models/Project';
 import { Task } from '../models/Task';
 import type { FormItemValues } from './addItemValues';
 import { formValuesToItem } from './dataHelpers';
-import { deserializeProject, serializeProject } from './projectSerializer';
+import { deserializeProject, SerializedProject, serializeProject } from './projectSerializer';
 
 export class ProjectController {
   private static instance: ProjectController;
   private project: Project;
 
-  private constructor(startDate: Date) {
-    this.project = new Project(startDate);
+  private constructor(id: string, startDate: Date) {
+    this.createNewProject(id, startDate);
   }
 
-  static getInstance(startDate?: Date): ProjectController {
+  static getInstance(id: string, startDate?: Date): ProjectController {
     if (!this.instance) {
       startDate = startDate || new Date();
-      this.instance = new ProjectController(startDate);
+      this.instance = new ProjectController(id, startDate);
     }
     return this.instance;
   }
 
-  createNewProject(startDate: Date): void {
-    this.project = new Project(startDate);
+  createNewProject(id: string, startDate: Date): void {
+    this.project = new Project(id, startDate);
   }
 
   getProject(): Project {
     return this.project;
+  }
+
+  getAllItems(): Item[] {
+    const out: Item[] = []
+    this.project.getAllItems().forEach(item => {
+
+      out.push(item)
+
+    })
+
+    return out
   }
 
   getAllProcess(): Process[] {
@@ -75,7 +86,7 @@ export class ProjectController {
     }
 
     let newID = parent.children.length + 1;
-    newID += parent.id == this.project.rootProcess.id ? 0 : parent.id * 10;
+    newID += parent.id == this.project.getRoot().id ? 0 : parent.id * 10;
     return newID;
   }
 
@@ -110,61 +121,50 @@ export class ProjectController {
   // En el método editItem, agregar manejo de useManualCost
   editItem(id: number, itemData: FormItemValues): void {
     try {
-      let existingItem = this.project.getItemById(id);
-      if (!existingItem) throw new Error(`Item with ID ${id} not found.`);
-  
-      const typeChanged =
+      const existingItem = this.project.getItemById(id);
+      if (!existingItem) {
+        throw new Error(`Item with ID ${id} not found.`);
+      }
+
+      // Asegurarse de que el tipo de ítem no cambie
+      if (
         (existingItem instanceof Task && itemData.type !== 'task') ||
         (existingItem instanceof Milestone && itemData.type !== 'milestone') ||
-        (existingItem instanceof Process && itemData.type !== 'process');
-  
-      if (existingItem instanceof Process && itemData.type !== 'process') {
-        if (existingItem.children.length > 0) {
-          throw new Error(
-            `No se puede cambiar el tipo de un proceso que contiene ítems hijos.`
-          );
-        }
+        (existingItem instanceof Process && itemData.type !== 'process')
+      ) {
+        throw new Error(`No se puede cambiar el tipo de un ítem.`);
       }
-  
-      if (typeChanged) {
-        this.deleteItem(id);
-        const newItem = formValuesToItem(id, itemData, this.project);
-        const parent = this.project.getItemById(itemData.processId);
-        if (parent instanceof Process) {
-          this.project.addItem(newItem, parent);
-        } else {
-          this.project.addItem(newItem);
-        }
-  
-        itemData.predecessorIds.forEach((predId) => {
-          const pred = this.project.getItemById(predId);
-          if (pred) this.project.addRelation(pred, newItem);
-        });
-        existingItem = newItem;
-  
-        this.project.calculateItemDates();
+
+      // Asegurarse de que el padre no cambie
+      if (
+        (existingItem.parent && itemData.processId && existingItem.parent.id !== itemData.processId) ||
+        (!existingItem.parent && itemData.processId)
+      ) {
+        throw new Error(`No se puede cambiar el padre de un ítem.`);
       }
-  
-      // Si no cambió el tipo
+
       existingItem.name = itemData.name;
       existingItem.detail = itemData.detail;
-      
+
       // Actualizar cost si está disponible
       if (itemData.cost !== undefined) {
         existingItem.setCost(itemData.cost);
       }
-  
+
       // Actualizar useManualCost para procesos
       if (existingItem instanceof Process && itemData.useManualCost !== undefined) {
         existingItem.setUseManualCost(itemData.useManualCost);
       }
-  
+
+      // Eliminar las relaciones de predecesores existentes y añadir las nuevas
       existingItem.predecessors.clear();
       itemData.predecessorIds.forEach((predId) => {
         const pred = this.project.getItemById(predId);
-        if (pred) this.project.addRelation(pred, existingItem);
+        if (pred) {
+          this.project.addRelation(pred, existingItem);
+        }
       });
-  
+
       if (existingItem instanceof Task && itemData.type === 'task') {
         existingItem.setManualDuration(itemData.duration!);
         if (itemData.actualStartDate) {
@@ -172,29 +172,16 @@ export class ProjectController {
         } else {
           existingItem.setActualStartDate(undefined);
         }
-      } else if (
-        existingItem instanceof Milestone &&
-        itemData.type === 'milestone'
-      ) {
+      } else if (existingItem instanceof Milestone && itemData.type === 'milestone') {
         if (itemData.actualStartDate) {
           existingItem.setActualStartDate(itemData.actualStartDate);
         } else {
           existingItem.setActualStartDate(undefined);
         }
       }
-  
-      const newParent = itemData.processId
-        ? this.project.getItemById(itemData.processId)
-        : undefined;
-  
-      if (newParent instanceof Process && existingItem.parent !== newParent) {
-        (existingItem.parent as Process).removeChild(id);
-        newParent.addChild(existingItem);
-        existingItem.parent = newParent;
-      }
-  
-      this.normalizeItemIds();
+
       this.project.calculateItemDates();
+      this.normalizeItemIds();
     } catch (error) {
       console.error('Error editing item:', error);
       throw new Error(`Error al editar item: ${error.message}`);
@@ -249,10 +236,9 @@ export class ProjectController {
       const parentId =
         parent === this.project.getRoot() ? '' : parent.id.toString();
       const newId = Number(
-        `${parentId}${
-          parent === this.project.getRoot()
-            ? counter++
-            : parent.children.indexOf(item) + 1
+        `${parentId}${parent === this.project.getRoot()
+          ? counter++
+          : parent.children.indexOf(item) + 1
         }`
       );
       idMap.set(item.id, newId);
@@ -265,7 +251,7 @@ export class ProjectController {
       assignIds(item, parent);
     };
 
-    newMap.set(this.project.rootProcess.id, this.project.rootProcess);
+    newMap.set(this.project.getRoot().id, this.project.getRoot());
     this.project.traverse(update);
 
     // Reemplazar el mapa global
@@ -292,8 +278,8 @@ export class ProjectController {
   }
 
   /** Carga un proyecto desde un archivo JSON */
-  async loadProjectFromFile(file: File | object): Promise<void> {
-    let json;
+  async loadProjectFromFile(file: File | SerializedProject): Promise<void> {
+    let json: SerializedProject;
     if (file instanceof File) {
       const text = await file.text();
       json = JSON.parse(text);
@@ -306,7 +292,7 @@ export class ProjectController {
   }
 
   chargeExampleProject() {
-    const P = getProject();
+    const P = getExampleProject();
     P.getItemById(21)!.setActualStartDate(new Date('2025-08-29'));
     P.getItemById(3)!.setActualStartDate(new Date('2025-09-29'));
     (P.getItemById(3) as Task).setManualDuration(3);
