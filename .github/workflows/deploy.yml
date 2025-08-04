@@ -3,7 +3,7 @@ name: Deploy Nuxt to GitHub Pages
 on:
   push:
     branches:
-      - vue
+      - main # O el nombre de tu rama principal
 
 jobs:
   build-and-deploy:
@@ -15,10 +15,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # O la versión de Node.js que uses
+          node-version: '18' # Puedes usar una versión más moderna si lo prefieres
 
-      - name: Install dependencies
-        run: npm install
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Paso clave: limpiar antes de instalar
+      - name: Clean install dependencies
+        run: |
+          npm install --force # Usamos --force para ignorar el bug de dependencias opcionales.
 
       - name: Build site
         run: npm run generate # O el comando que uses para generar tu proyecto
@@ -27,4 +37,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # O la carpeta de salida de tu proyecto
+          publish_dir: ./dist # O ./output/public si usas Nuxt 3
