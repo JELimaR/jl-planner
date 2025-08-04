@@ -96,8 +96,8 @@
 </template>
 
 <script setup lang="ts">
-import { useProjectStore } from '../stores/project';
-import { useFormItemStore } from '../stores/formItem';
+import { useProjectStore } from '../../stores/project';
+import { useFormItemStore } from '../../stores/formItem';
 
 const projectStore = useProjectStore();
 const formItemStore = useFormItemStore();

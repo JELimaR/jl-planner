@@ -14,6 +14,12 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vue-final-modal/nuxt',
   ],
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    },
+  ],
   typescript: {
     strict: true
   },

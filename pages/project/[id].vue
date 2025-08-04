@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Header del proyecto (movido desde el layout) -->
+    <!-- Header del proyecto -->
     <ProjectHeader />
 
     <!-- Barra de acciones del proyecto -->
@@ -32,17 +32,22 @@
 
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
-import { useProjectStore } from '../stores/project'
-import { useUIStore } from '../stores/ui'
-import { setProjectItemsColors } from '../src/views/colors'
+import { useRoute } from 'vue-router'
+import { useProjectStore } from '../../stores/project'
+import { useUIStore } from '../../stores/ui'
+import { setProjectItemsColors } from '../../src/views/colors'
 
+const route = useRoute()
 const projectStore = useProjectStore()
 const uiStore = useUIStore()
 
+// Obtener el ID del proyecto desde la ruta
+const projectId = route.params.id as string
+
 onMounted(async () => {
   try {
-    // Inicializar el proyecto
-    await projectStore.initializeProject()
+    // Inicializar el proyecto con el ID específico
+    await projectStore.initializeProject(projectId)
     
     // Configurar eventos globales si es necesario
     if (typeof window !== 'undefined') {

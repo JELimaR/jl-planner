@@ -28,9 +28,9 @@
 
 <script setup>
 import { VueFinalModal } from 'vue-final-modal';
-import { useUIStore } from '../stores/ui';
-import { useProjectStore } from '../stores/project';
-import { useFormItemStore } from '../stores/formItem';
+import { useUIStore } from '../../stores/ui';
+import { useProjectStore } from '../../stores/project';
+import { useFormItemStore } from '../../stores/formItem';
 
 const uiStore = useUIStore();
 const projectStore = useProjectStore();

@@ -21,10 +21,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useProjectStore } from '../stores/project'
-import { ganttRenderer } from '../src/views/ganttRenderer'
-import { setProjectItemsColors } from '../src/views/colors'
-import type { Scale } from '../src/views/ganttHelpers'
+import { useProjectStore } from '../../stores/project'
+import { ganttRenderer } from '../../src/views/ganttRenderer'
+import { setProjectItemsColors } from '../../src/views/colors'
+import type { Scale } from '../../src/views/ganttHelpers'
 
 const projectStore = useProjectStore()
 const ganttContainer = ref<HTMLElement | null>(null)

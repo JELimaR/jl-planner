@@ -52,11 +52,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
-import { useProjectStore } from '../stores/project'
-import { useUIStore } from '../stores/ui'
-import { Task } from '../src/models/Task'
-import { processColorMap } from '../src/views/colors'
-import type { Item } from '../src/models/Item'
+import { useProjectStore } from '../../stores/project'
+import { useUIStore } from '../../stores/ui'
+import { Task } from '../../src/models/Task'
+import { processColorMap } from '../../src/views/colors'
+import type { Item } from '../../src/models/Item'
 
 const projectStore = useProjectStore()
 const uiStore = useUIStore()

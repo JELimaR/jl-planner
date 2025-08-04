@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { useProjectStore } from '../stores/project'
+import { useProjectStore } from '../../stores/project'
 
 const projectStore = useProjectStore()
 

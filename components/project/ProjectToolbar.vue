@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useProjectStore } from '../stores/project'
+import { useProjectStore } from '../../stores/project'
 
 const projectStore = useProjectStore()
 const fileInput = ref<HTMLInputElement>()

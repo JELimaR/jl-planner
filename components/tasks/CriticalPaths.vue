@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { useProjectStore } from '../stores/project'
+import { useProjectStore } from '../../stores/project'
 
 const projectStore = useProjectStore()
 const criticalPaths = computed(() => projectStore.controller.getProject().getCriticalPaths())

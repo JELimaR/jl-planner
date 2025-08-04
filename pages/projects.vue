@@ -3,8 +3,8 @@
     <div class="row justify-content-center">
       <div class="col-lg-10">
         <div class="text-center mb-5">
-          <h1 class="display-4 fw-bold text-primary">JL Planner</h1>
-          <p class="lead text-muted">Gestiona tus proyectos de manera eficiente</p>
+          <h1 class="display-4 fw-bold text-primary">Seleccionar Proyecto</h1>
+          <p class="lead text-muted">Elige un proyecto para trabajar</p>
         </div>
         
         <ProjectList 
@@ -39,10 +39,10 @@ interface ProjectItem {
 // Estado reactivo
 const projects = ref<ProjectItem[]>([])
 
-// Cargar proyectos (simulado - aquí conectarías con tu API/store)
+// Cargar proyectos
 const loadProjects = async () => {
   try {
-    // Simulación de datos - reemplaza con tu lógica real
+    // Aquí cargarías los proyectos desde tu API/store
     projects.value = [
       {
         id: 'project-001',
@@ -54,28 +54,6 @@ const loadProjects = async () => {
         progress: 65,
         createdAt: new Date('2024-01-15'),
         updatedAt: new Date()
-      },
-      {
-        id: 'project-002',
-        title: 'Desarrollo Web',
-        description: 'Sitio web corporativo con funcionalidades avanzadas.',
-        lastAccess: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // hace 2 días
-        isActive: false,
-        itemCount: 8,
-        progress: 30,
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 'project-003',
-        title: 'App Mobile',
-        description: 'Aplicación móvil para gestión de inventarios.',
-        lastAccess: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // hace 1 semana
-        isActive: false,
-        itemCount: 22,
-        progress: 85,
-        createdAt: new Date('2023-12-10'),
-        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
       }
     ]
   } catch (error) {
@@ -85,28 +63,21 @@ const loadProjects = async () => {
 
 // Handlers para eventos del componente
 const handleCreateProject = () => {
-  // Lógica para crear nuevo proyecto
   console.log('Crear nuevo proyecto')
-  // Aquí podrías abrir un modal o navegar a una página de creación
 }
 
 const handleEditProject = (project: ProjectItem) => {
-  // Lógica para editar proyecto
   console.log('Editar proyecto:', project)
-  // Aquí podrías abrir un modal de edición
 }
 
 const handleDeleteProject = (project: ProjectItem) => {
-  // Lógica para eliminar proyecto
   console.log('Eliminar proyecto:', project)
-  // Aquí podrías mostrar un modal de confirmación
   if (confirm(`¿Estás seguro de que quieres eliminar el proyecto "${project.title}"?`)) {
     projects.value = projects.value.filter(p => p.id !== project.id)
   }
 }
 
 const handleDuplicateProject = (project: ProjectItem) => {
-  // Lógica para duplicar proyecto
   console.log('Duplicar proyecto:', project)
   const newProject: ProjectItem = {
     ...project,
@@ -125,9 +96,3 @@ onMounted(() => {
   loadProjects()
 })
 </script>
-
-<style scoped>
-.display-4 {
-  font-size: 2.5rem;
-}
-</style>

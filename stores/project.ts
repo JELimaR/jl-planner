@@ -15,10 +15,17 @@ export const useProjectStore = defineStore('project', {
   }),
   
   actions: {
-    async initializeProject() {
-      if (this.isInitialized) return
-      
+    // In the project store, update the initializeProject method
+    async initializeProject(projectId?: string) {
       try {
+        if (projectId) {
+          // Load specific project by ID
+          // Implement your project loading logic here
+          console.log('Loading project:', projectId)
+        } else {
+          // Load default project or handle no project case
+          console.log('Loading default project')
+        }
         const response = await fetch('/project.json')
         if (!response.ok) throw new Error('No se pudo cargar project.json')
         const json = await response.json()

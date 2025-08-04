@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getTimeUnitsBetween, SCALE_OPTIONS, type Scale } from '../src/views/ganttHelpers'
+import { getTimeUnitsBetween, SCALE_OPTIONS, type Scale } from '../../src/views/ganttHelpers'
 
 interface Props {
   scale: Scale
