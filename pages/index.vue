@@ -7,13 +7,38 @@
           <!--<p class="lead text-muted">Gestiona tus proyectos de manera eficiente</p>-->
         </div>
         
-        <ProjectList 
-          :projects="projects"
-          @create-project="handleCreateProject"
-          @edit-project="handleEditProject"
-          @delete-project="handleDeleteProject"
-          @duplicate-project="handleDuplicateProject"
-        />
+        
+          <div class="project-list">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Mis Proyectos</h4>
+      <button class="btn btn-primary btn-sm" @click="createProject">
+        <i class="bi bi-plus-circle"></i> Nuevo Proyecto
+      </button>
+    </div>
+    
+    <div v-if="projects.length === 0" class="text-center py-5">
+      <div class="text-muted">
+        <i class="bi bi-folder2-open" style="font-size: 3rem;"></i>
+        <p class="mt-3">No tienes proyectos aún</p>
+        <button class="btn btn-primary" @click="createProject">
+          Crear tu primer proyecto
+        </button>
+      </div>
+    </div>
+    
+    <div v-else class="list-group">
+      <ProjectCard 
+        v-for="project in projects" 
+        :key="project.id"
+        :project="project"
+        @edit-project="editProject"
+        @delete-project="deleteProject"
+        @duplicate-project="duplicateProject"
+      />
+    </div>
+  </div>
+        
+
       </div>
     </div>
   </div>
@@ -21,7 +46,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import ProjectList from '../components/project/ProjectList.vue'
+import { IProjectData } from '../src/models/Project'
 
 // Definir la interfaz del proyecto
 interface ProjectItem {
@@ -37,7 +62,7 @@ interface ProjectItem {
 }
 
 // Estado reactivo
-const projects = ref<ProjectItem[]>([])
+const projects = ref<IProjectData[]>([])
 
 // Cargar proyectos (simulado - aquí conectarías con tu API/store)
 const loadProjects = async () => {
@@ -45,38 +70,26 @@ const loadProjects = async () => {
     // Simulación de datos - reemplaza con tu lógica real
     projects.value = [
       {
-        id: 'project-001',
-        title: 'Proyecto Principal',
-        description: 'Proyecto de ejemplo con tareas y milestones.',
-        lastAccess: new Date(),
-        isActive: true,
-        itemCount: 15,
-        progress: 65,
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date()
+        id: 'p001',
+        title: 'Blank Project',
+        subTitle: 'Caso en blanco',
+        //createdAt: new Date('2024-01-15'),
+        //updatedAt: new Date()
       },
       {
-        id: 'project-002',
-        title: 'Desarrollo Web',
-        description: 'Sitio web corporativo con funcionalidades avanzadas.',
-        lastAccess: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // hace 2 días
-        isActive: false,
-        itemCount: 8,
-        progress: 30,
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+        id: 'p002',
+        title: 'SS MT',
+        subTitle: 'Ejemplo solicitud de suministro en MT.',
+        //createdAt: new Date('2024-02-01'),
+        //updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
       },
       {
-        id: 'project-003',
-        title: 'App Mobile',
-        description: 'Aplicación móvil para gestión de inventarios.',
-        lastAccess: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // hace 1 semana
-        isActive: false,
-        itemCount: 22,
-        progress: 85,
-        createdAt: new Date('2023-12-10'),
-        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-      }
+        id: 'p003',
+        title: 'Ejemplo',
+        subTitle: 'Ejemplo de pruebas.',
+        //createdAt: new Date('2024-02-01'),
+        //updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      },
     ]
   } catch (error) {
     console.error('Error loading projects:', error)
@@ -84,19 +97,19 @@ const loadProjects = async () => {
 }
 
 // Handlers para eventos del componente
-const handleCreateProject = () => {
+const createProject = () => {
   // Lógica para crear nuevo proyecto
   console.log('Crear nuevo proyecto')
   // Aquí podrías abrir un modal o navegar a una página de creación
 }
 
-const handleEditProject = (project: ProjectItem) => {
+const editProject = (project: IProjectData) => {
   // Lógica para editar proyecto
   console.log('Editar proyecto:', project)
   // Aquí podrías abrir un modal de edición
 }
 
-const handleDeleteProject = (project: ProjectItem) => {
+const deleteProject = (project: IProjectData) => {
   // Lógica para eliminar proyecto
   console.log('Eliminar proyecto:', project)
   // Aquí podrías mostrar un modal de confirmación
@@ -105,17 +118,14 @@ const handleDeleteProject = (project: ProjectItem) => {
   }
 }
 
-const handleDuplicateProject = (project: ProjectItem) => {
+const duplicateProject = (project: IProjectData) => {
   // Lógica para duplicar proyecto
   console.log('Duplicar proyecto:', project)
-  const newProject: ProjectItem = {
+  const newProject: IProjectData = {
     ...project,
     id: `${project.id}-copy-${Date.now()}`,
     title: `${project.title} (Copia)`,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastAccess: new Date(),
-    isActive: false
+    subTitle: `${project.subTitle}`,
   }
   projects.value.unshift(newProject)
 }
