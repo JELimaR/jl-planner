@@ -1,40 +1,58 @@
+# Nombre del flujo de trabajo
 name: Deploy Nuxt to GitHub Pages
 
+# Disparador: el flujo se ejecuta en cada push a la rama principal (main)
 on:
   push:
     branches:
-      - main # O el nombre de tu rama principal
+      - main
 
+# Define un trabajo (job) que se ejecutará
 jobs:
   build-and-deploy:
+    # Se ejecuta en un sistema Ubuntu
     runs-on: ubuntu-latest
+
+    # Pasos del trabajo
     steps:
+      # Paso 1: Clonar el repositorio
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          # Permite que el bot del flujo tenga permisos para crear commits en la rama de despliegue
+          fetch-depth: 0
 
+      # Paso 2: Configurar el entorno de Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18' # Puedes usar una versión más moderna si lo prefieres
+          # Versión de Node.js a usar. Se recomienda una versión LTS.
+          node-version: '20'
+          cache: 'npm' # Habilita el cacheo para acelerar la instalación de dependencias
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      # Paso 3: Instalar dependencias de forma segura
+      # Usamos `npm ci` (clean install) que es ideal para CI/CD y más rápido
+      # El comando `--force` ayuda a solucionar problemas con dependencias opcionales
+      - name: Install dependencies
+        run: npm ci --force
 
-      # Paso clave: limpiar antes de instalar
-      - name: Clean install dependencies
-        run: |
-          npm install --force # Usamos --force para ignorar el bug de dependencias opcionales.
+      # Paso 4: Construir la aplicación estática
+      # Este paso genera la carpeta de despliegue (`dist` o `.output/public`)
+      - name: Generate static site
+        run: npm run generate # Utiliza `npm run generate` para Nuxt 2
+        # Si usas Nuxt 3, cambia la línea de arriba por:
+        # run: npx nuxi generate
 
-      - name: Build site
-        run: npm run generate # O el comando que uses para generar tu proyecto
-
+      # Paso 5: Desplegar en GitHub Pages
+      # Este paso toma la carpeta generada y la sube a la rama `gh-pages`
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
+          # El token de GitHub se inyecta automáticamente para la autenticación
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # O ./output/public si usas Nuxt 3
+          # Ruta de la carpeta que contiene los archivos para el despliegue
+          # Si usas Nuxt 2, la carpeta es `dist`
+          # Si usas Nuxt 3, la carpeta es `.output/public`
+          publish_dir: ./dist # Asegúrate de que esta ruta sea correcta para tu proyecto
+          # La rama de despliegue. `gh-pages` es el estándar.
+          publish_branch: gh-pages
