@@ -3,8 +3,8 @@ import { Process } from './Process';
 import { Project } from './Project';
 import { Task } from './Task';
 
-export function getProject(): Project {
-  const project = new Project(new Date('2025-09-01'));
+export function getExampleProject(): Project {
+  const project = new Project('example', new Date('2025-09-01'));
 
   const p1 = new Process(1, 'Planificación');
   project.addItem(p1);
