@@ -4,11 +4,11 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
         <NuxtLink to="/" class="navbar-brand">
-          <i class="bi bi-house"></i> JL Planner
+          <i class="bi bi-house"></i> Home
         </NuxtLink>
         <div class="navbar-nav ms-auto">
-          <NuxtLink to="/" class="nav-link">Inicio</NuxtLink>
-          <NuxtLink to="/project" class="nav-link">Proyecto</NuxtLink>
+          <!--<NuxtLink to="/" class="nav-link">Inicio</NuxtLink>-->
+          <!--<NuxtLink to="/project" class="nav-link">Proyecto</NuxtLink>-->
         </div>
       </div>
     </nav>
@@ -21,7 +21,7 @@
     <!-- Footer -->
     <footer class="footer bg-light mt-auto py-3">
       <div class="container text-center">
-        <span class="text-muted">© 2024 JL Planner - Gestión de Proyectos</span>
+        <span class="text-muted">© 2024 Planner - Gestión</span>
       </div>
     </footer>
   </div>

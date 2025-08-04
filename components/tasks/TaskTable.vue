@@ -64,16 +64,26 @@ const uiStore = useUIStore()
 // Obtener los items del proyecto
 const items = computed(() => {
   const allItems: Item[] = []
-  projectStore.controller.getProject().traverse((item) => {
-    allItems.push(item)
+  projectStore.controller.getAllItems().forEach((item: Item) => {
+    if (item !== projectStore.controller.getProject().getRoot()) {
+      allItems.push(item)
+    }
   })
   return allItems
 })
 
 // Formatear fecha
 const formatDate = (date?: Date): string => {
-  return date ? date.toISOString().split('T')[0] : ''
-}
+  if (!date) {
+    return '';
+  }
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses en JavaScript van de 0 a 11
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+};
 
 // Obtener el nivel de profundidad del item
 const getDepth = (item: Item): number => {

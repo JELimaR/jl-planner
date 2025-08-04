@@ -3,8 +3,8 @@
     <div class="row justify-content-center">
       <div class="col-lg-10">
         <div class="text-center mb-5">
-          <h1 class="display-4 fw-bold text-primary">JL Planner</h1>
-          <p class="lead text-muted">Gestiona tus proyectos de manera eficiente</p>
+          <h1 class="display-4 fw-bold text-primary">Planner</h1>
+          <!--<p class="lead text-muted">Gestiona tus proyectos de manera eficiente</p>-->
         </div>
         
         <ProjectList 
