@@ -16,10 +16,10 @@ export class DependencyGraph {
    * Agrega un nodo (Task o Milestone) al grafo.
    */
   addNode(item: TNode): void {
-    if (!this.nodes.has(item.id)) {
-      this.nodes.set(item.id, item);
-      this.edges.set(item.id, new Set());
-      this.reverseEdges.set(item.id, new Set());
+    if (!this.nodes.has(item._id)) {
+      this.nodes.set(item._id, item);
+      this.edges.set(item._id, new Set());
+      this.reverseEdges.set(item._id, new Set());
     }
   }
 
@@ -99,8 +99,8 @@ export class DependencyGraph {
 
     graph.nodes.forEach((value: TNode) => {
       value.predecessors.forEach((prede: Item) => {
-        if (graph.nodes.has(prede.id)) {
-          graph.addEdge(prede.id, value.id);
+        if (graph.nodes.has(prede._id)) {
+          graph.addEdge(prede._id, value._id);
         }
       });
     });

@@ -1,4 +1,4 @@
-import { Item } from './Item';
+import { Item, type IProcessData } from './Item';
 
 export class Process extends Item {
   hasActualStartDate(): boolean {
@@ -10,7 +10,7 @@ export class Process extends Item {
   getCalculatedEndDate(): Date | undefined {
     throw new Error('Method not implemented.');
   }
-  type: 'process' = 'process';
+  _type: 'process' = 'process';
   private _children: Item[] = [];
   private useManualCost: boolean = false; // Nuevo campo para indicar si usar costo manual
 
@@ -43,7 +43,7 @@ export class Process extends Item {
         return total + child.getTotalCost();
       }, 0);
     } catch (error) {
-      console.error('Error calculating children cost for process:', this.name, error);
+      console.error('Error calculating children cost for process:', this._name, error);
       return 0;
     }
   }
@@ -52,12 +52,12 @@ export class Process extends Item {
   getTotalCost(): number {
     try {
       if (this.useManualCost) {
-        return this.cost; // Usar costo manual
+        return this._cost; // Usar costo manual
       } else {
         return this.calculateChildrenCost(); // Usar costo calculado (suma de hijos)
       }
     } catch (error) {
-      console.error('Error getting total cost for process:', this.name, error);
+      console.error('Error getting total cost for process:', this._name, error);
       return 0;
     }
   }
@@ -126,7 +126,7 @@ export class Process extends Item {
   addChild(item: Item): void {
     this._children.push(item);
     this.predecessors.forEach((p) => item.addPredecessor(p));
-    item.parent = this;
+    item._parent = this;
   }
 
   /**
@@ -134,7 +134,7 @@ export class Process extends Item {
    */
   removeChild(id: number): boolean {
     const initialLength = this._children.length;
-    this._children = this._children.filter((child) => child.id !== id);
+    this._children = this._children.filter((child) => child._id !== id);
     return this._children.length < initialLength;
   }
 
@@ -156,5 +156,20 @@ export class Process extends Item {
 
   getDelayInDays(): number {
     return 0; // Procesos no tienen delay directo, es derivado de sus hijos.
+  }
+
+  /** Implementación específica para Process */
+  get data(): IProcessData {
+    return {
+      id: this._id,
+      type: this._type,
+      name: this._name,
+      detail: this._detail,
+      cost: this._cost,
+      processId: this._parent?._id ?? -1,
+      predecessorIds: Array.from(this.predecessors).map((item) => item._id),
+      children: this._children.map(child => child.data),
+      useManualCost: this.useManualCost
+    };
   }
 }

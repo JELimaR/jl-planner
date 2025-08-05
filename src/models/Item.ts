@@ -1,11 +1,45 @@
-export abstract class Item {
+// Interfaz base para herencia
+export interface IItemData {
   id: number;
   type: 'task' | 'milestone' | 'process';
   name: string;
-  parent?: Item;
   detail?: string;
-  color?: string;
-  cost: number = 0; // Nuevo campo cost
+  cost: number;
+  processId: number;
+  predecessorIds: number[];
+}
+
+// Interfaz específica para Task
+export interface ITaskData extends IItemData {
+  type: 'task';
+  duration: number;
+  actualStartDate?: string; // ISO format
+  calculatedStartDate?: string; // ISO format
+  manualDuration?: number;
+}
+
+// Interfaz específica para Process
+export interface IProcessData extends IItemData {
+  type: 'process';
+  children: IItemData[];
+  useManualCost: boolean;
+}
+
+// Interfaz específica para Milestone
+export interface IMilestoneData extends IItemData {
+  type: 'milestone';
+  calculatedDate?: string; // ISO format
+  actualStartDate?: string; // ISO format
+}
+
+export abstract class Item {
+  _id: number;
+  _type: 'task' | 'milestone' | 'process';
+  _name: string;
+  _parent?: Item;
+  _detail?: string;
+  _color?: string;
+  private _cost: number = 0; // Nuevo campo cost
   _isCritical: boolean = false;
 
   // IDs de los ítems de los que depende este ítem
@@ -19,12 +53,12 @@ export abstract class Item {
     detail?: string,
     cost: number = 0 // Agregar cost al constructor
   ) {
-    this.id = id;
-    this.type = type;
-    this.name = name;
-    this.parent = parent;
-    this.detail = detail;
-    this.cost = cost;
+    this._id = id;
+    this._type = type;
+    this._name = name;
+    this._parent = parent;
+    this._detail = detail;
+    this._cost = cost;
   }
 
   setCritial() {
@@ -36,6 +70,9 @@ export abstract class Item {
   get isCritical() {
     return this._isCritical;
   }
+
+  /** */
+  abstract get data(): IItemData;
 
   /** Devuelve la fecha de inicio real (puede ser manual o calculada) */
   abstract getStartDate(): Date | undefined;
@@ -80,6 +117,6 @@ export abstract class Item {
 
   /** Establece el costo del item */
   setCost(cost: number): void {
-    this.cost = Math.max(0, cost); // Asegurar que no sea negativo
+    this._cost = Math.max(0, cost); // Asegurar que no sea negativo
   }
 }
