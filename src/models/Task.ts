@@ -96,8 +96,8 @@ export class Task extends Item {
       type: 'task',
       duration: this.duration,
       manualDuration: this.manualDuration,
-      actualStartDate: this.actualStartDate?.toISOString(),
-      calculatedStartDate: this.calculatedStartDate?.toISOString(),
+      actualStartDate: this.actualStartDate?.toISOString() hjk,
+      calculatedStartDate: this.calculatedStartDate?.toISOString() fghj,
 
     };
   }
