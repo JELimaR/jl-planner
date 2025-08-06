@@ -26,6 +26,9 @@
             <td>{{ formatDateToDisplay(item.getEndDate()!) }}</td>
             <td>{{ getPredecessors(item) }}</td>
             <td class="action-buttons">
+              <div
+              v-if="item.id !== projectStore.controller.getProject().getStartMilestone().id && item.id !== projectStore.controller.getProject().getEndMilestone().id"
+              >
               <button
                 class="btn btn-sm btn-light"
                 @click="changeOrder(item, 'up')"
@@ -43,12 +46,12 @@
               <button
                 class="btn btn-sm btn-primary"
                 @click="editItem(item)"
-                v-if="item.id !== projectStore.controller.getProject().getStartMilestone().id || item.id !== projectStore.controller.getProject().getEndMilestone().id"
               >✏️</button>
               <button
                 class="btn btn-sm btn-danger"
                 @click="deleteItem(item)"
               >🗑️</button>
+            </div>
             </td>
           </tr>
         </tbody>
