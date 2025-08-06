@@ -3,6 +3,7 @@ import { Milestone } from '../models/Milestone';
 import { Process } from '../models/Process';
 import { Project } from '../models/Project';
 import { Task } from '../models/Task';
+import { formatDateToDisplay } from '../models/dateFunc';
 
 export interface IProjectData {
   id: string;
@@ -13,49 +14,15 @@ export interface IProjectData {
 }
 
 export function serializeProject(project: Project): IProjectData {
-  const startDate = project.getProjectStartDate().toISOString();
+  const startDate = formatDateToDisplay(project.getProjectStartDate());
   const items: IItemData[] = [];
 
-  const serializeItem = (item: Item, parent: Process): IItemData => {
-    const base = {
-      id: item._id,
-      name: item._name,
-      detail: item._detail,
-      processId: parent._id,
-      predecessorIds: Array.from(item.predecessors).map((p) => p._id),
-      cost: item.getTotalCost(),
-    };
-
-    if (item instanceof Task) {
-      return {
-        ...base,
-        type: 'task',
-        duration: item.duration,
-        actualStartDate: item.hasActualStartDate()
-          ? item.getStartDate()!.toISOString()
-          : undefined,
-      };
-    } else if (item instanceof Milestone) {
-      return {
-        ...base,
-        type: 'milestone',
-        actualStartDate: item.hasActualStartDate()
-          ? item.getStartDate()!.toISOString()
-          : undefined,
-      };
-    } else if (item instanceof Process) {
-      return {
-        ...base,
-        type: 'process',
-        children: item.children.map((child) => serializeItem(child, item)),
-      };
-    } else {
-      throw new Error('Unknown item type');
-    }
+  const serializeItem = (item: Item): IItemData => {
+    return item.data;
   };
 
   for (const child of project.getRoot().children) {
-    items.push(serializeItem(child, project.getRoot()));
+    items.push(child.data);
   }
 
   return {

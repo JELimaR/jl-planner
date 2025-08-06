@@ -191,7 +191,7 @@ export class Project {
 
     out.forEach((criticalPath: CriticalPath) => {
       criticalPath.path.forEach((item) => {
-        item.setCritial();
+        item.setCritical();
       });
     });
 

@@ -1,4 +1,10 @@
-import { Item, type IProcessData } from './Item';
+import { IItemData, Item } from './Item';
+
+export interface IProcessData extends IItemData {
+  type: 'process';
+  children: IItemData[];
+  useManualCost: boolean;
+}
 
 export class Process extends Item {
   hasActualStartDate(): boolean {
@@ -12,7 +18,7 @@ export class Process extends Item {
   }
   _type: 'process' = 'process';
   private _children: Item[] = [];
-  private useManualCost: boolean = false; // Nuevo campo para indicar si usar costo manual
+  private _useManualCost: boolean = false; // Nuevo campo para indicar si usar costo manual
 
   constructor(
     id: number, 
@@ -23,17 +29,17 @@ export class Process extends Item {
     useManualCost: boolean = false // Agregar parámetro para usar costo manual
   ) {
     super(id, 'process', name, parent, detail, cost);
-    this.useManualCost = useManualCost;
+    this._useManualCost = useManualCost;
   }
 
   /** Establece si debe usar el costo manual o calculado */
   setUseManualCost(useManual: boolean): void {
-    this.useManualCost = useManual;
+    this._useManualCost = useManual;
   }
 
   /** Obtiene si está usando costo manual */
   getUseManualCost(): boolean {
-    return this.useManualCost;
+    return this._useManualCost;
   }
 
   /** Calcula el costo sumando los costos de los hijos */
@@ -51,8 +57,8 @@ export class Process extends Item {
   /** Implementación del costo total para Process (manual o calculado según configuración) */
   getTotalCost(): number {
     try {
-      if (this.useManualCost) {
-        return this._cost; // Usar costo manual
+      if (this._useManualCost) {
+        return super.getTotalCost(); // Usar costo manual
       } else {
         return this.calculateChildrenCost(); // Usar costo calculado (suma de hijos)
       }
@@ -161,15 +167,11 @@ export class Process extends Item {
   /** Implementación específica para Process */
   get data(): IProcessData {
     return {
-      id: this._id,
-      type: this._type,
-      name: this._name,
-      detail: this._detail,
-      cost: this._cost,
-      processId: this._parent?._id ?? -1,
-      predecessorIds: Array.from(this.predecessors).map((item) => item._id),
+      ...super.data,
+      type: 'process',
+      cost: this.getTotalCost(),
       children: this._children.map(child => child.data),
-      useManualCost: this.useManualCost
+      useManualCost: this._useManualCost
     };
   }
 }

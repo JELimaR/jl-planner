@@ -9,29 +9,6 @@ export interface IItemData {
   predecessorIds: number[];
 }
 
-// Interfaz específica para Task
-export interface ITaskData extends IItemData {
-  type: 'task';
-  duration: number;
-  actualStartDate?: string; // ISO format
-  calculatedStartDate?: string; // ISO format
-  manualDuration?: number;
-}
-
-// Interfaz específica para Process
-export interface IProcessData extends IItemData {
-  type: 'process';
-  children: IItemData[];
-  useManualCost: boolean;
-}
-
-// Interfaz específica para Milestone
-export interface IMilestoneData extends IItemData {
-  type: 'milestone';
-  calculatedDate?: string; // ISO format
-  actualStartDate?: string; // ISO format
-}
-
 export abstract class Item {
   _id: number;
   _type: 'task' | 'milestone' | 'process';
@@ -61,7 +38,7 @@ export abstract class Item {
     this._cost = cost;
   }
 
-  setCritial() {
+  setCritical() {
     this._isCritical = true;
   }
   resetCritical() {
@@ -72,7 +49,17 @@ export abstract class Item {
   }
 
   /** */
-  abstract get data(): IItemData;
+  get data(): IItemData {
+    return {
+      id: this._id,
+      type: this._type,
+      name: this._name,
+      detail: this._detail,
+      cost: this._cost,
+      processId: this._parent?._id ?? -1,
+      predecessorIds: Array.from(this.predecessors).map((item) => item._id),
+    }
+  }
 
   /** Devuelve la fecha de inicio real (puede ser manual o calculada) */
   abstract getStartDate(): Date | undefined;
@@ -113,7 +100,9 @@ export abstract class Item {
   }*/
 
   /** Método abstracto para obtener el costo total (implementado diferente en Process) */
-  abstract getTotalCost(): number;
+  getTotalCost(): number {
+    return this._cost;
+  }
 
   /** Establece el costo del item */
   setCost(cost: number): void {
