@@ -32,19 +32,19 @@ export class Project {
 
     // Crear el proceso raíz
     this.rootProcess = new Process(1001, 'Project Root Process');
-    this.allItemsMap.set(this.rootProcess.id, this.rootProcess);
+    this.allItemsMap.set(this.rootProcess._id, this.rootProcess);
 
     // Crear el hito de inicio
     this.startMilestone = new Milestone(1000, 'start', this.rootProcess);
     this.startMilestone.setCalculatedStartDate(startDate);
-    this.allItemsMap.set(this.startMilestone.id, this.startMilestone);
+    this.allItemsMap.set(this.startMilestone._id, this.startMilestone);
     this.rootProcess.addChild(this.startMilestone);
 
     // Crear el hito final
     this.endMilestone = new Milestone(1002, 'end', this.rootProcess);
     this.endMilestone.setCalculatedStartDate(startDate);
     this.rootProcess.addChild(this.endMilestone);
-    this.allItemsMap.set(this.endMilestone.id, this.endMilestone);
+    this.allItemsMap.set(this.endMilestone._id, this.endMilestone);
   }
 
   title: string = 'Proyecto sin título';
@@ -76,24 +76,24 @@ export class Project {
    * Se agrega el item a las dependencias de endMilestone
    */
   addItem(item: Item, parent?: Process): void {
-    if (this.allItemsMap.has(item.id)) {
-      console.error(`Ya existe el item: ID ${item.id}`);
+    if (this.allItemsMap.has(item._id)) {
+      console.error(`Ya existe el item: ID ${item._id}`);
     } else {
-      this.allItemsMap.set(item.id, item);
+      this.allItemsMap.set(item._id, item);
     }
-    if (parent && parent.id !== this.rootProcess.id) {
+    if (parent && parent._id !== this.rootProcess._id) {
       parent.addChild(item);
       parent.predecessors.forEach((dep: Item) => {
         this.addRelation(dep, item);
       });
-      item.parent = parent;
+      item._parent = parent;
     } else {
       if (item.predecessors.size === 0) {
         this.addRelation(this.startMilestone, item);
       }
-      item.parent = this.rootProcess;
+      item._parent = this.rootProcess;
       // Quitar el hito final para insertar el nuevo item antes que él
-      this.rootProcess.removeChild(this.endMilestone.id);
+      this.rootProcess.removeChild(this.endMilestone._id);
       this.rootProcess.addChild(item);
       this.rootProcess.addChild(this.endMilestone);
       this.addRelation(item, this.endMilestone);
@@ -111,7 +111,7 @@ export class Project {
   }
 
   addRelation(pre: Item, suc: Item) {
-    if (pre.id == suc.id) {
+    if (pre._id == suc._id) {
       return;
     }
     if (pre instanceof Process) {
@@ -185,13 +185,13 @@ export class Project {
 
     const out = getCriticalPathsFromGraph(
       graph,
-      this.startMilestone.id,
-      this.endMilestone.id
+      this.startMilestone._id,
+      this.endMilestone._id
     );
 
     out.forEach((criticalPath: CriticalPath) => {
       criticalPath.path.forEach((item) => {
-        item.setCritial();
+        item.setCritical();
       });
     });
 

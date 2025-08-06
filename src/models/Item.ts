@@ -1,11 +1,22 @@
-export abstract class Item {
+// Interfaz base para herencia
+export interface IItemData {
   id: number;
   type: 'task' | 'milestone' | 'process';
   name: string;
-  parent?: Item;
   detail?: string;
-  color?: string;
-  cost: number = 0; // Nuevo campo cost
+  cost: number;
+  processId: number;
+  predecessorIds: number[];
+}
+
+export abstract class Item {
+  _id: number;
+  _type: 'task' | 'milestone' | 'process';
+  _name: string;
+  _parent?: Item;
+  _detail?: string;
+  _color?: string;
+  private _cost: number = 0; // Nuevo campo cost
   _isCritical: boolean = false;
 
   // IDs de los ítems de los que depende este ítem
@@ -19,15 +30,15 @@ export abstract class Item {
     detail?: string,
     cost: number = 0 // Agregar cost al constructor
   ) {
-    this.id = id;
-    this.type = type;
-    this.name = name;
-    this.parent = parent;
-    this.detail = detail;
-    this.cost = cost;
+    this._id = id;
+    this._type = type;
+    this._name = name;
+    this._parent = parent;
+    this._detail = detail;
+    this._cost = cost;
   }
 
-  setCritial() {
+  setCritical() {
     this._isCritical = true;
   }
   resetCritical() {
@@ -35,6 +46,19 @@ export abstract class Item {
   }
   get isCritical() {
     return this._isCritical;
+  }
+
+  /** */
+  get data(): IItemData {
+    return {
+      id: this._id,
+      type: this._type,
+      name: this._name,
+      detail: this._detail,
+      cost: this._cost,
+      processId: this._parent?._id ?? -1,
+      predecessorIds: Array.from(this.predecessors).map((item) => item._id),
+    }
   }
 
   /** Devuelve la fecha de inicio real (puede ser manual o calculada) */
@@ -76,10 +100,12 @@ export abstract class Item {
   }*/
 
   /** Método abstracto para obtener el costo total (implementado diferente en Process) */
-  abstract getTotalCost(): number;
+  getTotalCost(): number {
+    return this._cost;
+  }
 
   /** Establece el costo del item */
   setCost(cost: number): void {
-    this.cost = Math.max(0, cost); // Asegurar que no sea negativo
+    this._cost = Math.max(0, cost); // Asegurar que no sea negativo
   }
 }

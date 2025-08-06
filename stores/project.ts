@@ -48,7 +48,7 @@ export const useProjectStore = defineStore('project', {
     },
     
     newProject() {
-      this.controller.createNewProject('idP', new Date())
+      this.controller.createNewProject('new', new Date())
       this.updateProjectDates()
       this.renderAll()
     },

@@ -1,11 +1,17 @@
 import { DAY_MS } from '../views/ganttHelpers';
-import { Item } from './Item';
+import { IItemData, Item } from './Item';
 import type { Process } from './Process';
+
+export interface IMilestoneData extends IItemData {
+  type: 'milestone';
+  calculatedDate?: string; // ISO format
+  actualStartDate?: string; // ISO format
+}
 
 export class Milestone extends Item {
   private calculatedDate?: Date;
   private actualStartDate?: Date;
-  type: 'milestone' = 'milestone';
+  _type: 'milestone' = 'milestone';
 
   constructor(
     id: number, 
@@ -15,11 +21,6 @@ export class Milestone extends Item {
     cost: number = 0 // Agregar cost al constructor
   ) {
     super(id, 'milestone', name, parent, detail, cost);
-  }
-
-  /** Implementación del costo total para Milestone (es su propio costo) */
-  getTotalCost(): number {
-    return this.cost;
   }
 
   /** Fecha mostrada (real o planificada) */
@@ -57,5 +58,15 @@ export class Milestone extends Item {
 
   hasActualStartDate(): boolean {
     return !!this.actualStartDate;
+  }
+
+  /** Implementación específica para Milestone */
+  get data(): IMilestoneData {
+    return {
+      ...super.data,
+      type: 'milestone',
+      actualStartDate: this.actualStartDate?.toISOString() asdf,
+      calculatedDate: this.calculatedDate?.toISOString(),
+    };
   }
 }

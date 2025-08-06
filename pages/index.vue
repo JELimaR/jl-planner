@@ -41,6 +41,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { IProjectData } from '../src/models/Project'
+import { useProjectStore } from '../stores/project'
+import { useRoute } from 'vue-router';
+import { navigateTo } from 'nuxt/app';
+
+const projectStore = useProjectStore()
 
 // Definir la interfaz del proyecto
 interface ProjectItem {
@@ -93,8 +98,10 @@ const loadProjects = async () => {
 // Handlers para eventos del componente
 const createProject = () => {
   // Lógica para crear nuevo proyecto
-  console.log('Crear nuevo proyecto')
+  console.log('Crear nuevo proyectooO')
   // Aquí podrías abrir un modal o navegar a una página de creación
+  projectStore.newProject()
+  navigateTo(`project/${projectStore.controller.getProject().getId()}`)
 }
 
 const editProject = (project: IProjectData) => {

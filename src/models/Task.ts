@@ -1,5 +1,13 @@
-import { Item } from './Item';
+import { IItemData, Item } from './Item';
 import type { Process } from './Process';
+
+export interface ITaskData extends IItemData {
+  type: 'task';
+  duration: number;
+  actualStartDate?: string; // ISO format
+  calculatedStartDate?: string; // ISO format
+  manualDuration?: number;
+}
 
 const ONEDAY = 24 * 60 * 60 * 1000;
 
@@ -8,7 +16,7 @@ export class Task extends Item {
   private actualStartDate?: Date;
   private calculatedDuration: number;
   private manualDuration?: number;
-  type: 'task' = 'task';
+  _type: 'task' = 'task';
 
   constructor(
     id: number,
@@ -20,11 +28,6 @@ export class Task extends Item {
   ) {
     super(id, 'task', name, parent, detail, cost);
     this.calculatedDuration = duration;
-  }
-
-  /** Implementación del costo total para Task (es su propio costo) */
-  getTotalCost(): number {
-    return this.cost;
   }
 
   /** Fecha mostrada (actual o planificada) */
@@ -84,5 +87,18 @@ export class Task extends Item {
 
   hasActualStartDate(): boolean {
     return !!this.actualStartDate;
+  }
+
+  /** Implementación específica para Task */
+  get data(): ITaskData {
+    return {
+      ...super.data,
+      type: 'task',
+      duration: this.duration,
+      manualDuration: this.manualDuration,
+      actualStartDate: this.actualStartDate?.toISOString() hjk,
+      calculatedStartDate: this.calculatedStartDate?.toISOString() fghj,
+
+    };
   }
 }

@@ -1,4 +1,10 @@
-import { Item } from './Item';
+import { IItemData, Item } from './Item';
+
+export interface IProcessData extends IItemData {
+  type: 'process';
+  children: IItemData[];
+  useManualCost: boolean;
+}
 
 export class Process extends Item {
   hasActualStartDate(): boolean {
@@ -10,9 +16,9 @@ export class Process extends Item {
   getCalculatedEndDate(): Date | undefined {
     throw new Error('Method not implemented.');
   }
-  type: 'process' = 'process';
+  _type: 'process' = 'process';
   private _children: Item[] = [];
-  private useManualCost: boolean = false; // Nuevo campo para indicar si usar costo manual
+  private _useManualCost: boolean = false; // Nuevo campo para indicar si usar costo manual
 
   constructor(
     id: number, 
@@ -23,17 +29,17 @@ export class Process extends Item {
     useManualCost: boolean = false // Agregar parámetro para usar costo manual
   ) {
     super(id, 'process', name, parent, detail, cost);
-    this.useManualCost = useManualCost;
+    this._useManualCost = useManualCost;
   }
 
   /** Establece si debe usar el costo manual o calculado */
   setUseManualCost(useManual: boolean): void {
-    this.useManualCost = useManual;
+    this._useManualCost = useManual;
   }
 
   /** Obtiene si está usando costo manual */
   getUseManualCost(): boolean {
-    return this.useManualCost;
+    return this._useManualCost;
   }
 
   /** Calcula el costo sumando los costos de los hijos */
@@ -43,7 +49,7 @@ export class Process extends Item {
         return total + child.getTotalCost();
       }, 0);
     } catch (error) {
-      console.error('Error calculating children cost for process:', this.name, error);
+      console.error('Error calculating children cost for process:', this._name, error);
       return 0;
     }
   }
@@ -51,13 +57,13 @@ export class Process extends Item {
   /** Implementación del costo total para Process (manual o calculado según configuración) */
   getTotalCost(): number {
     try {
-      if (this.useManualCost) {
-        return this.cost; // Usar costo manual
+      if (this._useManualCost) {
+        return super.getTotalCost(); // Usar costo manual
       } else {
         return this.calculateChildrenCost(); // Usar costo calculado (suma de hijos)
       }
     } catch (error) {
-      console.error('Error getting total cost for process:', this.name, error);
+      console.error('Error getting total cost for process:', this._name, error);
       return 0;
     }
   }
@@ -126,7 +132,7 @@ export class Process extends Item {
   addChild(item: Item): void {
     this._children.push(item);
     this.predecessors.forEach((p) => item.addPredecessor(p));
-    item.parent = this;
+    item._parent = this;
   }
 
   /**
@@ -134,7 +140,7 @@ export class Process extends Item {
    */
   removeChild(id: number): boolean {
     const initialLength = this._children.length;
-    this._children = this._children.filter((child) => child.id !== id);
+    this._children = this._children.filter((child) => child._id !== id);
     return this._children.length < initialLength;
   }
 
@@ -156,5 +162,16 @@ export class Process extends Item {
 
   getDelayInDays(): number {
     return 0; // Procesos no tienen delay directo, es derivado de sus hijos.
+  }
+
+  /** Implementación específica para Process */
+  get data(): IProcessData {
+    return {
+      ...super.data,
+      type: 'process',
+      cost: this.getTotalCost(),
+      children: this._children.map(child => child.data),
+      useManualCost: this._useManualCost
+    };
   }
 }

@@ -88,7 +88,7 @@ export function getCriticalPathsFromGraph(
   const DFS = (current: Task | Milestone) => {
     path.push(current);
 
-    if (current.id === endId) {
+    if (current._id === endId) {
       rawPaths.push([...path]);
       path.pop();
       return;
@@ -101,7 +101,7 @@ export function getCriticalPathsFromGraph(
     }
 
     const successors = graph
-      .getSuccessors(current.id)
+      .getSuccessors(current._id)
       .map((id) => graph.nodes.get(id))
       .filter((i): i is Task | Milestone => !!i);
 
