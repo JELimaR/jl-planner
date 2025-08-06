@@ -61,7 +61,8 @@ export function displayStringToDate(dateString: TDateString): Date {
  * @param date - El objeto Date a convertir.
  * @returns La cadena de fecha correspondiente como un TDateString.
  */
-export function formatDateToDisplay(date: Date): TDateString {
+export function formatDateToDisplay(date: Date | undefined): TDateString | undefined {
+    if (!date) return undefined
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();

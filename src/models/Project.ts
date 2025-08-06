@@ -328,6 +328,9 @@ export class Project {
    */
   getData(): IProjectData {
     const startDate = formatDateToDisplay(this.getProjectStartDate());
+    if (!startDate) {
+      throw new Error(``)
+    }
     const items: IItemData[] = [];
 
     for (const child of this.getRoot().children) {
