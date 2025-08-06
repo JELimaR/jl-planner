@@ -1,3 +1,5 @@
+import { Process } from "./Process";
+
 // Interfaz base para herencia
 export interface IItemData {
   id: number;
@@ -5,19 +7,19 @@ export interface IItemData {
   name: string;
   detail?: string;
   cost: number;
-  processId: number;
+  parentId: number;
   predecessorIds: number[];
 }
 
 export abstract class Item {
-  _id: number;
+  private _id: number;
   _type: 'task' | 'milestone' | 'process';
-  _name: string;
-  _parent?: Item;
-  _detail?: string;
+  private _name: string;
+  private _parent?: Item;
+  private _detail?: string;
   _color?: string;
   private _cost: number = 0; // Nuevo campo cost
-  _isCritical: boolean = false;
+  private _isCritical: boolean = false;
 
   // IDs de los ítems de los que depende este ítem
   predecessors: Set<Item> = new Set();
@@ -48,15 +50,61 @@ export abstract class Item {
     return this._isCritical;
   }
 
+  get id(): number {
+    return this._id
+  }
+  get name(): string {
+    return this._name
+  }
+  get detail(): string {
+    return this._detail || ''
+  }
+  get parent(): Item | undefined {
+    return this._parent
+  }
+  set parent(p: Process) {
+    this._parent = p
+  }
+
+  edit(data: IItemData) {
+    // We explicitly prevent the modification of id, type, and parent.
+    // The provided 'data' is used only for other properties.
+    this._name = data.name;
+    this._detail = data.detail;
+    this._cost = data.cost;
+
+    // This method doesn't handle predecessor updates because that logic
+    // is usually managed by a controller that has access to all items
+    // to ensure relations are properly set up.
+  }
+  /**
+   * ⚠️ DANGER: FORCIBLY SETS THE ITEM'S ID.
+   * * This method should be used with extreme caution. Changing an item's ID
+   * can break critical relationships and dependencies throughout the project
+   * structure (e.g., predecessor links, parent-child references). It is
+   * intended for internal use cases like ID normalization and should not
+   * be called during regular item editing.
+   * * @param newId The new ID to assign to the item.
+   */
+  public forceSetId(newId: number): void {
+    // Log a strong warning to the console.
+    /*console.warn(
+      `⚠️ DANGER: Forcibly changing item ID from ${this._id} to ${newId}. ` +
+      `Ensure all project references and relationships are updated accordingly.`
+    );*/
+    this._id = newId;
+  }
+
+
   /** */
   get data(): IItemData {
     return {
-      id: this._id,
+      id: this.id,
       type: this._type,
-      name: this._name,
-      detail: this._detail,
-      cost: this._cost,
-      processId: this._parent?._id ?? -1,
+      name: this.name,
+      detail: this.detail,
+      cost: this.getTotalCost(),
+      parentId: this._parent?._id ?? -1,
       predecessorIds: Array.from(this.predecessors).map((item) => item._id),
     }
   }

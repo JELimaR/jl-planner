@@ -2,12 +2,12 @@
   "id": "template00",
   "title": "Template 00",
   "subtitle": "Solicitud de suministro en MT con SB",
-  "startDate": "2025-07-16T12:00:00.000Z",
+  "startDate": "16-07-2025",
   "items": [
     {
       "id": 1000,
       "name": "start",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [],
       "type": "milestone"
     },
@@ -15,7 +15,7 @@
       "id": 1,
       "name": "Otros - cliente",
       "detail": "",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [
         1000
       ],
@@ -25,7 +25,7 @@
           "id": 11,
           "name": "Pago de carpeta",
           "detail": "",
-          "processId": 1,
+          "parentId": 1,
           "predecessorIds": [
             1000,
             22
@@ -36,7 +36,7 @@
           "id": 12,
           "name": "DAR",
           "detail": "",
-          "processId": 1,
+          "parentId": 1,
           "predecessorIds": [
             1000,
             324,
@@ -52,7 +52,7 @@
       "id": 2,
       "name": "Proyectos",
       "detail": "",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [
         1000
       ],
@@ -62,7 +62,7 @@
           "id": 21,
           "name": "Informe Tecnico",
           "detail": "Informe Técnico + Envío a Estudios",
-          "processId": 2,
+          "parentId": 2,
           "predecessorIds": [
             1000
           ],
@@ -73,7 +73,7 @@
           "id": 22,
           "name": "Presupuesto",
           "detail": "",
-          "processId": 2,
+          "parentId": 2,
           "predecessorIds": [
             1000,
             21
@@ -87,7 +87,7 @@
       "id": 3,
       "name": "Local para Subestación",
       "detail": "",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [
         1000
       ],
@@ -97,7 +97,7 @@
           "id": 31,
           "name": "Visto Bueno Proyectos",
           "detail": "",
-          "processId": 3,
+          "parentId": 3,
           "predecessorIds": [
             21,
             1000
@@ -108,7 +108,7 @@
               "id": 311,
               "name": "Aprobación proyecto",
               "detail": "Aprobación proyecto civil/albañilería",
-              "processId": 31,
+              "parentId": 31,
               "predecessorIds": [
                 1000,
                 21
@@ -120,7 +120,7 @@
               "id": 312,
               "name": "Aprobación proy SPAT",
               "detail": "",
-              "processId": 31,
+              "parentId": 31,
               "predecessorIds": [
                 1000,
                 21
@@ -134,7 +134,7 @@
           "id": 32,
           "name": "Visto Bueno Obras",
           "detail": "",
-          "processId": 3,
+          "parentId": 3,
           "predecessorIds": [
             21,
             1000
@@ -145,9 +145,10 @@
               "id": 321,
               "name": "Obra Civil del Local",
               "detail": "",
-              "processId": 32,
+              "parentId": 32,
               "predecessorIds": [
                 21,
+                311,
                 1000
               ],
               "type": "task",
@@ -157,7 +158,7 @@
               "id": 322,
               "name": "Medidas de TP y TC",
               "detail": "Medidas de tensión de paso y contacto.",
-              "processId": 32,
+              "parentId": 32,
               "predecessorIds": [
                 21,
                 321,
@@ -170,7 +171,7 @@
               "id": 323,
               "name": "Presentación de documentación",
               "detail": "",
-              "processId": 32,
+              "parentId": 32,
               "predecessorIds": [
                 21,
                 311,
@@ -187,7 +188,7 @@
               "id": 324,
               "name": "Visto bueno local OB",
               "detail": "",
-              "processId": 32,
+              "parentId": 32,
               "predecessorIds": [
                 21,
                 311,
@@ -204,7 +205,7 @@
           "id": 33,
           "name": "Contrato Comodato",
           "detail": "",
-          "processId": 3,
+          "parentId": 3,
           "predecessorIds": [
             1000,
             21
@@ -218,7 +219,7 @@
       "id": 4,
       "name": "Instalación enlace MT",
       "detail": "Obras eléctricas",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [
         1000
       ],
@@ -228,7 +229,7 @@
           "id": 41,
           "name": "Envío correo PCV",
           "detail": "Se envía al cliente los reuqerimientos tecnicos para la puesta en servicio de su instalacion interior.\nCeldas UTE\nEnsayos requeridos en CMT",
-          "processId": 4,
+          "parentId": 4,
           "predecessorIds": [
             1000,
             11
@@ -240,7 +241,7 @@
           "id": 42,
           "name": "Cliente levanta PCV",
           "detail": "",
-          "processId": 4,
+          "parentId": 4,
           "predecessorIds": [
             1000,
             41
@@ -251,7 +252,7 @@
               "id": 421,
               "name": "CMT y Terminales",
               "detail": "Cliente debe:\nobtener materiales\nrealizar tendido del CMT y montaje de terminales",
-              "processId": 42,
+              "parentId": 42,
               "predecessorIds": [
                 1000,
                 41
@@ -263,7 +264,7 @@
               "id": 422,
               "name": "Aprobación ensayo CMT",
               "detail": "Coordinación de ensayos y presentación de informe",
-              "processId": 42,
+              "parentId": 42,
               "predecessorIds": [
                 41,
                 421,
@@ -280,7 +281,7 @@
       "id": 5,
       "name": "Obras",
       "detail": "",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [
         1000,
         11
@@ -291,7 +292,7 @@
           "id": 51,
           "name": "Montaje SB",
           "detail": "",
-          "processId": 5,
+          "parentId": 5,
           "predecessorIds": [
             1000,
             11,
@@ -304,7 +305,7 @@
           "id": 52,
           "name": "Otros (tendidos)",
           "detail": "",
-          "processId": 5,
+          "parentId": 5,
           "predecessorIds": [
             1000,
             11
@@ -316,7 +317,7 @@
           "id": 53,
           "name": "Corte-(Energización/Conexión)",
           "detail": "",
-          "processId": 5,
+          "parentId": 5,
           "predecessorIds": [
             1000,
             11,
@@ -331,7 +332,7 @@
           "id": 54,
           "name": "Act 78",
           "detail": "",
-          "processId": 5,
+          "parentId": 5,
           "predecessorIds": [
             1000,
             11,
@@ -347,7 +348,7 @@
       "id": 6,
       "name": "Protecciones - Comercial",
       "detail": "",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [
         1000
       ],
@@ -357,7 +358,7 @@
           "id": 61,
           "name": "Configuración Relé CCC",
           "detail": "",
-          "processId": 6,
+          "parentId": 6,
           "predecessorIds": [
             1000,
             11
@@ -369,7 +370,7 @@
           "id": 62,
           "name": "Relevamiento medida",
           "detail": "",
-          "processId": 6,
+          "parentId": 6,
           "predecessorIds": [
             1000,
             11
@@ -382,7 +383,7 @@
     {
       "id": 1002,
       "name": "end",
-      "processId": 1001,
+      "parentId": 1001,
       "predecessorIds": [
         1,
         11,

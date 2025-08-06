@@ -8,20 +8,16 @@
     overlay-class="modal-overlay"
     content-class="modal-content"
     @before-open="beforeOpen"
-    @closed="uiStore.closeAddModal()"
+    @closed="close()"
   >
     <div class="modal-header">
       <h5 class="modal-title">{{ projectStore.isEditing ? 'Editar' : 'Agregar' }} Item</h5>
-      <button type="button" class="btn-close" aria-label="Close" @click="uiStore.closeAddModal()"></button>
+      <button type="button" class="btn-close" aria-label="Close" @click="close()"></button>
     </div>
     
     <div class="modal-body">
       <ItemForm />
-      
-      <div class="mt-3 d-flex justify-content-end">
-        <button type="button" class="btn btn-secondary me-2" @click="uiStore.closeAddModal()">Cancelar</button>
-        <button type="button" class="btn btn-primary" @click="formItemStore.submitForm()">Guardar</button>
-      </div>
+
     </div>
   </VueFinalModal>
 </template>

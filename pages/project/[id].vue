@@ -54,10 +54,12 @@ onMounted(async () => {
       case 'p002':
         await projectStore.initializeProject(projectId)
         break;
+      case 'p003':
+        await projectStore.initializeProject(projectId)
+        projectStore.controller.chargeExampleProject()
+        break;
       default:
         await projectStore.newProject()
-        projectStore.newProject()
-        projectStore.controller.chargeExampleProject()
     }
     
     // Configurar eventos globales si es necesario

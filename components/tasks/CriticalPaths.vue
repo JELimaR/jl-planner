@@ -24,7 +24,7 @@
             <td>{{ i + 1 }}</td>
             <td style="font-size: 0.75rem;">{{ item.id }}</td>
             <td>{{ item.name }}</td>
-            <td style="font-size: 0.75rem;">{{ formatDate(item.getStartDate()) }}</td>
+            <td style="font-size: 0.75rem;">{{ formatDateToDisplay(item.getStartDate()!) }}</td>
             <td>{{ item.getDelayInDays() }}</td>
           </tr>
         </tbody>
@@ -36,22 +36,10 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useProjectStore } from '../../stores/project'
+import { formatDateToDisplay } from '../../src/models/dateFunc';
 
 const projectStore = useProjectStore()
 const criticalPaths = computed(() => projectStore.controller.getProject().getCriticalPaths())
-
-// Formatear fecha
-const formatDate = (date?: Date): string => {
-  if (!date) {
-    return '';
-  }
-
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses en JavaScript van de 0 a 11
-  const year = date.getFullYear();
-
-  return `${day}-${month}-${year}`;
-};
 
 // Actualizar los caminos críticos cuando cambien las fechas del proyecto
 watch(

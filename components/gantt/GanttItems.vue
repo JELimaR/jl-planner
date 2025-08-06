@@ -68,7 +68,6 @@
 import { computed } from 'vue'
 import { CRITICAL_COLOR, processColorMap } from '../../src/views/colors'
 import { getTimeUnitsBetween, SCALE_OPTIONS, type Scale } from '../../src/views/ganttHelpers'
-import type { Item } from '../../src/models/Item'
 
 interface Props {
   items: any[] // Usar el tipo correcto para los items

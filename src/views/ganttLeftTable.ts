@@ -1,5 +1,6 @@
 import type { Item } from '../models/Item';
 import type { Project } from '../models/Project';
+import { formatDateToDisplay } from '../models/dateFunc';
 import { CRITICAL_COLOR } from './colors';
 
 // Renderiza la sección de etiquetas (nombres de tareas, fechas y números)
@@ -32,7 +33,7 @@ export function renderItemRowsFromProject(
     name.textContent = item.name;
 
     // Columna 2: fecha de inicio
-    const startDate = item.getStartDate()?.toISOString().split('T')[0] ?? '-';
+    const startDate = formatDateToDisplay(item.getStartDate()!) ?? '-';
     const start = document.createElement('div');
     start.style.width = '90px';
     start.style.color = color;

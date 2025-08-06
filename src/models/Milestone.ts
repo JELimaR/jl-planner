@@ -1,16 +1,17 @@
 import { DAY_MS } from '../views/ganttHelpers';
 import { IItemData, Item } from './Item';
 import type { Process } from './Process';
+import { TDateString, formatDateToDisplay } from './dateFunc';
 
 export interface IMilestoneData extends IItemData {
   type: 'milestone';
-  calculatedDate?: string; // ISO format
-  actualStartDate?: string; // ISO format
+  calculatedStartDate?: TDateString;
+  actualStartDate?: TDateString;
 }
 
 export class Milestone extends Item {
-  private calculatedDate?: Date;
-  private actualStartDate?: Date;
+  private _calculatedStartDate?: Date;
+  private _actualStartDate?: Date;
   _type: 'milestone' = 'milestone';
 
   constructor(
@@ -23,9 +24,26 @@ export class Milestone extends Item {
     super(id, 'milestone', name, parent, detail, cost);
   }
 
+  edit(data: IItemData): void {
+    // Call the parent class's edit method to handle common properties
+    super.edit(data);
+
+    // Cast the IItemData to IMilestoneData to access milestone-specific properties
+    const milestoneData = data as IMilestoneData;
+
+    // Handle milestone-specific editable properties
+    if (milestoneData.actualStartDate !== undefined) {
+      // Assuming a function exists to parse the date string
+      // For example, using `new Date(milestoneData.actualStartDate)`
+      this.setActualStartDate(new Date(milestoneData.actualStartDate));
+    } else {
+      this.setActualStartDate(undefined);
+    }
+  }
+
   /** Fecha mostrada (real o planificada) */
   getStartDate(): Date | undefined {
-    return this.actualStartDate || this.calculatedDate;
+    return this._actualStartDate || this._calculatedStartDate;
   }
 
   getEndDate(): Date | undefined {
@@ -34,30 +52,30 @@ export class Milestone extends Item {
 
   /** Establece la fecha real (manual) */
   setActualStartDate(date: Date | undefined): void {
-    this.actualStartDate = date;
+    this._actualStartDate = date;
   }
 
   /** Establece la fecha calculada automáticamente */
   setCalculatedStartDate(date: Date): void {
-    this.calculatedDate = date;
+    this._calculatedStartDate = date;
   }
 
   getCalculatedStartDate(): Date | undefined {
-    return this.calculatedDate;
+    return this._calculatedStartDate;
   }
 
   getCalculatedEndDate(): Date | undefined {
-    return this.calculatedDate;
+    return this._calculatedStartDate;
   }
 
   getDelayInDays(): number {
-    if (!this.actualStartDate || !this.calculatedDate) return 0;
-    const diff = this.actualStartDate.getTime() - this.calculatedDate.getTime();
+    if (!this._actualStartDate || !this._calculatedStartDate) return 0;
+    const diff = this._actualStartDate.getTime() - this._calculatedStartDate.getTime();
     return Math.ceil(diff / DAY_MS);
   }
 
   hasActualStartDate(): boolean {
-    return !!this.actualStartDate;
+    return !!this._actualStartDate;
   }
 
   /** Implementación específica para Milestone */
@@ -65,8 +83,8 @@ export class Milestone extends Item {
     return {
       ...super.data,
       type: 'milestone',
-      actualStartDate: this.actualStartDate?.toISOString() asdf,
-      calculatedDate: this.calculatedDate?.toISOString(),
+      actualStartDate: this._actualStartDate ? formatDateToDisplay(this._actualStartDate) : undefined,
+      calculatedStartDate: this._calculatedStartDate ? formatDateToDisplay(this._calculatedStartDate) : undefined,
     };
   }
 }

@@ -9,6 +9,7 @@ import { itemToFormValues } from '../src/controllers/dataHelpers';
 
 // Define el estado inicial del formulario
 const initialFormState: FormItemValues = {
+  title: 'Nuevo Item',
   type: 'task',
   id: -1,
   name: '',
@@ -24,6 +25,26 @@ export const useFormItemStore = defineStore('formItem', {
     // El objeto del formulario que se enlazará con v-model
     form: { ...initialFormState },
   }),
+
+  // Agrega una nueva propiedad computada al store para la validación
+  getters: {
+    isFormValid(state) {
+      const isNameValid = state.form.name.trim() !== '';
+      let isValid = isNameValid;
+
+      if (state.form.type === 'task') {
+        isValid = isValid && state.form.duration !== null && state.form.duration! > 0;
+      }
+
+      if (state.form.type === 'process' && state.form.useManualCost) {
+        isValid = isValid && state.form.cost !== null && state.form.cost! >= 0;
+      }
+      
+      // añadir más validaciones aquí
+      
+      return isValid;
+    },
+  },
 
   actions: {
     /**
@@ -63,6 +84,13 @@ export const useFormItemStore = defineStore('formItem', {
       const uiStore = useUIStore();
       
       try {
+        // La validación se realiza aquí. Usamos un getter para la validez.
+      if (!this.isFormValid) {
+        // En un entorno real, podrías lanzar un error o mostrar una notificación.
+        console.error('El formulario no es válido.');
+        return;
+      }
+      
         if (this.form.id !== -1) {
           // Lógica para editar un item existente
           if (!!this.form.actualStartDate)

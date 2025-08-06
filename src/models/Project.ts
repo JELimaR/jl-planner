@@ -1,20 +1,25 @@
 import { DAY_MS } from '../views/ganttHelpers';
+import { createDateString, displayStringToDate, formatDateToDisplay, TDateString } from './dateFunc';
 import { DependencyGraph } from './DependencyGraph';
-import {
-  calculateDatesFromGraph,
-  getCriticalPathsFromGraph,
-  type CriticalPath,
-} from './graphCalculation';
-import type { Item } from './Item';
-import { Milestone } from './Milestone';
-import { Process } from './Process';
-import { Task } from './Task';
+import { calculateDatesFromGraph, getCriticalPathsFromGraph, type CriticalPath, } from './graphCalculation';
+import type { IItemData, Item } from './Item';
+import { IMilestoneData, Milestone } from './Milestone';
+import { IProcessData, Process } from './Process';
+import { ITaskData, Task } from './Task';
+
+export interface IProjectHeader {
+  id: string;
+  title: string;
+  subtitle: string;
+  startDate: TDateString;
+}
 
 export interface IProjectData {
   id: string;
   title: string;
-  subTitle: string;
-
+  subtitle: string;
+  startDate: TDateString;
+  items: IItemData[];
 }
 
 export class Project {
@@ -32,19 +37,19 @@ export class Project {
 
     // Crear el proceso raíz
     this.rootProcess = new Process(1001, 'Project Root Process');
-    this.allItemsMap.set(this.rootProcess._id, this.rootProcess);
+    this.allItemsMap.set(this.rootProcess.id, this.rootProcess);
 
     // Crear el hito de inicio
     this.startMilestone = new Milestone(1000, 'start', this.rootProcess);
     this.startMilestone.setCalculatedStartDate(startDate);
-    this.allItemsMap.set(this.startMilestone._id, this.startMilestone);
+    this.allItemsMap.set(this.startMilestone.id, this.startMilestone);
     this.rootProcess.addChild(this.startMilestone);
 
     // Crear el hito final
     this.endMilestone = new Milestone(1002, 'end', this.rootProcess);
     this.endMilestone.setCalculatedStartDate(startDate);
     this.rootProcess.addChild(this.endMilestone);
-    this.allItemsMap.set(this.endMilestone._id, this.endMilestone);
+    this.allItemsMap.set(this.endMilestone.id, this.endMilestone);
   }
 
   title: string = 'Proyecto sin título';
@@ -76,24 +81,24 @@ export class Project {
    * Se agrega el item a las dependencias de endMilestone
    */
   addItem(item: Item, parent?: Process): void {
-    if (this.allItemsMap.has(item._id)) {
-      console.error(`Ya existe el item: ID ${item._id}`);
+    if (this.allItemsMap.has(item.id)) {
+      console.error(`Ya existe el item: ID ${item.id}`);
     } else {
-      this.allItemsMap.set(item._id, item);
+      this.allItemsMap.set(item.id, item);
     }
-    if (parent && parent._id !== this.rootProcess._id) {
+    if (parent && parent.id !== this.rootProcess.id) {
       parent.addChild(item);
       parent.predecessors.forEach((dep: Item) => {
         this.addRelation(dep, item);
       });
-      item._parent = parent;
+      item.parent = parent;
     } else {
       if (item.predecessors.size === 0) {
         this.addRelation(this.startMilestone, item);
       }
-      item._parent = this.rootProcess;
+      item.parent = this.rootProcess;
       // Quitar el hito final para insertar el nuevo item antes que él
-      this.rootProcess.removeChild(this.endMilestone._id);
+      this.rootProcess.removeChild(this.endMilestone.id);
       this.rootProcess.addChild(item);
       this.rootProcess.addChild(this.endMilestone);
       this.addRelation(item, this.endMilestone);
@@ -111,7 +116,7 @@ export class Project {
   }
 
   addRelation(pre: Item, suc: Item) {
-    if (pre._id == suc._id) {
+    if (pre.id == suc.id) {
       return;
     }
     if (pre instanceof Process) {
@@ -128,6 +133,46 @@ export class Project {
       });
     }
     suc.addPredecessor(pre);
+  }
+
+  /**
+   * Modifies an existing item's data.
+   * The item's ID, type, and parent process cannot be changed.
+   *
+   * @param itemData The data object containing the updated values.
+   */
+  editItem(itemData: IItemData): void {
+    // Find the existing item by ID
+    const existingItem = this.getItemById(itemData.id);
+
+    // If the item doesn't exist, throw an error
+    if (!existingItem) {
+      throw new Error(`Item with ID ${itemData.id} not found.`);
+    }
+
+    // Ensure the type and parent ID have not been changed
+    if (existingItem._type !== itemData.type) {
+      throw new Error('Cannot change the type of an item.');
+    }
+
+    if (existingItem.parent?.id !== itemData.parentId) {
+      throw new Error('Cannot change the parent process of an item.');
+    }
+
+    // Update the item's properties using its own edit method
+    existingItem.edit(itemData);
+
+    // Clear and re-add predecessor relationships
+    existingItem.predecessors.clear();
+    itemData.predecessorIds.forEach((predId) => {
+      const predecessor = this.getItemById(predId);
+      if (predecessor) {
+        this.addRelation(predecessor, existingItem);
+      }
+    });
+
+    // Recalculate project dates to reflect the changes
+    this.calculateItemDates();
   }
 
   getAllItems() {
@@ -185,8 +230,8 @@ export class Project {
 
     const out = getCriticalPathsFromGraph(
       graph,
-      this.startMilestone._id,
-      this.endMilestone._id
+      this.startMilestone.id,
+      this.endMilestone.id
     );
 
     out.forEach((criticalPath: CriticalPath) => {
@@ -282,11 +327,124 @@ export class Project {
    * 
    */
   getData(): IProjectData {
-    return {
-      id: this.id,
-      title: this.getTitle(),
-      subTitle: this.getSubtitle()
+    const startDate = formatDateToDisplay(this.getProjectStartDate());
+    const items: IItemData[] = [];
+
+    for (const child of this.getRoot().children) {
+      items.push(child.data);
     }
+
+    return {
+      id: this.getId(),
+      title: this.getTitle(),
+      subtitle: this.getSubtitle(),
+      startDate,
+      items,
+    };
   }
 
+  /**
+   * 
+   */
+  static deserializeProject(data: IProjectData): Project {
+    const project = new Project(data.id, displayStringToDate(data.startDate));
+    project.setTitle(data.title);
+    project.setSubtitle(data.subtitle);
+    data.items.forEach((iid: IItemData) => {
+      if (
+        !(
+          iid.id == project.getEndMilestone().id ||
+          iid.id == project.getStartMilestone().id
+        )
+      ) {
+        serial2Item(project, iid, project.getRoot());
+      }
+    });
+
+    restoreRelationsRecursively(project, data.items);
+
+    return project;
+  }
+}
+
+function serial2Item(project: Project, data: IItemData, parent: Process): void {
+  if (data.parentId !== parent.id) {
+    console.log(data)
+    console.log(project)
+    throw new Error(`data parent: ${data.parentId} - praent.id: ${parent.id}`);
+  }
+  let item: Item;
+  switch (data.type) {
+    case 'task':
+      const tdata = data as ITaskData;
+      if (!tdata.duration) throw new Error(``);
+      item = new Task(
+        tdata.id,
+        tdata.name,
+        tdata.duration,
+        parent,
+        tdata.detail,
+        tdata.cost,
+      );
+      project.addItem(item, parent);
+      if (!!tdata.actualStartDate) {
+        const asd = createDateString(tdata.actualStartDate)
+        item.setActualStartDate(displayStringToDate(asd));
+      }
+      break;
+    case 'milestone':
+      const mdata = data as IMilestoneData;
+      item = new Milestone(
+        mdata.id,
+        mdata.name,
+        parent,
+        mdata.detail,
+        mdata.cost
+      );
+      project.addItem(item, parent);
+      if (!!mdata.actualStartDate) {
+        const asd = createDateString(mdata.actualStartDate)
+        item.setActualStartDate(displayStringToDate(asd));
+      }
+      break;
+    case 'process':
+      const pdata = data as IProcessData
+      item = new Process(
+        pdata.id,
+        pdata.name,
+        parent,
+        pdata.detail
+      );
+      project.addItem(item, parent);
+      pdata.children.forEach((child: IItemData) => {
+        serial2Item(project, child, item as Process);
+      });
+      break;
+    default:
+      throw new Error(``);
+  }
+}
+
+function restoreRelationsRecursively(project: Project, itemDataArr: IItemData[]) {
+  for (const idata of itemDataArr) {
+    const item = project.getItemById(idata.id);
+    if (!item) {
+      throw new Error(`Item no encontrado: ${idata.id}`);
+    }
+
+    // Asignar predecesores
+    for (const pid of idata.predecessorIds) {
+      const prede = project.getItemById(pid);
+      if (!prede) {
+        throw new Error(`Predecesor no encontrado: ${pid}`);
+      }
+      project.addRelation(prede, item);
+    }
+
+    // Si es un proceso, aplicar recursivamente a los hijos
+    if (item instanceof Process) {
+      const pdata = idata as IProcessData
+      restoreRelationsRecursively(project, pdata.children);
+    }
+  }
 }

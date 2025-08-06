@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
-import ProjectController from '../src/controllers/ProjectController'
+import {ProjectController} from '../src/controllers/ProjectController'
 import type { Scale } from '../src/views/ganttHelpers'
 import { setProjectItemsColors } from '../src/views/colors'
 import { FormItemValues } from '../src/controllers/addItemValues'
+import { Item } from '../src/models/Item'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
@@ -30,7 +31,7 @@ export const useProjectStore = defineStore('project', {
         const response = await fetch('/template00.jlprj')
         if (!response.ok) throw new Error('No se pudo cargar template00.jlprj')
         const JSON = await response.json()
-        this.controller.loadProjectFromFile(JSON)
+        this.controller.loadProjectFromJSON(JSON)
       } catch (err) {
         console.warn('No se pudo cargar template00.jlprj:', err)
         this.controller.createNewProject('creato', new Date())
@@ -51,6 +52,21 @@ export const useProjectStore = defineStore('project', {
       this.controller.createNewProject('new', new Date())
       this.updateProjectDates()
       this.renderAll()
+    },
+
+     /**
+     * Llama al controlador para cambiar el orden de un ítem y luego refresca la vista.
+     * @param item El ítem a mover.
+     * @param sense La dirección ('up' o 'down').
+     */
+     changeOrder(item: Item, sense: 'up' | 'down') {
+      try {
+        this.controller.changeOrder(item, sense);
+        this.renderAll();
+      } catch (error) {
+        console.error('Error al reordenar el ítem:', error);
+        // Opcional: mostrar una notificación de error en la UI
+      }
     },
     
     resetActualStartDates() {

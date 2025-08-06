@@ -1,12 +1,12 @@
+import { displayStringToDate, TDateString } from '../models/dateFunc';
 import { getExampleProject } from '../models/getExampleProject';
-import type { Item } from '../models/Item';
-import { Milestone } from '../models/Milestone';
-import { Process } from '../models/Process';
+import type { Item, IItemData } from '../models/Item';
+import { IMilestoneData, Milestone } from '../models/Milestone';
+import { IProcessData, Process } from '../models/Process';
 import { Project } from '../models/Project';
-import { Task } from '../models/Task';
+import { ITaskData, Task } from '../models/Task';
 import type { FormItemValues } from './addItemValues';
 import { formValuesToItem } from './dataHelpers';
-import { deserializeProject, SerializedProject, serializeProject } from './projectSerializer';
 
 export class ProjectController {
   private static instance: ProjectController;
@@ -121,70 +121,70 @@ export class ProjectController {
   // En el método editItem, agregar manejo de useManualCost
   editItem(id: number, itemData: FormItemValues): void {
     try {
-      const existingItem = this.project.getItemById(id);
-      if (!existingItem) {
-        throw new Error(`Item with ID ${id} not found.`);
-      }
+      // 1. Convert form values to the correct IItemData type
+      const updatedItemData = formValuesToItemData(id, itemData);
 
-      // Asegurarse de que el tipo de ítem no cambie
-      if (
-        (existingItem instanceof Task && itemData.type !== 'task') ||
-        (existingItem instanceof Milestone && itemData.type !== 'milestone') ||
-        (existingItem instanceof Process && itemData.type !== 'process')
-      ) {
-        throw new Error(`No se puede cambiar el tipo de un ítem.`);
-      }
+      // 2. Call the new project.editItem method
+      this.project.editItem(updatedItemData);
 
-      // Asegurarse de que el padre no cambie
-      if (
-        (existingItem.parent && itemData.processId && existingItem.parent.id !== itemData.processId) ||
-        (!existingItem.parent && itemData.processId)
-      ) {
-        throw new Error(`No se puede cambiar el padre de un ítem.`);
-      }
+      // 3. Recalculate project dates and normalize IDs (this is now handled by project.editItem,
+      // so we can remove the redundant calls here unless you need them for other reasons).
+      // this.project.calculateItemDates();
+      // this.normalizeItemIds();
 
-      existingItem.name = itemData.name;
-      existingItem.detail = itemData.detail;
-
-      // Actualizar cost si está disponible
-      if (itemData.cost !== undefined) {
-        existingItem.setCost(itemData.cost);
-      }
-
-      // Actualizar useManualCost para procesos
-      if (existingItem instanceof Process && itemData.useManualCost !== undefined) {
-        existingItem.setUseManualCost(itemData.useManualCost);
-      }
-
-      // Eliminar las relaciones de predecesores existentes y añadir las nuevas
-      existingItem.predecessors.clear();
-      itemData.predecessorIds.forEach((predId) => {
-        const pred = this.project.getItemById(predId);
-        if (pred) {
-          this.project.addRelation(pred, existingItem);
-        }
-      });
-
-      if (existingItem instanceof Task && itemData.type === 'task') {
-        existingItem.setManualDuration(itemData.duration!);
-        if (itemData.actualStartDate) {
-          existingItem.setActualStartDate(itemData.actualStartDate);
-        } else {
-          existingItem.setActualStartDate(undefined);
-        }
-      } else if (existingItem instanceof Milestone && itemData.type === 'milestone') {
-        if (itemData.actualStartDate) {
-          existingItem.setActualStartDate(itemData.actualStartDate);
-        } else {
-          existingItem.setActualStartDate(undefined);
-        }
-      }
-
-      this.project.calculateItemDates();
-      this.normalizeItemIds();
     } catch (error) {
       console.error('Error editing item:', error);
       throw new Error(`Error al editar item: ${error.message}`);
+    }
+  }
+
+  changeOrder(item: Item, sense: 'up' | 'down'): void {
+    try {
+      const parent = item.parent;
+
+      if (!(parent instanceof Process)) {
+        throw new Error('No se puede cambiar el orden de un ítem sin un proceso padre.');
+      }
+
+      if (item.id === this.project.getStartMilestone().id || item.id === this.project.getEndMilestone().id) {
+        throw new Error('No se puede cambiar el orden de los hitos de inicio y fin.');
+      }
+
+      const children = parent.children;
+      const itemIndex = children.indexOf(item);
+      let newIndex;
+
+      if (sense === 'up') {
+        // Mover el ítem hacia arriba
+        if (itemIndex <= 0) return; // Ya está en la primera posición
+
+        const neighbor = children[itemIndex - 1];
+        if (neighbor.id === this.project.getStartMilestone().id) {
+          return; // No se puede mover por encima del hito de inicio
+        }
+
+        newIndex = itemIndex - 1;
+      } else { // sense === 'down'
+        // Mover el ítem hacia abajo
+        if (itemIndex >= children.length - 1) return; // Ya está en la última posición
+
+        const neighbor = children[itemIndex + 1];
+        if (neighbor.id === this.project.getEndMilestone().id) {
+          return; // No se puede mover por debajo del hito de fin
+        }
+
+        newIndex = itemIndex + 1;
+      }
+
+      // Intercambiar los ítems en el array
+      [children[itemIndex], children[newIndex]] = [children[newIndex], children[itemIndex]];
+
+      this.normalizeItemIds();
+      this.project.calculateItemDates();
+
+    } catch (error) {
+      console.error('Error al cambiar el orden del ítem:', error);
+      throw new Error(`Error al cambiar el orden: ${error.message}`);
     }
   }
 
@@ -243,7 +243,7 @@ export class ProjectController {
       );
       idMap.set(item.id, newId);
 
-      item.id = newId;
+      item.forceSetId(newId);
       newMap.set(newId, item);
     };
 
@@ -264,7 +264,18 @@ export class ProjectController {
 
   /** Descarga el proyecto como archivo jlprj */
   downloadProjectAsJSON(): void {
-    const data = serializeProject(this.project);
+    const data = this.project.getData()
+    data.items = data.items.map((iid: IItemData) => {
+      if (iid.type == 'milestone' || iid.type == 'task') {
+        const idata = iid as (IMilestoneData | ITaskData);
+        return {
+          ...idata,
+          calculatedStartDate: undefined,
+        }
+      } else {
+        return iid
+      }
+    })
     const blob = new Blob([JSON.stringify(data, null, 0)], {
       type: 'application/json',
     });
@@ -277,29 +288,79 @@ export class ProjectController {
     URL.revokeObjectURL(url);
   }
 
-  /** Carga un proyecto desde un archivo jlprj */
-  async loadProjectFromFile(file: File | SerializedProject): Promise<void> {
-    let json: SerializedProject;
-    if (file instanceof File) {
-      const text = await file.text();
-      json = JSON.parse(text);
-    } else {
-      json = file;
-    }
+  /** Carga un proyecto desde un objeto JSON */
+  loadProjectFromJSON(json: any): void {
     console.log(json);
-    this.project = deserializeProject(json);
+    this.project = Project.deserializeProject(json);
     this.normalizeItemIds();
   }
 
+  /** Carga un proyecto desde un archivo jlprj */
+  async loadProjectFromFile(file: File): Promise<void> {
+    const text = await file.text();
+    const json = JSON.parse(text);
+    this.loadProjectFromJSON(json);
+  }
+
+
   chargeExampleProject() {
     const P = getExampleProject();
-    P.getItemById(21)!.setActualStartDate(new Date('2025-08-29'));
-    P.getItemById(3)!.setActualStartDate(new Date('2025-09-29'));
+
+    P.getItemById(21)!.setActualStartDate(displayStringToDate('29-08-2025' as TDateString));
+    P.getItemById(3)!.setActualStartDate(displayStringToDate('29-09-2025' as TDateString));
     (P.getItemById(3) as Task).setManualDuration(3);
     P.getCriticalPaths();
+
+    P.setTitle('Example')
+    P.setSubtitle('Example subtitle')
 
     this.project = P;
   }
 }
 
-export default ProjectController;
+// mover de acá
+function formValuesToItemData(id: number, formValues: FormItemValues): IItemData {
+  switch (formValues.type) {
+    case 'task':
+      return {
+        id: id,
+        type: 'task',
+        name: formValues.name,
+        detail: formValues.detail,
+        cost: formValues.cost || 0,
+        parentId: formValues.processId,
+        predecessorIds: formValues.predecessorIds,
+        duration: formValues.duration!,
+        actualStartDate: formValues.actualStartDate,
+        manualDuration: formValues.duration,
+      } as ITaskData;
+
+    case 'milestone':
+      return {
+        id: id,
+        type: 'milestone',
+        name: formValues.name,
+        detail: formValues.detail,
+        cost: formValues.cost || 0,
+        parentId: formValues.processId,
+        predecessorIds: formValues.predecessorIds,
+        actualStartDate: formValues.actualStartDate,
+      } as IMilestoneData;
+
+    case 'process':
+      return {
+        id: id,
+        type: 'process',
+        name: formValues.name,
+        detail: formValues.detail,
+        cost: formValues.cost || 0,
+        parentId: formValues.processId,
+        predecessorIds: formValues.predecessorIds,
+        useManualCost: formValues.useManualCost || false,
+        children: [], // Processes don't have children from form input
+      } as IProcessData;
+
+    default:
+      throw new Error('Unsupported item type from form values.');
+  }
+}

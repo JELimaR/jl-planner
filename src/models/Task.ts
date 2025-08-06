@@ -1,11 +1,12 @@
 import { IItemData, Item } from './Item';
 import type { Process } from './Process';
+import { TDateString, formatDateToDisplay } from './dateFunc';
 
 export interface ITaskData extends IItemData {
   type: 'task';
   duration: number;
-  actualStartDate?: string; // ISO format
-  calculatedStartDate?: string; // ISO format
+  actualStartDate?: TDateString;
+  calculatedStartDate?: TDateString;
   manualDuration?: number;
 }
 
@@ -29,6 +30,35 @@ export class Task extends Item {
     super(id, 'task', name, parent, detail, cost);
     this.calculatedDuration = duration;
   }
+
+
+  edit(data: IItemData): void {
+    // Call the parent class's edit method to handle common properties
+    super.edit(data);
+
+    // Cast the IItemData to ITaskData to access task-specific properties
+    const taskData = data as ITaskData;
+
+    // Handle task-specific editable properties
+    if (taskData.manualDuration !== undefined) {
+      this.setManualDuration(taskData.manualDuration);
+    } else {
+      // If manualDuration is not provided, reset it
+      this.manualDuration = undefined;
+      // You may also want to update the calculatedDuration if needed,
+      // but the current structure suggests it's a fixed property.
+    }
+
+    if (taskData.actualStartDate !== undefined) {
+      // Assuming a function exists to parse the date string
+      // This is a placeholder; you'll need a way to convert TDateString to a Date object.
+      // For example, using `new Date(taskData.actualStartDate)`
+      this.setActualStartDate(new Date(taskData.actualStartDate));
+    } else {
+      this.setActualStartDate(undefined);
+    }
+  }
+
 
   /** Fecha mostrada (actual o planificada) */
   getStartDate(): Date | undefined {
@@ -96,9 +126,9 @@ export class Task extends Item {
       type: 'task',
       duration: this.duration,
       manualDuration: this.manualDuration,
-      actualStartDate: this.actualStartDate?.toISOString() hjk,
-      calculatedStartDate: this.calculatedStartDate?.toISOString() fghj,
 
+      actualStartDate: this.actualStartDate ? formatDateToDisplay(this.actualStartDate) : undefined,
+      calculatedStartDate: this.calculatedStartDate ? formatDateToDisplay(this.calculatedStartDate) : undefined,
     };
   }
 }

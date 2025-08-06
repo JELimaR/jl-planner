@@ -40,10 +40,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { IProjectData } from '../src/models/Project'
+import { IProjectHeader } from '../src/models/Project'
 import { useProjectStore } from '../stores/project'
-import { useRoute } from 'vue-router';
 import { navigateTo } from 'nuxt/app';
+import { TDateString } from '../src/models/dateFunc';
 
 const projectStore = useProjectStore()
 
@@ -61,7 +61,7 @@ interface ProjectItem {
 }
 
 // Estado reactivo
-const projects = ref<IProjectData[]>([])
+const projects = ref<IProjectHeader[]>([])
 
 // Cargar proyectos (simulado - aquí conectarías con tu API/store)
 const loadProjects = async () => {
@@ -71,21 +71,24 @@ const loadProjects = async () => {
       {
         id: 'p001',
         title: 'Blank Project',
-        subTitle: 'Caso en blanco',
+        subtitle: 'Caso en blanco',
+        startDate: '15-07-2025' as TDateString
         //createdAt: new Date('2024-01-15'),
         //updatedAt: new Date()
       },
       {
         id: 'p002',
         title: 'SS MT',
-        subTitle: 'Ejemplo solicitud de suministro en MT.',
+        subtitle: 'Ejemplo solicitud de suministro en MT.',
+        startDate: '15-07-2025' as TDateString
         //createdAt: new Date('2024-02-01'),
         //updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
       },
       {
         id: 'p003',
         title: 'Ejemplo',
-        subTitle: 'Ejemplo de pruebas.',
+        subtitle: 'Ejemplo de pruebas.',
+        startDate: '15-07-2025' as TDateString
         //createdAt: new Date('2024-02-01'),
         //updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
       },
@@ -104,13 +107,13 @@ const createProject = () => {
   navigateTo(`project/${projectStore.controller.getProject().getId()}`)
 }
 
-const editProject = (project: IProjectData) => {
+const editProject = (project: IProjectHeader) => {
   // Lógica para editar proyecto
   console.log('Editar proyecto:', project)
   // Aquí podrías abrir un modal de edición
 }
 
-const deleteProject = (project: IProjectData) => {
+const deleteProject = (project: IProjectHeader) => {
   // Lógica para eliminar proyecto
   console.log('Eliminar proyecto:', project)
   // Aquí podrías mostrar un modal de confirmación
@@ -119,14 +122,15 @@ const deleteProject = (project: IProjectData) => {
   }
 }
 
-const duplicateProject = (project: IProjectData) => {
+const duplicateProject = (project: IProjectHeader) => {
   // Lógica para duplicar proyecto
   console.log('Duplicar proyecto:', project)
-  const newProject: IProjectData = {
+  const newProject: IProjectHeader = {
     ...project,
     id: `${project.id}-copy-${Date.now()}`,
     title: `${project.title} (Copia)`,
-    subTitle: `${project.subTitle}`,
+    subtitle: `${project.subtitle}`,
+    startDate: project.startDate
   }
   projects.value.unshift(newProject)
 }

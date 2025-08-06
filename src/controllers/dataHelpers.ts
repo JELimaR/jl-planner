@@ -11,13 +11,14 @@ export function itemToFormValues(item: Item): FormItemValues {
     throw new Error(`Item ${item.name} no tiene proceso padre`);
   }
   const common = {
+    title: `Editar: (#${item.id} - ${item.name})`,
     id: item.id,
-    type: item.type,
+    type: item._type,
     name: item.name,
     detail: item.detail,
     processId: processId,
     predecessorIds: Array.from(item.predecessors).map((pred) => pred.id),
-    cost: item.cost || 0,
+    cost: item.getTotalCost() || 0,
   };
 
   if (item instanceof Task) {

@@ -1,4 +1,4 @@
-import { IItemData, Item } from './Item';
+import { type IItemData, Item } from './Item';
 
 export interface IProcessData extends IItemData {
   type: 'process';
@@ -16,9 +16,10 @@ export class Process extends Item {
   getCalculatedEndDate(): Date | undefined {
     throw new Error('Method not implemented.');
   }
-  _type: 'process' = 'process';
+
   private _children: Item[] = [];
   private _useManualCost: boolean = false; // Nuevo campo para indicar si usar costo manual
+  _type: 'process' = 'process';
 
   constructor(
     id: number, 
@@ -30,6 +31,22 @@ export class Process extends Item {
   ) {
     super(id, 'process', name, parent, detail, cost);
     this._useManualCost = useManualCost;
+  }
+
+  edit(data: IItemData): void {
+    // Call the parent class's edit method to handle common properties
+    super.edit(data);
+
+    // Cast the IItemData to IProcessData to access process-specific properties
+    const processData = data as IProcessData;
+
+    // Handle process-specific editable properties
+    if (processData.useManualCost !== undefined) {
+      this.setUseManualCost(processData.useManualCost);
+    }
+
+    // The children property is handled by other methods (addChild, removeChild),
+    // not directly through the edit method, as it represents the project's structure.
   }
 
   /** Establece si debe usar el costo manual o calculado */
@@ -49,7 +66,7 @@ export class Process extends Item {
         return total + child.getTotalCost();
       }, 0);
     } catch (error) {
-      console.error('Error calculating children cost for process:', this._name, error);
+      console.error('Error calculating children cost for process:', this.name, error);
       return 0;
     }
   }
@@ -63,7 +80,7 @@ export class Process extends Item {
         return this.calculateChildrenCost(); // Usar costo calculado (suma de hijos)
       }
     } catch (error) {
-      console.error('Error getting total cost for process:', this._name, error);
+      console.error('Error getting total cost for process:', this.name, error);
       return 0;
     }
   }
@@ -132,7 +149,7 @@ export class Process extends Item {
   addChild(item: Item): void {
     this._children.push(item);
     this.predecessors.forEach((p) => item.addPredecessor(p));
-    item._parent = this;
+    item.parent = this;
   }
 
   /**
@@ -140,7 +157,7 @@ export class Process extends Item {
    */
   removeChild(id: number): boolean {
     const initialLength = this._children.length;
-    this._children = this._children.filter((child) => child._id !== id);
+    this._children = this._children.filter((child) => child.id !== id);
     return this._children.length < initialLength;
   }
 

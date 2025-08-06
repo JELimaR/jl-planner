@@ -12,24 +12,38 @@
             <th style="width: 15%">Inicio</th>
             <th style="width: 15%">Fin</th>
             <th style="width: 10%">Dependencias</th>
-            <th style="width: 10%"></th>
+            <th style="width: 10%">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(item, index) in items" :key="item.id" 
               :style="getRowStyle(item, index)">
-            <td :style="`padding-left: ${5 + 0 * getDepth(item) * 16}px; font-size: 8px;`">{{ item.id }}</td>
+            <td :style="`padding-left: ${5 + 0 * getDepth(item) * 8}px; font-size: 8px;`">{{ item.id }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.detail || '' }}</td>
             <td>{{ item instanceof Task ? item.duration : '-' }}</td>
-            <td>{{ formatDate(item.getStartDate()) }}</td>
-            <td>{{ formatDate(item.getEndDate()) }}</td>
+            <td>{{ formatDateToDisplay(item.getStartDate()!) }}</td>
+            <td>{{ formatDateToDisplay(item.getEndDate()!) }}</td>
             <td>{{ getPredecessors(item) }}</td>
             <td class="action-buttons">
               <button
+                class="btn btn-sm btn-light"
+                @click="changeOrder(item, 'up')"
+                :disabled="!canMoveUp(item, index)"
+              >
+                ⬆️
+              </button>
+              <button
+                class="btn btn-sm btn-light"
+                @click="changeOrder(item, 'down')"
+                :disabled="!canMoveDown(item, index)"
+              >
+                ⬇️
+              </button>
+              <button
                 class="btn btn-sm btn-primary"
                 @click="editItem(item)"
-                v-if="item !== projectStore.controller.getProject().getStartMilestone() || item !== projectStore.controller.getProject().getEndMilestone()"
+                v-if="item.id !== projectStore.controller.getProject().getStartMilestone().id || item.id !== projectStore.controller.getProject().getEndMilestone().id"
               >✏️</button>
               <button
                 class="btn btn-sm btn-danger"
@@ -58,6 +72,9 @@ import { useFormItemStore } from '../../stores/formItem'
 import { Task } from '../../src/models/Task'
 import { processColorMap } from '../../src/views/colors'
 import type { Item } from '../../src/models/Item'
+import { formatDateToDisplay } from '../../src/models/dateFunc'
+import { Milestone } from '../../src/models/Milestone'
+import { Process } from '../../src/models/Process'
 
 const projectStore = useProjectStore()
 const uiStore = useUIStore()
@@ -72,19 +89,6 @@ const items = computed(() => {
   })
   return allItems
 })
-
-// Formatear fecha
-const formatDate = (date?: Date): string => {
-  if (!date) {
-    return '';
-  }
-
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses en JavaScript van de 0 a 11
-  const year = date.getFullYear();
-
-  return `${day}-${month}-${year}`;
-};
 
 // Obtener el nivel de profundidad del item
 const getDepth = (item: Item): number => {
@@ -139,9 +143,79 @@ const deleteItem = (item: Item) => {
   uiStore.openDeleteModal()
 }
 
+// Función para cambiar el orden
+const changeOrder = (item: Item, sense: 'up' | 'down') => {
+  projectStore.changeOrder(item, sense)
+}
+
+// Función para deshabilitar el botón de subir
+const canMoveUp = (item: Item, index: number): boolean => {
+  if (
+    item instanceof Milestone &&
+    (item.id === projectStore.controller.getProject().getStartMilestone().id ||
+      item.id === projectStore.controller.getProject().getEndMilestone().id)
+  ) {
+    return false
+  }
+  const parent = item.parent as Process | undefined;
+  if (!parent) return false
+  const children = parent.children
+  if (children.indexOf(item) === 0) return false
+  const prevSibling = children[children.indexOf(item) - 1]
+  if (prevSibling && prevSibling.id === projectStore.controller.getProject().getStartMilestone().id) {
+    return false
+  }
+  return true
+}
+
+// Función para deshabilitar el botón de bajar
+const canMoveDown = (item: Item, index: number): boolean => {
+  if (
+    item instanceof Milestone &&
+    (item.id === projectStore.controller.getProject().getStartMilestone().id ||
+      item.id === projectStore.controller.getProject().getEndMilestone().id)
+  ) {
+    return false
+  }
+  const parent = item.parent as Process | undefined;
+  if (!parent) return false
+  const children = parent.children
+  if (children.indexOf(item) === children.length - 1) return false
+  const nextSibling = children[children.indexOf(item) + 1]
+  if (nextSibling && nextSibling.id === projectStore.controller.getProject().getEndMilestone().id) {
+    return false
+  }
+  return true
+}
+
+
 // Actualizar la tabla cuando cambie el proyecto
 watch(() => projectStore.projectStartDate, () => {
   projectStore.controller.getProject().calculateItemDates()
 })
 </script>
 
+<style>
+/* Estilo para los botones en la tabla */
+.custom_table .action-buttons button {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px; /* Reduce el tamaño de la fuente para los iconos/emojis */
+  line-height: 1; /* Asegura que el contenido esté bien centrado */
+  margin: 0 2px; /* Espacio entre los botones */
+}
+
+/* Estilo para el contenedor de los botones */
+.custom_table .action-buttons {
+  white-space: nowrap; /* Evita que los botones se envuelvan en varias líneas */
+}
+
+/* Estilo para reducir el espacio de las celdas de la tabla */
+.custom_table td {
+  padding: 6px 8px;
+}
+</style>

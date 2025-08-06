@@ -1,8 +1,5 @@
 import type { Project } from '../models/Project';
-
-function formatDate(date?: Date): string {
-  return date ? date.toISOString().split('T')[0] : '';
-}
+import { formatDateToDisplay } from '../models/dateFunc';
 
 export function criticalPathRenderer(container: HTMLElement, project: Project) {
   const criticalPaths = project.getCriticalPaths();
@@ -60,7 +57,7 @@ export function criticalPathRenderer(container: HTMLElement, project: Project) {
         <td>${i + 1}</td>
         <td style="font-size: 0.75rem;">${item.id}</td>
         <td>${item.name}</td>
-        <td style="font-size: 0.75rem;">${formatDate(item.getStartDate())}</td>
+        <td style="font-size: 0.75rem;">${formatDateToDisplay(item.getStartDate()!)}</td>
         <td>${delay}</td>
       `;
 

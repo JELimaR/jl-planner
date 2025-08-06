@@ -2,6 +2,7 @@ import type { Project } from '../models/Project';
 import { setupAddFormHTML } from './setupAddItemForm';
 
 export interface FormItemValues {
+  title: string;
   id: number;
   type: 'task' | 'milestone' | 'process';
   name: string;
@@ -61,6 +62,7 @@ export function getFormItemValues(): FormItemValues {
     const useManualCost = useManualCostInput ? useManualCostInput.checked : false;
 
     return {
+      title: 'Nuevo Item',
       id,
       type,
       name,

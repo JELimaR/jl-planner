@@ -2,11 +2,8 @@ import type { Item } from '../models/Item';
 import { Process } from '../models/Process';
 import type { Project } from '../models/Project';
 import { Task } from '../models/Task';
+import { formatDateToDisplay } from '../models/dateFunc';
 import { processColorMap } from './colors';
-
-function formatDate(date?: Date): string {
-  return date ? date.toISOString().split('T')[0] : '';
-}
 
 export function renderTaskTable(project: Project, tbody: HTMLElement) {
   tbody.innerHTML = '';
@@ -48,8 +45,8 @@ export function renderTaskTable(project: Project, tbody: HTMLElement) {
         <td>${item.name}</td>
         <td>${item.detail ? item.detail : ''}</td>
         <td>${duration}</td>
-        <td>${formatDate(start)}</td>
-        <td>${formatDate(end)}</td>
+        <td>${formatDateToDisplay(start!)}</td>
+        <td>${formatDateToDisplay(end!)}</td>
         <td>${predecesors}</td>
         <td class="action-buttons">
           <button
