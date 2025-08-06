@@ -36,6 +36,12 @@ const uiStore = useUIStore();
 const projectStore = useProjectStore();
 const formItemStore = useFormItemStore();
 
+// cerrar el modal
+const close = () => {
+  uiStore.closeAddModal()
+  formItemStore.resetForm()
+}
+
 // Esta función ahora contiene la lógica para preparar el formulario
 const beforeOpen = () => {
   if (projectStore.itemToEdit) { // Usa itemToEdit en lugar de itemForEdit

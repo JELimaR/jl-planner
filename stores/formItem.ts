@@ -34,9 +34,9 @@ export const useFormItemStore = defineStore('formItem', {
         this.form = { ...initialFormState };
         // Opcional: inicializar el padre del proceso al root por defecto
         const projectStore = useProjectStore();
-        if (projectStore.isInitialized) {
+        
           this.form.processId = projectStore.controller.getProject().getRoot().id;
-        }
+        
       } catch (error) {
         console.error('Error resetting form:', error);
       }

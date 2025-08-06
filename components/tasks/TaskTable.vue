@@ -43,7 +43,7 @@
 
     <!-- Botón Agregar -->
     <div class="my-3">
-      <button class="btn btn-success" @click="uiStore.openAddModal()">
+      <button class="btn btn-success" @click="addITem()">
         ➕ Agregar Item
       </button>
     </div>
@@ -54,6 +54,7 @@
 import { computed, onMounted, watch } from 'vue'
 import { useProjectStore } from '../../stores/project'
 import { useUIStore } from '../../stores/ui'
+import { useFormItemStore } from '../../stores/formItem'
 import { Task } from '../../src/models/Task'
 import { processColorMap } from '../../src/views/colors'
 import type { Item } from '../../src/models/Item'
@@ -117,6 +118,13 @@ const getPredecessors = (item: Item): string => {
     .filter((i) => i !== project.getStartMilestone().id)
     .join(', ')
   return item.id === project.getEndMilestone().id ? '' : predecessors
+}
+
+// Agregar un Item
+const addITem = () => {
+  projectStore.setupItemForEdit(null)
+  useFormItemStore().resetForm()
+  uiStore.openAddModal()
 }
 
 // Editar un item

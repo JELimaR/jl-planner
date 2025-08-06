@@ -116,7 +116,7 @@ export const useProjectStore = defineStore('project', {
       setProjectItemsColors(this.controller.getProject())
     },
     
-    setupItemForEdit(id: number) {
+    setupItemForEdit(id: number | null) {
       this.itemToEdit = id
       // Aquí puedes preparar el formulario para editar
     }

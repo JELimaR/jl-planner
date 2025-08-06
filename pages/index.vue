@@ -6,38 +6,32 @@
           <h1 class="display-4 fw-bold text-primary">Planner</h1>
           <!--<p class="lead text-muted">Gestiona tus proyectos de manera eficiente</p>-->
         </div>
-        
-        
-          <div class="project-list">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4>Mis Proyectos</h4>
-      <button class="btn btn-primary btn-sm" @click="createProject">
-        <i class="bi bi-plus-circle"></i> Nuevo Proyecto
-      </button>
-    </div>
-    
-    <div v-if="projects.length === 0" class="text-center py-5">
-      <div class="text-muted">
-        <i class="bi bi-folder2-open" style="font-size: 3rem;"></i>
-        <p class="mt-3">No tienes proyectos aún</p>
-        <button class="btn btn-primary" @click="createProject">
-          Crear tu primer proyecto
-        </button>
-      </div>
-    </div>
-    
-    <div v-else class="list-group">
-      <ProjectCard 
-        v-for="project in projects" 
-        :key="project.id"
-        :project="project"
-        @edit-project="editProject"
-        @delete-project="deleteProject"
-        @duplicate-project="duplicateProject"
-      />
-    </div>
-  </div>
-        
+
+
+        <div class="project-list">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Templates</h4>
+            <button class="btn btn-primary btn-sm" @click="createProject">
+              <i class="bi bi-plus-circle"></i> Nuevo Proyecto
+            </button>
+          </div>
+
+          <div v-if="projects.length === 0" class="text-center py-5">
+            <div class="text-muted">
+              <i class="bi bi-folder2-open" style="font-size: 3rem;"></i>
+              <p class="mt-3">No tienes proyectos aún</p>
+              <button class="btn btn-primary" @click="createProject">
+                Crear tu primer proyecto
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="list-group">
+            <ProjectCard v-for="project in projects" :key="project.id" :project="project" @edit-project="editProject"
+              @delete-project="deleteProject" @duplicate-project="duplicateProject" />
+          </div>
+        </div>
+
 
       </div>
     </div>
