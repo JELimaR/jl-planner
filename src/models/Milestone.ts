@@ -65,6 +65,8 @@ export class Milestone extends Item {
     return {
       ...super.data,
       type: 'milestone',
+      actualStartDate: this.actualStartDate?.toISOString() asdf,
+      calculatedDate: this.calculatedDate?.toISOString(),
     };
   }
 }
