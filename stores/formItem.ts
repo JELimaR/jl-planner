@@ -1,11 +1,25 @@
 import { defineStore } from 'pinia';
 import { useProjectStore } from './project';
 import { useUIStore } from './ui';
-import type { FormItemValues } from '../src/controllers/addItemValues';
-import type { Item } from '../src/models/Item';
-import { Task } from '../src/models/Task';
-import { Process } from '../src/models/Process';
-import { itemToFormValues } from '../src/controllers/dataHelpers';
+import type { IItemData } from '../src/models/Item';
+import { ITaskData } from '../src/models/Task';
+import { IProcessData } from '../src/models/Process';
+import { IMilestoneData } from '../src/models/Milestone';
+import { TDateString } from '../src/models/dateFunc';
+
+export interface FormItemValues {
+  title: string;
+  id: number;
+  type: 'task' | 'milestone' | 'process';
+  name: string;
+  detail?: string;
+  duration?: number;
+  actualStartDate?: TDateString;
+  parentId: number;
+  predecessorIds: number[];
+  cost?: number;
+  useManualCost?: boolean; // Nuevo campo para procesos
+}
 
 // Define el estado inicial del formulario
 const initialFormState: FormItemValues = {
@@ -15,7 +29,7 @@ const initialFormState: FormItemValues = {
   name: '',
   duration: 1,
   predecessorIds: [],
-  processId: 1001,
+  parentId: 1001,
   cost: 0,
   useManualCost: false, // Agregar useManualCost con valor por defecto
 };
@@ -40,7 +54,7 @@ export const useFormItemStore = defineStore('formItem', {
         isValid = isValid && state.form.cost !== null && state.form.cost! >= 0;
       }
       
-      // añadir más validaciones aquí
+      // añadir más validaciones
       
       return isValid;
     },
@@ -55,9 +69,7 @@ export const useFormItemStore = defineStore('formItem', {
         this.form = { ...initialFormState };
         // Opcional: inicializar el padre del proceso al root por defecto
         const projectStore = useProjectStore();
-        
-          this.form.processId = projectStore.controller.getProject().getRoot().id;
-        
+        this.form.processId = projectStore.controller.getProject().getRoot().id;
       } catch (error) {
         console.error('Error resetting form:', error);
       }
@@ -67,9 +79,9 @@ export const useFormItemStore = defineStore('formItem', {
      * Carga los datos de un item para el modo de edición.
      * @param item El item a editar
      */
-    loadFormForEdit(item: Item) {
+    loadFormForEdit(item: IItemData) {
       try {
-        this.form = itemToFormValues(item)
+        this.form = itemDataToFormValues(item)
       } catch (error) {
         console.error('Error loading form for edit:', error);
         throw new Error('Error al cargar los datos del item para edición');
@@ -93,14 +105,11 @@ export const useFormItemStore = defineStore('formItem', {
       
         if (this.form.id !== -1) {
           // Lógica para editar un item existente
-          if (!!this.form.actualStartDate)
-            this.form.actualStartDate = new Date(this.form.actualStartDate)
-          projectStore.editItem(this.form);
+          projectStore.editItem(formValuesToItemData(this.form.id, this.form));
         } else {
           // Lógica para agregar un nuevo item
-          projectStore.addNewItem(this.form);
+          projectStore.addNewItem(formValuesToItemData(this.form.id, this.form));
         }
-        
         // Llamar a resetForm para limpiar el formulario después del envío
         this.resetForm();
         
@@ -113,3 +122,97 @@ export const useFormItemStore = defineStore('formItem', {
     },
   },
 });
+
+export function itemDataToFormValues(item: IItemData): FormItemValues {
+  const parentId = item.parentId;
+  if (!parentId) {
+    throw new Error(`Item ${item.name} no tiene proceso padre`);
+  }
+  const common = {
+    title: `Editar: (#${item.id} - ${item.name})`,
+    id: item.id,
+    type: item.type,
+    name: item.name,
+    detail: item.detail,
+    parentId: parentId,
+    predecessorIds: item.predecessorIds,
+    cost: item.cost,
+  };
+
+  if ('duration' in item) {
+    return {
+      ...common,
+      duration: (item as ITaskData).duration,
+      actualStartDate: (item as ITaskData).actualStartDate,
+    };
+  }
+
+  if (item.type === 'milestone') {
+    return {
+      ...common,
+      actualStartDate: (item as IMilestoneData).actualStartDate,
+    };
+  }
+
+  // Proceso
+  if (item.type === 'process') {
+    return {
+      ...common,
+      useManualCost: (item as IProcessData).useManualCost,
+    };
+  }
+
+  return common;
+}
+
+function formValuesToItemData(id: number, formValues: FormItemValues): IItemData {
+  switch (formValues.type) {
+    case 'task':
+      return {
+        id: id,
+        type: 'task',
+        name: formValues.name,
+        detail: formValues.detail,
+        startDate: '' as TDateString,
+        endDate: '' as TDateString,
+        cost: formValues.cost || 0,
+        parentId: formValues.parentId,
+        predecessorIds: formValues.predecessorIds,
+        duration: formValues.duration!,
+        actualStartDate: formValues.actualStartDate,
+        manualDuration: formValues.duration,
+      } as ITaskData;
+
+    case 'milestone':
+      return {
+        id: id,
+        type: 'milestone',
+        name: formValues.name,
+        detail: formValues.detail,
+        startDate: '' as TDateString,
+        endDate: '' as TDateString,
+        cost: formValues.cost || 0,
+        parentId: formValues.parentId,
+        predecessorIds: formValues.predecessorIds,
+        actualStartDate: formValues.actualStartDate,
+      } as IMilestoneData;
+
+    case 'process':
+      return {
+        id: id,
+        type: 'process',
+        name: formValues.name,
+        detail: formValues.detail,
+        startDate: '' as TDateString,
+        endDate: '' as TDateString,
+        cost: formValues.cost || 0,
+        parentId: formValues.parentId,
+        predecessorIds: formValues.predecessorIds,
+        useManualCost: formValues.useManualCost || false,
+        children: [], // Processes don't have children from form input
+      } as IProcessData;
+
+    default:
+      throw new Error('Unsupported item type from form values.');
+  }
+}

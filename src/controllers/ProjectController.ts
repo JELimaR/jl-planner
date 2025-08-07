@@ -1,47 +1,65 @@
-import { displayStringToDate, TDateString } from '../models/dateFunc';
+import { displayStringToDate, formatDateToDisplay, TDateString } from '../models/dateFunc';
 import { getExampleProject } from '../models/getExampleProject';
 import type { Item, IItemData } from '../models/Item';
 import { IMilestoneData, Milestone } from '../models/Milestone';
 import { IProcessData, Process } from '../models/Process';
-import { Project } from '../models/Project';
+import { IProjectData, IProjectHeader, Project } from '../models/Project';
 import { ITaskData, Task } from '../models/Task';
-import type { FormItemValues } from './addItemValues';
-import { formValuesToItem } from './dataHelpers';
+import { setProjectItemsColors } from '../views/colors';
+import { itemDataToItem } from './dataHelpers';
+
+// ver donde va
+export type SpendingMethod = 'finished' | 'started' | 'linear';
 
 export class ProjectController {
   private static instance: ProjectController;
   private project: Project;
 
-  private constructor(id: string, startDate: Date) {
-    this.createNewProject(id, startDate);
+  private constructor(startDate: Date) {
+    this.createNewProject(startDate);
   }
 
-  static getInstance(id: string, startDate?: Date): ProjectController {
+  static getInstance(startDate?: Date): ProjectController {
     if (!this.instance) {
       startDate = startDate || new Date();
-      this.instance = new ProjectController(id, startDate);
+      this.instance = new ProjectController(startDate);
     }
     return this.instance;
   }
 
-  createNewProject(id: string, startDate: Date): void {
+  createNewProject(startDate: Date): void {
+    const id: string = 'new';
     this.project = new Project(id, startDate);
   }
 
-  getProject(): Project {
+  getProject(): Project { // borrar
     return this.project;
   }
 
+  getProjectData(): IProjectData {
+    return this.project.getData();
+  }
+
+  getHeaderData(): IProjectHeader {
+    return this.project.getHeaderData();
+  }
+
   getAllItems(): Item[] {
-    const out: Item[] = []
-    this.project.getAllItems().forEach(item => {
-
-      out.push(item)
-
+    const out: Item[] = [this.project.getRoot()];
+    this.project.traverse((item: Item, _: number, __: Process) => {
+      out.push(item);
     })
-
     return out
   }
+
+  isStart(item: Item): boolean {
+    return item.id === this.project.getStartMilestone().id
+  }
+
+  isEnd(item: Item): boolean {
+    return item.id === this.project.getEndMilestone().id
+  }
+
 
   getAllProcess(): Process[] {
     const out: Process[] = []
@@ -65,10 +83,7 @@ export class ProjectController {
 
   resetActualStartDates() {
     this.project.getAllItems().forEach((item: Item) => {
-      if (
-        item.id !== this.project.getStartMilestone().id &&
-        !(item instanceof Process)
-      ) {
+      if (item.id !== this.project.getStartMilestone().id && !(item instanceof Process)) {
         item.setActualStartDate(undefined);
       }
     });
@@ -90,17 +105,18 @@ export class ProjectController {
     return newID;
   }
 
-  addNewItem(itemData: FormItemValues): Item {
+  addNewItem(itemData: IItemData): void {
     try {
-      const id = this.generateId(itemData.processId);
-      const item = formValuesToItem(id, itemData, this.project);
-      const parent = this.project.getItemById(itemData.processId);
+      console.log('itemData', itemData)
+      const id = this.generateId(itemData.parentId);
+      const item = itemDataToItem(id, itemData, this.project);
+      const parent = this.project.getItemById(itemData.parentId);
 
       if (parent instanceof Process) {
         this.project.addItem(item, parent);
       } else {
         throw new Error(
-          `Parent process with ID ${itemData.processId} not found.`
+          `Parent process with ID ${itemData.parentId} not found.`
         );
       }
 
@@ -109,9 +125,14 @@ export class ProjectController {
         const pred = this.project.getItemById(predId);
         if (pred) this.project.addRelation(pred, item);
       });
+      // Agregar actualStartDate
+      if (!!(itemData as ITaskData | IMilestoneData).actualStartDate) {
+        const dateString = (itemData as ITaskData | IMilestoneData).actualStartDate as TDateString
+        item.setActualStartDate(displayStringToDate(dateString));
+      }
+
 
       this.normalizeItemIds();
-      return item;
     } catch (error) {
       console.error('Error adding new item:', error);
       throw new Error(`Error al agregar nuevo item: ${error.message}`);
@@ -119,19 +140,9 @@ export class ProjectController {
   }
 
   // En el método editItem, agregar manejo de useManualCost
-  editItem(id: number, itemData: FormItemValues): void {
+  editItem(id: number, itemData: IItemData): void {
     try {
-      // 1. Convert form values to the correct IItemData type
-      const updatedItemData = formValuesToItemData(id, itemData);
-
-      // 2. Call the new project.editItem method
-      this.project.editItem(updatedItemData);
-
-      // 3. Recalculate project dates and normalize IDs (this is now handled by project.editItem,
-      // so we can remove the redundant calls here unless you need them for other reasons).
-      // this.project.calculateItemDates();
-      // this.normalizeItemIds();
-
+      this.project.editItem(itemData);
     } catch (error) {
       console.error('Error editing item:', error);
       throw new Error(`Error al editar item: ${error.message}`);
@@ -262,6 +273,41 @@ export class ProjectController {
     });
   }
 
+   /**
+   * Calcula el gasto diario del proyecto, cubriendo cada día desde el inicio hasta el fin.
+   * @param spendingMethod El método de cálculo a usar.
+   * @returns Un mapa con las fechas como claves y el gasto total de ese día como valor.
+   */
+  calculateDailySpending(spendingMethod: SpendingMethod): Array<{d: string, v: number}> {
+
+    const dailySpending = new Map<string, number>();
+    const project = this.getProject();
+
+    const projectStartDate = project.getProjectStartDate();
+    const projectEndDate = project.getProjectEndDate();
+
+    if (!projectStartDate || !projectEndDate) {
+      console.warn('Fechas de proyecto no definidas. No se puede calcular el gasto.');
+      return [];
+    }
+
+    // Recorre cada día entre el inicio y el fin del proyecto
+    let currentDate = new Date(projectStartDate);
+    while (currentDate <= projectEndDate) {
+      const formattedDate = formatDateToDisplay(currentDate) as TDateString;
+      let dailyCost = 0;
+      project.traverse((item: Item) => {
+        dailyCost += item.getDailyCost(currentDate, spendingMethod);
+      })
+      
+      dailySpending.set(formattedDate, dailyCost);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return Array.from(dailySpending.entries()).map(([d, v]) => ({ d, v }));
+  }
+
+
   /** Descarga el proyecto como archivo jlprj */
   downloadProjectAsJSON(): void {
     const data = this.project.getData()
@@ -290,6 +336,21 @@ export class ProjectController {
 
   /** Carga un proyecto desde un objeto JSON */
   loadProjectFromJSON(json: any): void {
+    // Verify json has the correct IProjectData structure
+    if (!json || typeof json !== 'object') {
+      throw new Error('Invalid project data: must be a JSON object');
+    }
+
+    const requiredFields = ['id', 'startDate', 'title', 'subtitle', 'items'];
+    for (const field of requiredFields) {
+      if (!(field in json)) {
+        throw new Error(`Invalid project data: missing required field '${field}'`);
+      }
+    }
+
+    if (!Array.isArray(json.items)) {
+      throw new Error('Invalid project data: items must be an array');
+    }
     console.log(json);
     this.project = Project.deserializeProject(json);
     this.normalizeItemIds();
@@ -314,53 +375,8 @@ export class ProjectController {
     P.setTitle('Example')
     P.setSubtitle('Example subtitle')
 
+    setProjectItemsColors(P)
+
     this.project = P;
-  }
-}
-
-// mover de acá
-function formValuesToItemData(id: number, formValues: FormItemValues): IItemData {
-  switch (formValues.type) {
-    case 'task':
-      return {
-        id: id,
-        type: 'task',
-        name: formValues.name,
-        detail: formValues.detail,
-        cost: formValues.cost || 0,
-        parentId: formValues.processId,
-        predecessorIds: formValues.predecessorIds,
-        duration: formValues.duration!,
-        actualStartDate: formValues.actualStartDate,
-        manualDuration: formValues.duration,
-      } as ITaskData;
-
-    case 'milestone':
-      return {
-        id: id,
-        type: 'milestone',
-        name: formValues.name,
-        detail: formValues.detail,
-        cost: formValues.cost || 0,
-        parentId: formValues.processId,
-        predecessorIds: formValues.predecessorIds,
-        actualStartDate: formValues.actualStartDate,
-      } as IMilestoneData;
-
-    case 'process':
-      return {
-        id: id,
-        type: 'process',
-        name: formValues.name,
-        detail: formValues.detail,
-        cost: formValues.cost || 0,
-        parentId: formValues.processId,
-        predecessorIds: formValues.predecessorIds,
-        useManualCost: formValues.useManualCost || false,
-        children: [], // Processes don't have children from form input
-      } as IProcessData;
-
-    default:
-      throw new Error('Unsupported item type from form values.');
   }
 }

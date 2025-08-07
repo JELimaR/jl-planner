@@ -2,12 +2,11 @@ import { defineStore } from 'pinia'
 import {ProjectController} from '../src/controllers/ProjectController'
 import type { Scale } from '../src/views/ganttHelpers'
 import { setProjectItemsColors } from '../src/views/colors'
-import { FormItemValues } from '../src/controllers/addItemValues'
-import { Item } from '../src/models/Item'
+import { IItemData, Item } from '../src/models/Item'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
-    controller: ProjectController.getInstance(''),
+    controller: ProjectController.getInstance(),
     projectStartDate: new Date(),
     projectEndDate: new Date(),
     newStartDate: new Date(),
@@ -18,23 +17,15 @@ export const useProjectStore = defineStore('project', {
   
   actions: {
     // In the project store, update the initializeProject method
-    async initializeProject(projectId?: string) {
+    async initializeProject() {
       try {
-        if (projectId) {
-          // Load specific project by ID
-          // Implement your project loading logic here
-          console.log('Loading project:', projectId)
-        } else {
-          // Load default project or handle no project case
-          console.log('Loading default project')
-        }
         const response = await fetch('/template00.jlprj')
         if (!response.ok) throw new Error('No se pudo cargar template00.jlprj')
         const JSON = await response.json()
         this.controller.loadProjectFromJSON(JSON)
       } catch (err) {
         console.warn('No se pudo cargar template00.jlprj:', err)
-        this.controller.createNewProject('creato', new Date())
+        this.controller.createNewProject(new Date())
         this.controller.chargeExampleProject()
       }
       
@@ -49,7 +40,7 @@ export const useProjectStore = defineStore('project', {
     },
     
     newProject() {
-      this.controller.createNewProject('new', new Date())
+      this.controller.createNewProject(new Date())
       this.updateProjectDates()
       this.renderAll()
     },
@@ -101,15 +92,15 @@ export const useProjectStore = defineStore('project', {
       console.log('Export PDF functionality to be implemented')
     },
     
-    addNewItem(formValues: FormItemValues) {
-      this.controller.addNewItem(formValues)
+    addNewItem(data: IItemData) {
+      this.controller.addNewItem(data)
       this.renderAll()
     },
     
-    editItem(formValues: FormItemValues) {
+    editItem(data: IItemData) {
       // Esta función se llamará desde el componente
-      console.log(formValues)
-      this.controller.editItem(formValues.id, formValues);
+      console.log(data)
+      this.controller.editItem(data.id, data);
       this.renderAll();
     },
     

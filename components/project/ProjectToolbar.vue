@@ -16,12 +16,8 @@
       </button>
 
       <!-- Cargar / Guardar -->
-      <button
-        class="btn btn-outline-secondary btn-sm"
-        @click="triggerFileInput"
-      >
-        📂 Cargar
-      </button>
+      <ProjectLoader />
+
       <button
         class="btn btn-outline-secondary btn-sm"
         @click="projectStore.saveProject()"
@@ -53,37 +49,14 @@
       </button>
     </div>
 
-    <!-- Input oculto para cargar archivos -->
-    <input
-      type="file"
-      accept=".json,.jlprj"
-      style="display: none"
-      ref="fileInput"
-      @change="handleFileLoad"
-    />
+    
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useProjectStore } from '../../stores/project'
 
 const projectStore = useProjectStore()
-const fileInput = ref<HTMLInputElement>()
 
-const triggerFileInput = () => {
-  fileInput.value?.click()
-}
 
-const handleFileLoad = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (file) {
-    projectStore.loadProjectFromFile(file)
-  }
-}
-
-defineExpose({
-  triggerFileInput
-})
 </script>

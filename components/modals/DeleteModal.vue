@@ -38,6 +38,8 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal';
+import { useProjectStore } from '../../stores/project';
+import { useUIStore } from '../../stores/ui';
 
 const projectStore = useProjectStore();
 const uiStore = useUIStore()

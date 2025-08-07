@@ -27,7 +27,7 @@
             <td>{{ getPredecessors(item) }}</td>
             <td class="action-buttons">
               <div
-              v-if="item.id !== projectStore.controller.getProject().getStartMilestone().id && item.id !== projectStore.controller.getProject().getEndMilestone().id"
+              v-if="!projectStore.controller.isStart(item) && !projectStore.controller.isEnd(item)"
               >
               <button
                 class="btn btn-sm btn-light"
@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useProjectStore } from '../../stores/project'
 import { useUIStore } from '../../stores/ui'
 import { useFormItemStore } from '../../stores/formItem'

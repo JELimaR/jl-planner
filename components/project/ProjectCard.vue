@@ -9,7 +9,7 @@
         <div class="d-flex w-100 justify-content-between">
           <h6 class="mb-1">{{ project.title || 'Sin título' }}</h6>
           </div>
-        <p class="mb-1 text-muted">{{ project.subTitle || 'Sin descripción' }}</p>
+        <p class="mb-1 text-muted">{{ project.subtitle || 'Sin descripción' }}</p>
         <div class="d-flex justify-content-between align-items-center">
           <small class="text-muted">ID: {{ project.id }}</small>
           <div class="d-flex gap-2">

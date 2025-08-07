@@ -27,6 +27,9 @@
     
     <!-- Caminos críticos -->
     <CriticalPaths />
+
+    <!-- {{ projectStore.controller.calculateDailySpending('linear') }} -->
+
   </div>
 </template>
 
@@ -52,27 +55,16 @@ onMounted(async () => {
         await projectStore.newProject()
         break;
       case 'p002':
-        await projectStore.initializeProject(projectId)
+        await projectStore.initializeProject()
         break;
       case 'p003':
-        await projectStore.initializeProject(projectId)
+        await projectStore.newProject()
         projectStore.controller.chargeExampleProject()
         break;
       default:
-        await projectStore.newProject()
+        //await projectStore.newProject()
     }
-    
-    // Configurar eventos globales si es necesario
-    /*if (typeof window !== 'undefined') {
-      window.addEventListener('openDeleteModal', (e: any) => {
-        try {
-          projectStore.itemToDelete = e.detail.itemId
-          uiStore.openDeleteModal()
-        } catch (error) {
-          console.error('Error opening delete modal:', error)
-        }
-      })
-    }*/
+
   } catch (error) {
     console.error('Error initializing project:', error)
   }

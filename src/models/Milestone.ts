@@ -1,7 +1,8 @@
+import { SpendingMethod } from '../controllers/ProjectController';
 import { DAY_MS } from '../views/ganttHelpers';
 import { IItemData, Item } from './Item';
 import type { Process } from './Process';
-import { TDateString, formatDateToDisplay } from './dateFunc';
+import { TDateString, displayStringToDate, formatDateToDisplay } from './dateFunc';
 
 export interface IMilestoneData extends IItemData {
   type: 'milestone';
@@ -10,6 +11,20 @@ export interface IMilestoneData extends IItemData {
 }
 
 export class Milestone extends Item {
+  getDailyCost(date: Date, method: SpendingMethod): number {
+    const cost = this.getTotalCost();
+    const startDate = this.getStartDate();
+    const endDate = this.getEndDate();
+    if (!startDate || !endDate) {
+      throw new Error('Start date and end date must be defined to calculate daily cost');
+    }
+
+    if (date >= startDate) {
+      return this.getTotalCost();
+    } else {
+      return 0;
+    }
+  }
   private _calculatedStartDate?: Date;
   private _actualStartDate?: Date;
   _type: 'milestone' = 'milestone';
@@ -32,10 +47,9 @@ export class Milestone extends Item {
     const milestoneData = data as IMilestoneData;
 
     // Handle milestone-specific editable properties
-    if (milestoneData.actualStartDate !== undefined) {
+    if (!!milestoneData.actualStartDate) {
       // Assuming a function exists to parse the date string
-      // For example, using `new Date(milestoneData.actualStartDate)`
-      this.setActualStartDate(new Date(milestoneData.actualStartDate));
+      this.setActualStartDate(displayStringToDate(milestoneData.actualStartDate));
     } else {
       this.setActualStartDate(undefined);
     }

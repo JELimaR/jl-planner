@@ -1,3 +1,5 @@
+import { SpendingMethod } from "../controllers/ProjectController";
+import { formatDateToDisplay, TDateString } from "./dateFunc";
 import { Process } from "./Process";
 
 // Interfaz base para herencia
@@ -6,6 +8,8 @@ export interface IItemData {
   type: 'task' | 'milestone' | 'process';
   name: string;
   detail?: string;
+  startDate: TDateString;
+  endDate: TDateString;
   cost: number;
   parentId: number;
   predecessorIds: number[];
@@ -98,11 +102,19 @@ export abstract class Item {
 
   /** */
   get data(): IItemData {
+    const startDate = formatDateToDisplay(this.getStartDate() || new Date());
+    if (!startDate) throw new Error('Start date cannot be undefined');
+
+    const endDate = formatDateToDisplay(this.getEndDate() || new Date());
+    if (!endDate) throw new Error('End date cannot be undefined');
+
     return {
       id: this.id,
       type: this._type,
       name: this.name,
       detail: this.detail,
+      startDate: startDate,
+      endDate: endDate,
       cost: this.getTotalCost(),
       parentId: this._parent?._id ?? -1,
       predecessorIds: Array.from(this.predecessors).map((item) => item._id),
@@ -151,6 +163,8 @@ export abstract class Item {
   getTotalCost(): number {
     return this._cost;
   }
+
+  abstract getDailyCost(date: Date, method: SpendingMethod): number;
 
   /** Establece el costo del item */
   setCost(cost: number): void {

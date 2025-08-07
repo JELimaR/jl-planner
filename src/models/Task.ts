@@ -1,6 +1,8 @@
+import { SpendingMethod } from '../controllers/ProjectController';
+import { DAY_MS } from '../views/ganttHelpers';
 import { IItemData, Item } from './Item';
 import type { Process } from './Process';
-import { TDateString, formatDateToDisplay } from './dateFunc';
+import { TDateString, displayStringToDate, formatDateToDisplay } from './dateFunc';
 
 export interface ITaskData extends IItemData {
   type: 'task';
@@ -10,9 +12,35 @@ export interface ITaskData extends IItemData {
   manualDuration?: number;
 }
 
-const ONEDAY = 24 * 60 * 60 * 1000;
-
 export class Task extends Item {
+  getDailyCost(date: Date, method: SpendingMethod): number {
+    const cost = this.getTotalCost();
+    const startDate = this.getStartDate();
+    const endDate = this.getEndDate();
+    if (!startDate || !endDate) {
+      throw new Error('Start date and end date must be defined to calculate daily cost');
+    }
+
+    switch (method) {
+      case 'finished':
+        return endDate && date >= endDate ? 0 : cost;
+      case 'started':
+        return startDate && date >= startDate ? cost : 0;
+
+      case 'linear':
+        if (date >= endDate!) {
+          return cost;
+        }
+        const duration = this.duration;
+        const daysProgress = Math.ceil((date.getTime() - startDate.getTime()) / DAY_MS);
+        return cost / duration * daysProgress;
+
+      default:
+        throw new Error('Invalid spending method');
+        break;
+    }
+  }
+
   private calculatedStartDate?: Date;
   private actualStartDate?: Date;
   private calculatedDuration: number;
@@ -49,11 +77,10 @@ export class Task extends Item {
       // but the current structure suggests it's a fixed property.
     }
 
-    if (taskData.actualStartDate !== undefined) {
+    if (!!taskData.actualStartDate) {
       // Assuming a function exists to parse the date string
       // This is a placeholder; you'll need a way to convert TDateString to a Date object.
-      // For example, using `new Date(taskData.actualStartDate)`
-      this.setActualStartDate(new Date(taskData.actualStartDate));
+      this.setActualStartDate(displayStringToDate(taskData.actualStartDate));
     } else {
       this.setActualStartDate(undefined);
     }
@@ -112,7 +139,7 @@ export class Task extends Item {
     if (!this.actualStartDate || !this.calculatedStartDate) return 0;
     const diff =
       this.actualStartDate.getTime() - this.calculatedStartDate.getTime();
-    return Math.ceil(diff / ONEDAY);
+    return Math.ceil(diff / DAY_MS);
   }
 
   hasActualStartDate(): boolean {

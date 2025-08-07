@@ -12,6 +12,7 @@ export interface IProjectHeader {
   title: string;
   subtitle: string;
   startDate: TDateString;
+  endDate: TDateString;
 }
 
 export interface IProjectData {
@@ -116,7 +117,7 @@ export class Project {
   }
 
   addRelation(pre: Item, suc: Item) {
-    if (pre.id == suc.id) {
+    if (pre.id == suc.id || pre.parent?.id == suc.id || suc.parent?.id == pre.id) {
       return;
     }
     if (pre instanceof Process) {
@@ -272,7 +273,7 @@ export class Project {
   getDelayedItems(): Array<Task | Milestone> {
     const delayed: Array<Task | Milestone> = [];
 
-    for (const item of this.allItemsMap.values()) {
+    this.allItemsMap.forEach((item) => {
       if (item instanceof Task || item instanceof Milestone) {
         const calc = item.getCalculatedStartDate();
         const actual = item.getStartDate();
@@ -280,7 +281,7 @@ export class Project {
           delayed.push(item);
         }
       }
-    }
+    })
 
     return delayed;
   }
@@ -323,29 +324,37 @@ export class Project {
       callback(item, depth, parent);
 
       if (item instanceof Process) {
-        for (const child of item.children) {
+        item.children.forEach((child: Item) => {
           visit(child, depth + 1, item);
-        }
+        })
       }
     };
 
-    for (const child of this.getRoot().children) {
+    this.getRoot().children.forEach((child: Item) => {
       visit(child, 0, this.getRoot());
-    }
+    })
   }
 
   /**
    * 
    */
   getData(): IProjectData {
-    const startDate = formatDateToDisplay(this.getProjectStartDate());
-    if (!startDate) {
-      throw new Error(`Project start date is not set.`);
-    }
     const items: IItemData[] = [];
-
-    for (const child of this.getRoot().children) {
+    this.getRoot().children.forEach((child: Item) => {
       items.push(child.data);
+    })
+
+    return {
+      ...this.getHeaderData(),
+      items,
+    };
+  }
+
+  getHeaderData(): IProjectHeader {
+    const startDate = formatDateToDisplay(this.getProjectStartDate());
+    const endDate = formatDateToDisplay(this.getProjectEndDate());
+    if (!startDate || !endDate) {
+      throw new Error(`Project start date is not set.`);
     }
 
     return {
@@ -353,7 +362,7 @@ export class Project {
       title: this.getTitle(),
       subtitle: this.getSubtitle(),
       startDate,
-      items,
+      endDate,
     };
   }
 

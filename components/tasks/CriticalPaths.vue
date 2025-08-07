@@ -6,8 +6,8 @@
       <p>No se detectaron caminos críticos.</p>
     </div>
     
-    <div v-for="(cp, index) in criticalPaths" :key="index">
-      <h5 class="mt-4">Camino Crítico #{{ index + 1 }} — Retraso total: {{ cp.totalDelayDays }} días</h5>
+    <div v-for="(cp, cpidx) in criticalPaths" :key="cpidx">
+      <h5 class="mt-4">Camino Crítico #{{ cpidx + 1 }} — Retraso total: {{ cp.totalDelayDays }} días</h5>
       
       <table class="table table-sm table-bordered">
         <thead>

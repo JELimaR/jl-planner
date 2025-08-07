@@ -2,7 +2,7 @@
   <VueFinalModal 
     :model-value="uiStore.addModalVisible"
     :lock-scroll="true"
-    :click-to-close="false"
+    :click-to-close="true"
     :esc-to-close="true"
     :teleport-to="'body'"
     overlay-class="modal-overlay"
@@ -11,7 +11,7 @@
     @closed="close()"
   >
     <div class="modal-header">
-      <h5 class="modal-title">{{ projectStore.isEditing ? 'Editar' : 'Agregar' }} Item</h5>
+      <h5 class="modal-title">{{ projectStore.itemToEdit ? `Editar (#${projectStore.itemToEdit} - ${ projectStore.controller.getProject().getItemById(projectStore.itemToEdit).name })` : 'Agregar' }} </h5>
       <button type="button" class="btn-close" aria-label="Close" @click="close()"></button>
     </div>
     
@@ -43,7 +43,7 @@ const beforeOpen = () => {
   if (projectStore.itemToEdit) { // Usa itemToEdit en lugar de itemForEdit
     // Si estamos en modo edición, cargamos los datos del item
     const item = projectStore.controller.getProject().getItemById(projectStore.itemToEdit);
-    formItemStore.loadFormForEdit(item);
+    formItemStore.loadFormForEdit(item.data);
   } else {
     // Si estamos en modo agregar, reseteamos el formulario
     formItemStore.resetForm();

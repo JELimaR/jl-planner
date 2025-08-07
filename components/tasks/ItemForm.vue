@@ -71,7 +71,8 @@
         <div class="mb-3">
           <label for="addActualStartDate" class="form-label">Inicio real (opcional)</label>
           <input type="date" class="form-control" id="addActualStartDate"
-            v-model="formItemStore.form.actualStartDate" />
+            v-model="actualStartDateRef" />
+
         </div>
       </div>
 
@@ -79,7 +80,8 @@
         <div class="mb-3">
           <label for="addActualStartDate" class="form-label">Inicio real (opcional)</label>
           <input type="date" class="form-control" id="addActualStartDate"
-            v-model="formItemStore.form.actualStartDate" />
+            v-model="actualStartDateRef" />
+
         </div>
       </div>
     </div>
@@ -96,7 +98,7 @@
 
     <div class="mb-3">
       <label for="addItemParentProcess" class="form-label">Pertenece a proceso</label>
-      <select class="form-select" id="addItemParentProcess" v-model="formItemStore.form.processId"
+      <select class="form-select" id="addItemParentProcess" v-model="formItemStore.form.parentId"
         :disabled="formItemStore.form.id !== -1">
         <option v-for="option in projectStore.controller.getAllProcess()" :key="option.id" :value="option.id">
           {{ option.name }}
@@ -115,23 +117,39 @@
 import { useProjectStore } from '../../stores/project';
 import { useFormItemStore } from '../../stores/formItem';
 import { useUIStore } from '../../stores/ui';
+import { displayStringToDate, TDateString } from '../../src/models/dateFunc';
+import { computed } from 'vue';
 
 const projectStore = useProjectStore();
 const formItemStore = useFormItemStore();
 const uiStore = useUIStore();
 
+const actualStartDateRef = computed({
+  // Getter: Lee el valor del store y lo convierte para mostrarlo en el input
+  get() {
+    if (formItemStore.form.actualStartDate && formItemStore.form.actualStartDate !== '') {
+      return displayStringToDate(formItemStore.form.actualStartDate).toISOString().substring(0, 10)
+    }
+    return undefined;
+  },
+  // Setter: Actualiza el valor del store cuando el input cambia
+  set(newValue) {
+    if (!newValue) {
+      formItemStore.form.actualStartDate = undefined
+    } else {
+      formItemStore.form.actualStartDate = newValue.split('-').reverse().join('-') as TDateString;
+    }
+  }
+});
+
 const close = () => {
   uiStore.closeAddModal()
   formItemStore.resetForm()
-}
+} 
 
 const saveItem = () => {
   if (formItemStore.isFormValid) {
-    if (formItemStore.form.id === -1) {
-      projectStore.addNewItem(formItemStore.form);
-    } else {
-      projectStore.editItem(formItemStore.form);
-    }
+    formItemStore.submitForm()
     close();
   }
 };

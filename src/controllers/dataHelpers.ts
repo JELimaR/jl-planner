@@ -1,98 +1,51 @@
-import type { Item } from '../models/Item';
+import type { IItemData, Item } from '../models/Item';
 import { Milestone } from '../models/Milestone';
-import { Process } from '../models/Process';
+import { IProcessData, Process } from '../models/Process';
 import type { Project } from '../models/Project';
-import { Task } from '../models/Task';
-import type { FormItemValues } from './addItemValues';
-
-export function itemToFormValues(item: Item): FormItemValues {
-  const processId = item.parent?.id;
-  if (!processId) {
-    throw new Error(`Item ${item.name} no tiene proceso padre`);
-  }
-  const common = {
-    title: `Editar: (#${item.id} - ${item.name})`,
-    id: item.id,
-    type: item._type,
-    name: item.name,
-    detail: item.detail,
-    processId: processId,
-    predecessorIds: Array.from(item.predecessors).map((pred) => pred.id),
-    cost: item.getTotalCost() || 0,
-  };
-
-  if (item instanceof Task) {
-    return {
-      ...common,
-      duration: item.duration,
-      actualStartDate: item.hasActualStartDate()
-        ? item.getStartDate()
-        : undefined,
-    };
-  }
-
-  if (item instanceof Milestone) {
-    return {
-      ...common,
-      actualStartDate: item.hasActualStartDate()
-        ? item.getStartDate()
-        : undefined,
-    };
-  }
-
-  // Proceso
-  if (item instanceof Process) {
-    return {
-      ...common,
-      useManualCost: item.getUseManualCost(), // Incluir useManualCost para procesos
-    };
-  }
-
-  return common;
-}
+import { ITaskData, Task } from '../models/Task';
 
 /**
- * Crea un nuevo Item (Task, Milestone o Process) desde los valores del formulario.
+ * Crea un nuevo Item (Task, Milestone o Process) desde los datos de un item.
+ * @param id - El ID del item.
+ * @param data - Los datos del item.
+ * @param project - El proyecto al que pertenece el item.
+ * @returns El item creado.
  */
-export function formValuesToItem(
-  id: number,
-  values: FormItemValues,
-  project: Project
-): Item {
+export function itemDataToItem(  id: number,  data: IItemData,  project: Project): Item {
   try {
-    const parent = values.processId
-      ? (project.getItemById(values.processId) as Process)
+    const parent = data.parentId
+      ? (project.getItemById(data.parentId) as Process)
       : undefined;
 
-    switch (values.type) {
+    switch (data.type) {
       case 'task':
         return new Task(
           id,
-          values.name,
-          values.duration || 1,
+          data.name,
+          (data as ITaskData).duration || 1,
           parent,
-          values.detail,
-          values.cost || 0
+          data.detail,
+          data.cost || 0
         );
       case 'milestone':
         return new Milestone(
           id,
-          values.name,
+          data.name,
           parent,
-          values.detail,
-          values.cost || 0
+          data.detail,
+          data.cost || 0
         );
       case 'process':
         return new Process(
           id,
-          values.name,
+          data.name,
           parent,
-          values.detail,
-          values.cost || 0,
-          values.useManualCost || false // Incluir useManualCost para procesos
+          data.detail,
+          data.cost || 0,
+          (data as IProcessData).useManualCost || false
         );
       default:
-        throw new Error(`Tipo de item no válido: ${values.type}`);
+        throw new Error(`Tipo de item no válido: ${data.type}`);
     }
   } catch (error) {
     console.error('Error creating item from form values:', error);
