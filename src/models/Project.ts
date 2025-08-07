@@ -132,7 +132,18 @@ export class Project {
         this.addRelation(pre, sucChild);
       });
     }
-    suc.addPredecessor(pre);
+
+    const graph = DependencyGraph.fromProject(this);
+    try {
+      // Intentar agregar la relación en el grafo de validación.
+      graph.addEdge(pre.id, suc.id);
+
+      // Si no se lanza un error, la relación es válida.
+      suc.addPredecessor(pre);
+    } catch (error) {
+      // Capturar el error y re-lanzarlo para indicar que la operación falló.
+      throw new Error(`Failed to add relation ${pre.id} -> ${suc.id}: ${error.message}`);
+    }
   }
 
   /**
@@ -207,8 +218,6 @@ export class Project {
 
     // Paso 2: calcular fechas para el grafo plano
     calculateDatesFromGraph(graph, this.projectStartDate);
-
-    // Paso 3: recursivamente actualizar fechas de procesos
   }
 
   /************************************************************************************** */
@@ -281,7 +290,6 @@ export class Project {
    * Se basa en la diferencia entre la fecha fin calculada y la mayor fecha fin real (entre todos los ítems).
    * Si no hay atrasos, devuelve 0.
    */
-
   getTotalProjectDelayInDays(): number {
     const projectEnd = this.getProjectEndDate();
     if (!projectEnd) return 0;
@@ -304,7 +312,10 @@ export class Project {
     return Math.ceil(delayMs / DAY_MS);
   }
 
-  /** */
+  /**
+   * Recorre el proyecto de forma recursiva, llamando a la función callback para cada ítem.
+   * @param callback Función a llamar para cada ítem. Recibe el ítem, su profundidad en el árbol y su proceso padre.
+   */
   traverse(
     callback: (item: Item, depth: number, parent: Process) => void
   ): void {
@@ -329,7 +340,7 @@ export class Project {
   getData(): IProjectData {
     const startDate = formatDateToDisplay(this.getProjectStartDate());
     if (!startDate) {
-      throw new Error(``)
+      throw new Error(`Project start date is not set.`);
     }
     const items: IItemData[] = [];
 

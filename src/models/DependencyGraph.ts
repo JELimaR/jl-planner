@@ -10,16 +10,16 @@ export class DependencyGraph {
   edges: Map<number, Set<number>> = new Map();
   reverseEdges: Map<number, Set<number>> = new Map();
 
-  constructor() {}
+  constructor() { }
 
   /**
    * Agrega un nodo (Task o Milestone) al grafo.
    */
   addNode(item: TNode): void {
-    if (!this.nodes.has(item._id)) {
-      this.nodes.set(item._id, item);
-      this.edges.set(item._id, new Set());
-      this.reverseEdges.set(item._id, new Set());
+    if (!this.nodes.has(item.id)) {
+      this.nodes.set(item.id, item);
+      this.edges.set(item.id, new Set());
+      this.reverseEdges.set(item.id, new Set());
     }
   }
 
@@ -27,11 +27,40 @@ export class DependencyGraph {
    * Agrega una dependencia dirigida: from → to (from debe completarse antes que to).
    */
   addEdge(fromId: number, toId: number): void {
+    // 1. Verificar si la dependencia crearía un ciclo.
+    // Un ciclo existe si ya hay un camino de `toId` a `fromId`.
+    if (this.hasPath(toId, fromId)) {
+      throw new Error(`Agregar la dependencia de ${fromId} a ${toId} crea un ciclo.`);
+    }
+
+    // 2. Si no hay ciclo, proceder a agregar la dependencia.
     if (!this.edges.has(fromId)) this.edges.set(fromId, new Set());
     if (!this.reverseEdges.has(toId)) this.reverseEdges.set(toId, new Set());
 
     this.edges.get(fromId)!.add(toId);
     this.reverseEdges.get(toId)!.add(fromId);
+  }
+
+  private hasPath(startId: number, targetId: number): boolean {
+    const visited = new Set<number>();
+    const stack = [startId];
+
+    while (stack.length > 0) {
+      const currentId = stack.pop()!;
+      if (currentId === targetId) {
+        return true; // Camino encontrado.
+      }
+      if (!visited.has(currentId)) {
+        visited.add(currentId);
+        const successors = this.edges.get(currentId);
+        if (successors) {
+          for (const successorId of successors) {
+            stack.push(successorId);
+          }
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -99,8 +128,12 @@ export class DependencyGraph {
 
     graph.nodes.forEach((value: TNode) => {
       value.predecessors.forEach((prede: Item) => {
-        if (graph.nodes.has(prede._id)) {
-          graph.addEdge(prede._id, value._id);
+        if (prede.id == project.getEndMilestone().id) {
+          throw new Error(`La tarea ${value.id} tiene como predecesor el hito final.`);
+        }
+
+        if (graph.nodes.has(prede.id)) {
+          graph.addEdge(prede.id, value.id);
         }
       });
     });
