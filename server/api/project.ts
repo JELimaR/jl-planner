@@ -3,7 +3,8 @@ import type { IProjectData, IProjectHeader } from '../../src/models/Project'
 import type { IItemData } from '../../src/models/Item'
 import { createError, defineEventHandler, getQuery, readBody, setHeader } from 'h3';
 import { displayStringToDate, TDateString } from '../../src/models/dateFunc';
-import { ICriticalPathData } from '../../src/models/graphCalculation';
+import fs from 'node:fs';
+import {join} from 'node:path'; 
 
 // Singleton del controlador para mantener estado en el servidor
 let projectController: ProjectController | null = null
@@ -68,6 +69,43 @@ export default defineEventHandler(async (event) => {
               }
             }
             return { success: true, data: controller.getProjectData() }
+          }
+
+          case 'getTemplate': {
+            const { tid } = data as { tid: string }
+            let templatePath: string;
+
+            switch (tid) {
+              case 'p001':
+                templatePath = './public/template-p001.jlprj';
+                try {
+                  const fs = await import('fs/promises');
+                  const templateData = await fs.readFile(templatePath, 'utf-8');
+                  const jsonData = JSON.parse(templateData);
+                  return { success: true, data: jsonData };
+                } catch (err) {
+                  console.error('Error reading template file:', err);
+                  throw createError({
+                    statusCode: 500,
+                    statusMessage: `Error loading template for ID '${tid}'.`
+                  });
+                }
+              case 'p002':
+                // Cargar proyecto de ejemplo
+                controller.chargeExampleProject();
+                return { success: true, data: controller.getProjectData() };
+              case 'p003':
+                // Crear un nuevo proyecto
+                controller.createNewProject(new Date());
+                return { success: true, data: controller.getProjectData() };
+              default:
+                controller.createNewProject(new Date());
+                return { success: true, data: controller.getProjectData() };
+                throw createError({
+                  statusCode: 404,
+                  statusMessage: `Template ID '${tid}' not found.`
+                });
+            }
           }
 
           case 'loadExample': {

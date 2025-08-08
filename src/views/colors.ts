@@ -66,7 +66,7 @@ export function setProjectItemsColors(project: Project) {
       bgColor = ligthenColor(bgColor, 1 - 0.2 * depth);
     }
     processColorMap.set(item.id, bgColor);
+    item._color = bgColor;
   };
-
   project.traverse(traverseFunc);
 }

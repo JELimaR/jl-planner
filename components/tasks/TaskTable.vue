@@ -16,12 +16,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in items" :key="item.id" 
-              :style="getRowStyle(item, index)">
+          <tr v-for="(item, index) in flattenedItems" :key="item.id" 
+              :style="getRowStyle(item, getDepth(item))">
             <td :style="`padding-left: ${5 + 0 * getDepth(item) * 8}px; font-size: 8px;`">{{ item.id }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.detail || '' }}</td>
-            <td>{{ item instanceof Task ? item.duration : '-' }}</td>
+            <td>{{ item.type === 'task' ? (item as ITaskData).duration : '-' }}</td>
             <td>{{ item.startDate }}</td>
             <td>{{ item.endDate }}</td>
             <td>{{ item.predecessorIds.filter(pi => pi !== 1000).join(', ') }}</td>
@@ -73,42 +73,46 @@ import { computed, watch } from 'vue'
 import { useProjectStore } from '../../stores/project'
 import { useUIStore } from '../../stores/ui'
 import { useFormItemStore } from '../../stores/formItem'
-import { Task } from '../../src/models/Task'
+import { ITaskData, Task } from '../../src/models/Task'
 import { processColorMap } from '../../src/views/colors'
-import type { IItemData, Item } from '../../src/models/Item'
-import { Milestone } from '../../src/models/Milestone'
-import { IProcessData, Process } from '../../src/models/Process'
+import type { IItemData } from '../../src/models/Item'
+import { IProcessData } from '../../src/models/Process'
+import { flattenItemsList } from '../../stores/project'
 
 const projectStore = useProjectStore()
 const uiStore = useUIStore()
 
 
-const items = computed(() => projectStore.flattennedItems);
-const getParent = (item: IItemData): IProcessData | undefined => {
-  const parent = projectStore.flattennedItems.find(fi => fi.id == item.parentId)
-  if (parent && parent.type === 'process') {
-    return parent as IProcessData
+const flattenedItems = computed(() => flattenItemsList(projectStore.projectItems))
+// Obtener el padre de un item de forma segura
+const getParent = (item: IItemData): IItemData | undefined => {
+  if (!item.parentId) {
+    return undefined;
   }
-  return undefined
+  return flattenedItems.value.find(fi => fi.id === item.parentId);
 }
 
 // Obtener el nivel de profundidad del item
 const getDepth = (item: IItemData): number => {
-  let depth = 0
-  let current = item
-  while (current.parentId && current.parentId !== 1001) { // mejorar
-    depth++
-    current = getParent(item)!;
+  let depth = 0;
+  let current: IItemData | undefined = item;
+  while (current && current.parentId !== undefined && current.parentId !== 1001) {
+    current = flattenedItems.value.find(fi => fi.id === current?.parentId);
+    if (current) {
+      depth++;
+    } else {
+      break;
+    }
   }
-  return depth
+  return depth;
 }
 
 // Obtener el estilo de la fila
 const getRowStyle = (item: IItemData, depth: number) => {
   const borderWidth = `${Math.max(0.5, 4 / 2 ** depth)}px`
   const opacity = 1 - depth * 0.05
-  const bgColor = processColorMap.get(item.id) || '#ffffff'
-  
+  // const bgColor = processColorMap.get(item.id) || '#ffffff';
+  const bgColor = item.color;
   return {
     fontSize: '12px',
     borderBottom: `${borderWidth} solid rgba(0,0,0,${opacity}) !important`,
@@ -143,8 +147,9 @@ const changeOrder = (item: IItemData, sense: 'up' | 'down') => {
 // Función para deshabilitar el botón de subir
 const canMoveUp = (item: IItemData, index: number): boolean => {
   const parent = getParent(item);
+  hay que corregir esta funcion
   if (!parent) return false
-  const children = parent.children
+  const children = (parent as IProcessData).children
   if (children.indexOf(item) === 0) return false
   const prevSibling = children[children.indexOf(item) - 1]
   if (prevSibling && prevSibling.id === 1000) { // mejorar
@@ -156,8 +161,9 @@ const canMoveUp = (item: IItemData, index: number): boolean => {
 // Función para deshabilitar el botón de bajar
 const canMoveDown = (item: IItemData, index: number): boolean => {
   const parent = getParent(item);
+  hay que corregir esta funcion
   if (!parent) return false
-  const children = parent.children
+  const children = (parent as IProcessData).children
   if (children.indexOf(item) === children.length - 1) return false
   const nextSibling = children[children.indexOf(item) + 1]
   if (nextSibling && nextSibling.id === 1002) { // mejorar
@@ -166,18 +172,6 @@ const canMoveDown = (item: IItemData, index: number): boolean => {
   return true
 }
 
-watch(
-  () => projectStore.projectData,
-  (newValue, oldValue) => {
-    if (newValue) {
-      console.log('projectData ha cambiado. La tabla debería actualizarse.');
-      // Aquí podrías agregar cualquier otra lógica que dependa del cambio de datos.
-      console.log(projectStore.projectData)
-      console.log(items)
-    }
-  },
-  { deep: true, immediate: true }
-);
 </script>
 
 <style>

@@ -58,6 +58,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { TDateString } from '../../src/models/dateFunc';
 import { useProjectStore } from '../../stores/project'
 import DateInput from '../DateInput.vue'
 
@@ -65,7 +67,8 @@ const selectedDate = ref<TDateString | undefined>(undefined);
 
 const projectStore = useProjectStore()
 const changeStartDate = () => {
-  projectStore.changeStartDate(selectedDate.value)
+  if (selectedDate.value)
+    projectStore.changeStartDate(selectedDate.value)
 }
 
 </script>

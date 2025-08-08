@@ -7,14 +7,16 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
-          include: ['test/{e2e,unit}/*.{test,spec}.ts'],
+          // Modificado para incluir subcarpetas
+          include: ['test/{e2e,unit}/**/*.{test,spec}.ts'],
           environment: 'node',
         },
       },
       await defineVitestProject({
         test: {
           name: 'nuxt',
-          include: ['test/nuxt/*.{test,spec}.ts'],
+          // Modificado para incluir subcarpetas
+          include: ['test/nuxt/**/*.{test,spec}.ts'],
           environment: 'nuxt',
         },
       }),

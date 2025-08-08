@@ -13,6 +13,7 @@ export interface IItemData {
   cost: number;
   parentId: number;
   predecessorIds: number[];
+  color?: string;
 }
 
 export abstract class Item {
@@ -115,6 +116,7 @@ export abstract class Item {
       detail: this.detail,
       startDate: startDate,
       endDate: endDate,
+      color: this._color,
       cost: this.getTotalCost(),
       parentId: this._parent?._id ?? -1,
       predecessorIds: Array.from(this.predecessors).map((item) => item._id),

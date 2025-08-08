@@ -9,7 +9,7 @@ export const useProjectStore = defineStore('project', {
   state: () => ({
     // Estado basado en IProjectData
     projectData: null as IProjectData | null,
-    
+
     // Estados de UI
     currentScale: 'week' as Scale,
     itemToDelete: null as IItemData | null,
@@ -18,7 +18,7 @@ export const useProjectStore = defineStore('project', {
     isLoading: false,
     error: null as string | null
   }),
-  
+
   getters: {
     // Getters computados para acceso fácil a datos del proyecto
     projectId: (state) => state.projectData?.id,
@@ -27,65 +27,49 @@ export const useProjectStore = defineStore('project', {
     projectStartDate: (state) => state.projectData?.startDate,
     projectEndDate: (state) => state.projectData?.endDate,
     projectItems: (state) => state.projectData?.items || [],
-    flattennedItems: (state) => flattenItemsList(state.projectData?.items || []),
     criticalPath: (state) => state.projectData?.criticalPath || [],
   },
-  
+
   actions: {
     // Manejo de errores centralizado
     setError(error: string | null) {
       this.error = error
     },
-    
+
     setLoading(loading: boolean) {
       this.isLoading = loading
     },
-    
-    // Inicializar proyecto
-    async initializeProject(projectId?: string) {
+
+    // 🆕 Obtener plantilla por ID
+    async getTemplate(tid: string) {
       this.setLoading(true)
       this.setError(null)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
           body: {
-            action: 'initialize',
-            data: { projectId }
+            action: 'getTemplate',
+            data: { tid }
           }
         })
-        
-          if ((response as { success: boolean }).success) {
+
+        if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          // await this.loadProjectHeader()
-          this.isInitialized = true
         }
       } catch (error) {
-        console.error('Error initializing project:', error)
-        this.setError('Error al inicializar el proyecto')
+        console.error('Error getting template:', error)
+        this.setError('Error al obtener la plantilla')
       } finally {
         this.setLoading(false)
       }
-      console.log(this.projectData)
     },
-    
-    // Cargar header del proyecto
-    async loadProjectHeader() {
-      try {
-        const response = await $fetch('/api/project?type=header')
-        if ((response as { success: boolean }).success) {
-          this.projectHeader = (response as { data: IProjectHeader }).data
-        }
-      } catch (error) {
-        console.error('Error loading project header:', error)
-      }
-    },
-    
+
     // Crear nuevo proyecto
     async newProject(startDate?: Date) {
       this.setLoading(true)
       this.setError(null)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
@@ -94,7 +78,7 @@ export const useProjectStore = defineStore('project', {
             data: { startDate: formatDateToDisplay(startDate) }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           console.log(response)
           this.projectData = (response as { data: IProjectData }).data
@@ -107,11 +91,11 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Cambiar orden de item
     async changeOrder(itemId: number, sense: 'up' | 'down') {
       this.setLoading(true)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
@@ -120,7 +104,7 @@ export const useProjectStore = defineStore('project', {
             data: { itemId, sense }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -132,11 +116,11 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Resetear fechas actuales
     async resetActualStartDates() {
       this.setLoading(true)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
@@ -145,7 +129,7 @@ export const useProjectStore = defineStore('project', {
             data: {}
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -157,16 +141,16 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Cargar proyecto desde archivo
     async loadProjectFromFile(file: File) {
       this.setLoading(true)
       this.setError(null)
-      
+
       try {
         const text = await file.text()
         const jsonData = JSON.parse(text)
-        
+
         const response = await $fetch('/api/project', {
           method: 'POST',
           body: {
@@ -174,7 +158,7 @@ export const useProjectStore = defineStore('project', {
             data: { jsonData }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -186,7 +170,7 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Guardar título y subtítulo
     async saveTitle(title: string, subtitle: string) {
       try {
@@ -197,7 +181,7 @@ export const useProjectStore = defineStore('project', {
             data: { title, subtitle }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectHeader = (response as { data: IProjectHeader }).data
           // Actualizar también en projectData
@@ -211,20 +195,20 @@ export const useProjectStore = defineStore('project', {
         this.setError('Error al guardar el título')
       }
     },
-    
+
     // Cambiar fecha de inicio
     async changeStartDate(newStartDate: TDateString) {
       this.setLoading(true)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
           body: {
             action: 'changeStartDate',
-            data: { startDate: newStartDate } 
+            data: { startDate: newStartDate }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -236,11 +220,11 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Agregar nuevo item
     async addNewItem(data: IItemData) {
       this.setLoading(true)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
@@ -249,7 +233,7 @@ export const useProjectStore = defineStore('project', {
             data: { itemData: data }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -261,11 +245,11 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Editar item
     async editItem(data: IItemData) {
       this.setLoading(true)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
@@ -274,7 +258,7 @@ export const useProjectStore = defineStore('project', {
             data: { id: data.id, itemData: data }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -286,22 +270,22 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Eliminar item
     async deleteItem() {
       if (this.itemToDelete === null) return
-      
+
       this.setLoading(true)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
           body: {
             action: 'deleteItem',
-            data: { id: this.itemToDelete .id}
+            data: { id: this.itemToDelete.id }
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -314,11 +298,11 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Descargar proyecto como JSON
     saveProject() {
       if (!this.projectData) return
-      
+
       const dataStr = JSON.stringify(this.projectData, null, 2)
       const dataBlob = new Blob([dataStr], { type: 'application/json' })
       const url = URL.createObjectURL(dataBlob)
@@ -328,22 +312,22 @@ export const useProjectStore = defineStore('project', {
       link.click()
       URL.revokeObjectURL(url)
     },
-    
+
     // Configurar item para editar
     setupItemForEdit(item: IItemData | null) {
       this.itemToEdit = item;
     },
-    
+
     // Configurar item para eliminar
     setupItemForDelete(item: IItemData | null) {
       this.itemToDelete = item;
     },
-    
+
     // Cargar proyecto de ejemplo
     async loadExampleProject() {
       this.setLoading(true)
       this.setError(null)
-      
+
       try {
         const response = await $fetch('/api/project', {
           method: 'POST',
@@ -352,7 +336,7 @@ export const useProjectStore = defineStore('project', {
             data: {}
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // await this.loadProjectHeader()
@@ -364,7 +348,7 @@ export const useProjectStore = defineStore('project', {
         this.setLoading(false)
       }
     },
-    
+
     // Exportar PDF
     async exportPDF() {
       try {
@@ -375,7 +359,7 @@ export const useProjectStore = defineStore('project', {
             data: {}
           }
         })
-        
+
         if ((response as { success: boolean }).success) {
           console.log('PDF export:', (response as { message: string }).message)
           // Implementar lógica de exportación PDF aquí
@@ -385,7 +369,7 @@ export const useProjectStore = defineStore('project', {
         this.setError('Error al exportar PDF')
       }
     },
-    
+
     // Descargar proyecto desde servidor
     async downloadProject() {
       try {
@@ -407,22 +391,23 @@ export const useProjectStore = defineStore('project', {
   }
 })
 
-      /**
- * Función que genera una lista plana de items, expandiendo los procesos para incluir sus hijos.
- *
- * @param items La lista de items de entrada, que puede contener procesos.
- * @returns Una lista plana y única de items.
- */
+/**
+* Función que genera una lista plana de items, expandiendo los procesos para incluir sus hijos.
+*
+* @param items La lista de items de entrada, que puede contener procesos.
+* @returns Una lista plana y única de items.
+*/
 export function flattenItemsList(items: IItemData[]): IItemData[] {
   const flattenedList: IItemData[] = [];
-
-  for (const item of items) {
-    flattenedList.push(item);
-
+  
+  for (const iid of items) {
+    flattenedList.push(iid);
+    
     // Si el item es un proceso, añade recursivamente sus hijos
-    if (item.type === 'process' && (item as IProcessData).children) {
-      const processItem = item as IProcessData;
-      flattenedList.push(...flattenItemsList(processItem.children));
+    if (iid.type === 'process' && (iid as IProcessData).children) {
+      const processItem = iid as IProcessData;
+      const childrenFlattened = flattenItemsList(processItem.children);
+      childrenFlattened.forEach(c => flattenedList.push(c))
     }
   }
 

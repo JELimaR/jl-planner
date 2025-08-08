@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { Project, type IProjectData, type IProjectHeader } from '~/src/models/Project'
-import { Task } from '~/src/models/Task'
-import { Milestone } from '~/src/models/Milestone'
-import { Process } from '~/src/models/Process'
-import type { ITaskData, IMilestoneData, IProcessData } from '~/src/models/Item'
+import { IProjectData, Project } from '../../../src/models/Project'
+import { ITaskData, Task } from '../../../src/models/Task'
+import { Milestone, IMilestoneData } from '../../../src/models/Milestone'
+import { Process, IProcessData } from '../../../src/models/Process'
+import { TDateString } from '../../../src/models/dateFunc'
 
 describe('Project', () => {
   let project: Project
@@ -173,7 +173,7 @@ describe('Project', () => {
       const updatedTask = project.getItemById(100) as Task
       expect(updatedTask.name).toBe('Updated Task')
       expect(updatedTask.detail).toBe('Updated detail')
-      expect(updatedTask.cost).toBe(1000)
+      expect(updatedTask.getTotalCost()).toBe(1000)
       expect(updatedTask.duration).toBe(7)
     })
 
@@ -300,8 +300,8 @@ describe('Project', () => {
         id: 'deserialized-project',
         title: 'Deserialized Project',
         subtitle: 'Test Subtitle',
-        startDate: '01/01/2024',
-        endDate: '01/31/2024',
+        startDate: '01-01-2024' as TDateString,
+        endDate: '01-31-2024' as TDateString,
         items: [
           {
             id: 100,
@@ -347,8 +347,8 @@ describe('Project', () => {
         id: 'process-project',
         title: 'Process Project',
         subtitle: '',
-        startDate: '01/01/2024',
-        endDate: '01/31/2024',
+        startDate: '01-01-2024',
+        endDate: '01-31-2024',
         items: [
           {
             id: 200,

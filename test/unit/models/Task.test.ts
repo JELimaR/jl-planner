@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { Task } from '../../src/models/Task'
-import { Process } from '../../src/models/Process'
-import type { ITaskData } from '../../src/models/Item'
+import { ITaskData, Task } from '../../../src/models/Task'
+import { Process } from '../../../src/models/Process'
 
 describe('Task', () => {
   let task: Task
@@ -14,19 +13,19 @@ describe('Task', () => {
 
   describe('constructor', () => {
     it('should create task with correct properties', () => {
-      expect(task._id).toBe(2)
-      expect(task._name).toBe('Test Task')
+      expect(task.id).toBe(2)
+      expect(task.name).toBe('Test Task')
       expect(task._type).toBe('task')
       expect(task.duration).toBe(5)
-      expect(task._parent).toBe(parent)
-      expect(task._detail).toBe('Task detail')
-      expect(task._cost).toBe(150)
+      expect(task.parent).toBe(parent)
+      expect(task.detail).toBe('Task detail')
+      expect(task.getTotalCost()).toBe(150)
     })
 
     it('should create task without parent', () => {
       const orphanTask = new Task(3, 'Orphan Task', 3)
-      expect(orphanTask._parent).toBeUndefined()
-      expect(orphanTask._cost).toBe(0)
+      expect(orphanTask.parent).toBeUndefined()
+      expect(orphanTask.getTotalCost()).toBe(0)
     })
   })
 
@@ -134,7 +133,7 @@ describe('Task', () => {
       expect(data.name).toBe('Test Task')
       expect(data.detail).toBe('Task detail')
       expect(data.cost).toBe(150)
-      expect(data.processId).toBe(1)
+      expect(data.parentId).toBe(1)
       expect(data.duration).toBe(7)
       expect(data.actualStartDate).toBe(actualDate.toISOString())
       expect(data.calculatedStartDate).toBe(calculatedDate.toISOString())

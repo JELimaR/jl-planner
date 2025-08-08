@@ -34,10 +34,15 @@ export class ProjectController {
   }
 
   getProject(): Project { // borrar
+    setProjectItemsColors(this.project)
+    this.project.calculateItemDates()
     return this.project;
   }
 
   getProjectData(): IProjectData {
+    console.log('getPojectData')
+    setProjectItemsColors(this.project)
+    this.project.calculateItemDates()
     return this.project.getData();
   }
 
@@ -63,15 +68,6 @@ export class ProjectController {
     })
     return out
   }
-
-  isStart(item: Item): boolean {
-    return item.id === this.project.getStartMilestone().id
-  }
-
-  isEnd(item: Item): boolean {
-    return item.id === this.project.getEndMilestone().id
-  }
-
 
   getAllProcess(): IProcessData[] {
     const out: IProcessData[] = []
@@ -119,7 +115,6 @@ export class ProjectController {
 
   addNewItem(itemData: IItemData): void {
     try {
-      console.log('itemData', itemData)
       const id = this.generateId(itemData.parentId);
       const item = itemDataToItem(id, itemData, this.project);
       const parent = this.project.getItemById(itemData.parentId);
@@ -142,7 +137,6 @@ export class ProjectController {
         const dateString = (itemData as ITaskData | IMilestoneData).actualStartDate as TDateString
         item.setActualStartDate(displayStringToDate(dateString));
       }
-
 
       this.normalizeItemIds();
     } catch (error) {
@@ -363,7 +357,6 @@ export class ProjectController {
     if (!Array.isArray(json.items)) {
       throw new Error('Invalid project data: items must be an array');
     }
-    console.log(json);
     this.project = Project.deserializeProject(json);
     this.normalizeItemIds();
   }

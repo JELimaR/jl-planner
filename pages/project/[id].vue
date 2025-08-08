@@ -21,7 +21,7 @@
     <div class="page-break"></div>
     
     <!-- Diagrama de Gantt -->
-    <GanttChart />
+    <!--  <GanttChart /> -->
 
     <div class="page-break"></div>
     
@@ -45,28 +45,16 @@ const projectStore = useProjectStore()
 const uiStore = useUIStore()
 
 // Obtener el ID del proyecto desde la ruta
-const projectId = route.params.id as string
+const tempId = route.params.id as string
 
 onMounted(async () => {
   try {
-    // Inicializar el proyecto con el ID específico
-    switch (projectId) {
-      case 'p001':
-        await projectStore.newProject()
-        break;
-      case 'p002':
-        await projectStore.initializeProject()
-        break;
-      case 'p003':
-        await projectStore.newProject()
-        await projectStore.loadExampleProject()
-        break;
-      default:
-        //await projectStore.newProject()
-    }
-
+    // La lógica de carga de proyecto se ha movido al `onMounted`
+    // para asegurar que el store esté listo.
+    await projectStore.getTemplate(tempId)
   } catch (error) {
-    console.error('Error initializing project:', error)
+    console.error('Error al inicializar el proyecto:', error)
+    projectStore.newProject()
   }
 })
 

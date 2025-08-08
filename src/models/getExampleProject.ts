@@ -2,9 +2,10 @@ import { Milestone } from './Milestone';
 import { Process } from './Process';
 import { Project } from './Project';
 import { Task } from './Task';
+import { TDateString, displayStringToDate } from './dateFunc';
 
 export function getExampleProject(): Project {
-  const project = new Project('example', new Date('2025-09-01'));
+  const project = new Project('example', displayStringToDate('01-09-2025' as TDateString));
 
   const p1 = new Process(1, 'Planificación');
   project.addItem(p1);
