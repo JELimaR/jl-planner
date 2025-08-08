@@ -22,12 +22,13 @@
             <td>{{ item.name }}</td>
             <td>{{ item.detail || '' }}</td>
             <td>{{ item instanceof Task ? item.duration : '-' }}</td>
-            <td>{{ formatDateToDisplay(item.getStartDate()!) }}</td>
-            <td>{{ formatDateToDisplay(item.getEndDate()!) }}</td>
-            <td>{{ getPredecessors(item) }}</td>
+            <td>{{ item.startDate }}</td>
+            <td>{{ item.endDate }}</td>
+            <td>{{ item.predecessorIds.join(', ') }}</td>
+
             <td class="action-buttons">
               <div
-              v-if="!projectStore.controller.isStart(item) && !projectStore.controller.isEnd(item)"
+              v-if="(item.id !== 1000) && (item.id !== 1001)"
               >
               <button
                 class="btn btn-sm btn-light"
@@ -74,8 +75,7 @@ import { useUIStore } from '../../stores/ui'
 import { useFormItemStore } from '../../stores/formItem'
 import { Task } from '../../src/models/Task'
 import { processColorMap } from '../../src/views/colors'
-import type { Item } from '../../src/models/Item'
-import { formatDateToDisplay } from '../../src/models/dateFunc'
+import type { IItemData, Item } from '../../src/models/Item'
 import { Milestone } from '../../src/models/Milestone'
 import { Process } from '../../src/models/Process'
 
@@ -84,11 +84,11 @@ const uiStore = useUIStore()
 
 // Obtener los items del proyecto
 const items = computed(() => {
-  const allItems: Item[] = []
-  projectStore.controller.getAllItems().forEach((item: Item) => {
-    if (item !== projectStore.controller.getProject().getRoot()) {
+  const allItems: IItemData[] = []
+  projectStore.projectData?.items.forEach((item: IItemData) => {
+    //if (item !== projectStore.controller.getProject().getRoot()) {
       allItems.push(item)
-    }
+    //}
   })
   return allItems
 })
@@ -105,7 +105,7 @@ const getDepth = (item: Item): number => {
 }
 
 // Obtener el estilo de la fila
-const getRowStyle = (item: Item, depth: number) => {
+const getRowStyle = (item: IItemData, depth: number) => {
   const borderWidth = `${Math.max(0.5, 4 / 2 ** depth)}px`
   const opacity = 1 - depth * 0.05
   const bgColor = processColorMap.get(item.id) || '#ffffff'
@@ -115,16 +115,6 @@ const getRowStyle = (item: Item, depth: number) => {
     borderBottom: `${borderWidth} solid rgba(0,0,0,${opacity}) !important`,
     backgroundColor: `${bgColor} !important`
   }
-}
-
-// Obtener los predecesores del item
-const getPredecessors = (item: Item): string => {
-  const project = projectStore.controller.getProject()
-  let predecessors = Array.from(item.predecessors)
-    .map((i) => i.id)
-    .filter((i) => i !== project.getStartMilestone().id)
-    .join(', ')
-  return item.id === project.getEndMilestone().id ? '' : predecessors
 }
 
 // Agregar un Item
@@ -147,8 +137,8 @@ const deleteItem = (item: Item) => {
 }
 
 // Función para cambiar el orden
-const changeOrder = (item: Item, sense: 'up' | 'down') => {
-  projectStore.changeOrder(item, sense)
+const changeOrder = (item: IItemData, sense: 'up' | 'down') => {
+  projectStore.changeOrder(item.id, sense)
 }
 
 // Función para deshabilitar el botón de subir

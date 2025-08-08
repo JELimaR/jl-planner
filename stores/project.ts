@@ -1,171 +1,403 @@
 import { defineStore } from 'pinia'
-import {ProjectController} from '../src/controllers/ProjectController'
 import type { Scale } from '../src/views/ganttHelpers'
-import { setProjectItemsColors } from '../src/views/colors'
-import { IItemData, Item } from '../src/models/Item'
+import type { IProjectData, IProjectHeader } from '../src/models/Project'
+import type { IItemData } from '../src/models/Item'
+import { displayStringToDate, TDateString } from '../src/models/dateFunc'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
-    controller: ProjectController.getInstance(),
-    projectStartDate: new Date(),
-    projectEndDate: new Date(),
-    newStartDate: new Date(),
+    // Estado basado en IProjectData
+    projectData: null as IProjectData | null,
+    
+    // Estados de UI
     currentScale: 'week' as Scale,
     itemToDelete: null as number | null,
-    isInitialized: false
+    itemToEdit: null as number | null,
+    isInitialized: false,
+    isLoading: false,
+    error: null as string | null
   }),
   
+  getters: {
+    // Getters computados para acceso fácil a datos del proyecto
+    projectId: (state) => state.projectData?.id,
+    projectTitle: (state) => state.projectData?.title || '',
+    projectSubtitle: (state) => state.projectData?.subtitle || '',
+    projectStartDate: (state) => state.projectData?.startDate,
+    projectEndDate: (state) => state.projectData?.endDate,
+    projectItems: (state) => state.projectData?.items || [],
+  },
+  
   actions: {
-    // In the project store, update the initializeProject method
-    async initializeProject() {
-      try {
-        const response = await fetch('/template00.jlprj')
-        if (!response.ok) throw new Error('No se pudo cargar template00.jlprj')
-        const JSON = await response.json()
-        this.controller.loadProjectFromJSON(JSON)
-      } catch (err) {
-        console.warn('No se pudo cargar template00.jlprj:', err)
-        this.controller.createNewProject(new Date())
-        this.controller.chargeExampleProject()
-      }
+    // Manejo de errores centralizado
+    setError(error: string | null) {
+      this.error = error
+    },
+    
+    setLoading(loading: boolean) {
+      this.isLoading = loading
+    },
+    
+    // Inicializar proyecto
+    async initializeProject(projectId?: string) {
+      this.setLoading(true)
+      this.setError(null)
       
-      this.updateProjectDates()
-      this.isInitialized = true
-    },
-    
-    updateProjectDates() {
-      const project = this.controller.getProject()
-      this.projectStartDate = project.getProjectStartDate()
-      this.projectEndDate = project.getProjectEndDate()
-    },
-    
-    newProject() {
-      this.controller.createNewProject(new Date())
-      this.updateProjectDates()
-      this.renderAll()
-    },
-
-     /**
-     * Llama al controlador para cambiar el orden de un ítem y luego refresca la vista.
-     * @param item El ítem a mover.
-     * @param sense La dirección ('up' o 'down').
-     */
-     changeOrder(item: Item, sense: 'up' | 'down') {
       try {
-        this.controller.changeOrder(item, sense);
-        this.renderAll();
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'initialize',
+            data: { projectId }
+          }
+        })
+        
+          if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+          this.isInitialized = true
+        }
       } catch (error) {
-        console.error('Error al reordenar el ítem:', error);
-        // Opcional: mostrar una notificación de error en la UI
+        console.error('Error initializing project:', error)
+        this.setError('Error al inicializar el proyecto')
+      } finally {
+        this.setLoading(false)
       }
     },
     
-    resetActualStartDates() {
-      this.controller.resetActualStartDates()
-      this.updateProjectDates()
-      this.renderAll()
+    // Cargar header del proyecto
+    async loadProjectHeader() {
+      try {
+        const response = await $fetch('/api/project?type=header')
+        if ((response as { success: boolean }).success) {
+          this.projectHeader = (response as { data: IProjectHeader }).data
+        }
+      } catch (error) {
+        console.error('Error loading project header:', error)
+      }
     },
     
+    // Crear nuevo proyecto
+    async newProject(startDate?: Date) {
+      this.setLoading(true)
+      this.setError(null)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'newProject',
+            data: { startDate: startDate?.toISOString() }
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
+      } catch (error) {
+        console.error('Error creating new project:', error)
+        this.setError('Error al crear nuevo proyecto')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Cambiar orden de item
+    async changeOrder(itemId: number, sense: 'up' | 'down') {
+      this.setLoading(true)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'changeOrder',
+            data: { itemId, sense }
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
+      } catch (error) {
+        console.error('Error changing item order:', error)
+        this.setError('Error al reordenar el ítem')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Resetear fechas actuales
+    async resetActualStartDates() {
+      this.setLoading(true)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'resetActualStartDates',
+            data: {}
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
+      } catch (error) {
+        console.error('Error resetting actual start dates:', error)
+        this.setError('Error al resetear fechas')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Cargar proyecto desde archivo
     async loadProjectFromFile(file: File) {
+      this.setLoading(true)
+      this.setError(null)
+      
       try {
-        await this.controller.loadProjectFromFile(file)
-        this.updateProjectDates()
-        this.renderAll()
+        const text = await file.text()
+        const jsonData = JSON.parse(text)
+        
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'loadFromFile',
+            data: { jsonData }
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
       } catch (error) {
-        console.error('Error loading project:', error)
+        console.error('Error loading project from file:', error)
+        this.setError('Error al cargar el archivo del proyecto')
+      } finally {
+        this.setLoading(false)
       }
     },
     
+    // Guardar título y subtítulo
+    async saveTitle(title: string, subtitle: string) {
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'saveTitle',
+            data: { title, subtitle }
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectHeader = (response as { data: IProjectHeader }).data
+          // Actualizar también en projectData
+          if (this.projectData) {
+            this.projectData.title = title
+            this.projectData.subtitle = subtitle
+          }
+        }
+      } catch (error) {
+        console.error('Error saving title:', error)
+        this.setError('Error al guardar el título')
+      }
+    },
+    
+    // Cambiar fecha de inicio
+    async changeStartDate(newStartDate: TDateString) {
+      this.setLoading(true)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'changeStartDate',
+            data: { startDate: newStartDate } 
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
+      } catch (error) {
+        console.error('Error changing start date:', error)
+        this.setError('Error al cambiar la fecha de inicio')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Agregar nuevo item
+    async addNewItem(data: IItemData) {
+      this.setLoading(true)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'addItem',
+            data: { itemData: data }
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
+      } catch (error) {
+        console.error('Error adding new item:', error)
+        this.setError('Error al agregar el ítem')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Editar item
+    async editItem(data: IItemData) {
+      this.setLoading(true)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'editItem',
+            data: { id: data.id, itemData: data }
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
+      } catch (error) {
+        console.error('Error editing item:', error)
+        this.setError('Error al editar el ítem')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Eliminar item
+    async deleteItem() {
+      if (this.itemToDelete === null) return
+      
+      this.setLoading(true)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'deleteItem',
+            data: { id: this.itemToDelete }
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+          this.itemToDelete = null
+        }
+      } catch (error) {
+        console.error('Error deleting item:', error)
+        this.setError('Error al eliminar el ítem')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Descargar proyecto como JSON
     saveProject() {
-      this.controller.downloadProjectAsJSON()
-    },
-    
-    changeStartDate() {
-      if (this.newStartDate) {
-        this.controller.changeStartDate(textToDate(this.newStartDate))
-        this.updateProjectDates()
-        this.renderAll()
-      }
-    },
-    
-    exportPDF() {
-      console.log('Export PDF functionality to be implemented')
-    },
-    
-    addNewItem(data: IItemData) {
-      this.controller.addNewItem(data)
-      this.renderAll()
-    },
-    
-    editItem(data: IItemData) {
-      // Esta función se llamará desde el componente
-      console.log(data)
-      this.controller.editItem(data.id, data);
-      this.renderAll();
-    },
-    
-    deleteItem() {
-      if (this.itemToDelete !== null) {
-        this.controller.deleteItem(this.itemToDelete)
-        this.itemToDelete = null
-        this.renderAll()
-      }
-    },
-    
-    renderAll() {
-      // Actualizar fechas del proyecto
-      this.updateProjectDates()
+      if (!this.projectData) return
       
-      // Recalcular fechas de los items
-      this.controller.getProject().calculateItemDates()
-      
-      // Actualizar colores de los items
-      setProjectItemsColors(this.controller.getProject())
+      const dataStr = JSON.stringify(this.projectData, null, 2)
+      const dataBlob = new Blob([dataStr], { type: 'application/json' })
+      const url = URL.createObjectURL(dataBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${this.projectData.title || 'proyecto'}.jlprj`
+      link.click()
+      URL.revokeObjectURL(url)
     },
     
+    // Configurar item para editar
     setupItemForEdit(id: number | null) {
       this.itemToEdit = id
-      // Aquí puedes preparar el formulario para editar
+    },
+    
+    // Configurar item para eliminar
+    setupItemForDelete(id: number | null) {
+      this.itemToDelete = id
+    },
+    
+    // Cargar proyecto de ejemplo
+    async loadExampleProject() {
+      this.setLoading(true)
+      this.setError(null)
+      
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'loadExample',
+            data: {}
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+          await this.loadProjectHeader()
+        }
+      } catch (error) {
+        console.error('Error loading example project:', error)
+        this.setError('Error al cargar el proyecto de ejemplo')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+    
+    // Exportar PDF
+    async exportPDF() {
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'exportPDF',
+            data: {}
+          }
+        })
+        
+        if ((response as { success: boolean }).success) {
+          console.log('PDF export:', (response as { message: string }).message)
+          // Implementar lógica de exportación PDF aquí
+        }
+      } catch (error) {
+        console.error('Error exporting PDF:', error)
+        this.setError('Error al exportar PDF')
+      }
+    },
+    
+    // Descargar proyecto desde servidor
+    async downloadProject() {
+      try {
+        const response = await fetch('/api/project?type=download')
+        if (response.ok) {
+          const blob = await response.blob()
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = `${this.projectTitle || 'proyecto'}.jlprj`
+          link.click()
+          URL.revokeObjectURL(url)
+        }
+      } catch (error) {
+        console.error('Error downloading project:', error)
+        this.setError('Error al descargar el proyecto')
+      }
     }
   }
 })
-
-/**
- * Convierte una cadena de fecha con formato DD-MM-YYYY en un objeto Date.
- *
- * @param {string | undefined} dateString La fecha en formato "dd-mm-yyyy".
- * @returns {Date | null} Un objeto Date o null si la cadena no es válida.
- */
-const textToDate = (dateString: string | undefined): Date | null => {
-  if (!dateString) {
-    return null;
-  }
-
-  const parts = dateString.split('-');
-
-  if (parts.length !== 3) {
-    return null;
-  }
-  
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10);
-  const day = parseInt(parts[2], 10);
-
-  if (isNaN(day) || isNaN(month) || isNaN(year)) {
-    return null;
-  }
-  
-  // El mes en JavaScript es de 0 a 11, por eso se resta 1.
-  const newDate = new Date(year, month - 1, day);
-
-  // Validación final para evitar fechas incorrectas (ej. 30 de febrero).
-  if (
-    newDate.getFullYear() !== year || 
-    newDate.getMonth() !== month - 1 || 
-    newDate.getDate() !== day
-  ) {
-    return null;
-  }
-  
-  return newDate;
-};

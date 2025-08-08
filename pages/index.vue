@@ -91,7 +91,7 @@ const createProject = () => {
   console.log('Crear nuevo proyectooO')
   // Aquí podrías abrir un modal o navegar a una página de creación
   projectStore.newProject()
-  navigateTo(`project/${projectStore.controller.getProject().getId()}`)
+  navigateTo(`project/${projectStore.projectId}`)
 }
 
 const editProject = (project: IProjectHeader) => {

@@ -15,11 +15,7 @@ export interface IProjectHeader {
   endDate: TDateString;
 }
 
-export interface IProjectData {
-  id: string;
-  title: string;
-  subtitle: string;
-  startDate: TDateString;
+export interface IProjectData extends IProjectHeader {
   items: IItemData[];
 }
 

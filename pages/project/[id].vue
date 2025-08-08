@@ -59,7 +59,7 @@ onMounted(async () => {
         break;
       case 'p003':
         await projectStore.newProject()
-        projectStore.controller.chargeExampleProject()
+        await projectStore.loadExampleProject()
         break;
       default:
         //await projectStore.newProject()
@@ -74,7 +74,7 @@ onMounted(async () => {
 watch(() => [projectStore.projectStartDate, projectStore.projectEndDate], () => {
   try {
     // Actualizar la interfaz cuando cambien las fechas del proyecto
-    setProjectItemsColors(projectStore.controller.getProject())
+    // setProjectItemsColors(projectStore.controller.getProject()) resolver
   } catch (error) {
     console.error('Error updating project colors:', error)
   }
