@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { Item, type IItemData } from '../../src/models/Item'
-import { Process } from '../../src/models/Process'
-import { SpendingMethod } from '../../src/controllers/ProjectController'
-import { formatDateToDisplay } from '../../src/models/dateFunc'
-import { DAY_MS } from '../../src/views/ganttHelpers'
-
+import { IItemData, Item } from '../../../src/models/Item'
+import { SpendingMethod } from '../../../src/controllers/ProjectController'
+import { DAY_MS } from '../../../src/views/ganttHelpers'
+import { Process } from '../../../src/models/Process'
 // Clase concreta para testing de la clase abstracta Item
 class TestItem extends Item {
   getDailyCost(date: Date, method: SpendingMethod): number {
@@ -61,7 +59,7 @@ class TestItem extends Item {
     return Math.ceil(diff / DAY_MS)
   }
 
-  get data(): IItemData {
+  /*get data(): IItemData {
     return {
       id: this.id,
       type: this._type,
@@ -73,7 +71,7 @@ class TestItem extends Item {
       startDate: formatDateToDisplay(this.getStartDate())!,
       endDate: formatDateToDisplay(this.getEndDate())!,
     }
-  }
+  }*/
 }
 
 describe('Item', () => {

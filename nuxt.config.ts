@@ -13,6 +13,7 @@ export default defineNuxtConfig({
   modules: [
     '@pinia/nuxt',
     '@vue-final-modal/nuxt',
+    '@nuxt/test-utils/module',
   ],
   components: [
     {

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { Process } from '../../src/models/Process'
-import { Task } from '../../src/models/Task'
-import { Milestone } from '../../src/models/Milestone'
-import type { IProcessData } from '../../src/models/Item'
+import { Process } from '../../../src/models/Process'
+import { Task } from '../../../src/models/Task'
+import { Milestone } from '../../../src/models/Milestone'
+import type { IProcessData } from '../../../src/models/Item'
 
 describe('Process', () => {
   let process: Process
