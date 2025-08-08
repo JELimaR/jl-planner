@@ -28,17 +28,16 @@
       <!-- Cambiar fecha de inicio -->
       <div class="d-flex align-items-center mx-5">
         <DateInput
-          v-model="projectStore.projectStartDate"
-          @update:modelValue="projectStore.changeStartDate"
+          v-model="selectedDate"
         />
-        <input
+        <!-- <input
           type="date"
           class="form-control form-control-sm ms-2"
           v-model="projectStore.projectStartDate"
-        />
+        /> -->
         <button
           class="btn btn-outline-primary btn-sm ms-2"
-          @click="projectStore.changeStartDate(projectStore.projectStartDate)"
+          @click="changeStartDate"
 
         >
           Cambiar inicio
@@ -62,11 +61,11 @@
 import { useProjectStore } from '../../stores/project'
 import DateInput from '../DateInput.vue'
 
+const selectedDate = ref<TDateString | undefined>(undefined);
+
 const projectStore = useProjectStore()
-
 const changeStartDate = () => {
-  projectStore.changeStartDate()
-
+  projectStore.changeStartDate(selectedDate.value)
 }
 
 </script>

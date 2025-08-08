@@ -89,7 +89,7 @@
     <div class="mb-3">
       <label for="addItemPredecessors" class="form-label">Predecesores</label>
       <select multiple class="form-select" id="addItemPredecessors" v-model="formItemStore.form.predecessorIds">
-        <option v-for="option in projectStore.controller.getAllItems()" :key="option.id" :value="option.id">
+        <option v-for="option in projectStore.projectItems" :key="option.id" :value="option.id">
           {{ option.name }} (#{{ option.id }})
         </option>
       </select>
@@ -100,7 +100,7 @@
       <label for="addItemParentProcess" class="form-label">Pertenece a proceso</label>
       <select class="form-select" id="addItemParentProcess" v-model="formItemStore.form.parentId"
         :disabled="formItemStore.form.id !== -1">
-        <option v-for="option in projectStore.controller.getAllProcess()" :key="option.id" :value="option.id">
+        <option v-for="option in projectStore.getAllProcess()" :key="option.id" :value="option.id">
           {{ option.name }}
         </option>
       </select>
@@ -124,6 +124,10 @@ const projectStore = useProjectStore();
 const formItemStore = useFormItemStore();
 const uiStore = useUIStore();
 
+const itemList = computed({
+  
+});
+// usar itemDate
 const actualStartDateRef = computed({
   // Getter: Lee el valor del store y lo convierte para mostrarlo en el input
   get() {

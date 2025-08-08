@@ -23,7 +23,6 @@ const emit = defineEmits(['update:modelValue']);
 // Propiedad computada para manejar la conversión del formato
 const formattedDate = computed<string | undefined>(() => {
   if (props.modelValue) {
-    // Convierte 'dd-mm-yyyy' a un objeto Date, luego a 'yyyy-mm-dd'
     const date = displayStringToDate(props.modelValue);
     return date.toISOString().substring(0, 10);
   }

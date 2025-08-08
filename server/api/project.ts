@@ -1,15 +1,16 @@
 import { ProjectController } from '../../src/controllers/ProjectController'
 import type { IProjectData, IProjectHeader } from '../../src/models/Project'
 import type { IItemData } from '../../src/models/Item'
-import defineEventHandler from './project';
-import { createError, getQuery, readBody, setHeader } from 'h3';
+import { createError, defineEventHandler, getQuery, readBody, setHeader } from 'h3';
+import { displayStringToDate, TDateString } from '../../src/models/dateFunc';
+import { ICriticalPathData } from '../../src/models/graphCalculation';
 
 // Singleton del controlador para mantener estado en el servidor
 let projectController: ProjectController | null = null
 
 function getController(): ProjectController {
   if (!projectController) {
-    projectController = ProjectController.getInstance(new Date())
+    projectController = ProjectController.getInstance()
   }
   return projectController
 }
@@ -76,8 +77,8 @@ export default defineEventHandler(async (event) => {
           }
 
           case 'newProject': {
-            const { startDate } = data
-            controller.createNewProject(startDate ? new Date(startDate) : new Date())
+            const { startDate } = data as {startDate: TDateString | undefined}
+            controller.createNewProject(startDate ? displayStringToDate(startDate) : new Date())
             return { success: true, data: controller.getProjectData() }
           }
 
@@ -94,8 +95,8 @@ export default defineEventHandler(async (event) => {
           }
 
           case 'changeStartDate': {
-            const { startDate } = data
-            controller.changeStartDate(new Date(startDate))
+            const { startDate } = data as {startDate: TDateString}
+            controller.changeStartDate(displayStringToDate(startDate))
             return { success: true, data: controller.getProjectData() }
           }
 

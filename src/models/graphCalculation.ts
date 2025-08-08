@@ -1,6 +1,6 @@
 import { DependencyGraph } from './DependencyGraph';
-import { Task } from './Task';
-import { Milestone } from './Milestone';
+import { ITaskData, Task } from './Task';
+import { IMilestoneData, Milestone } from './Milestone';
 
 const ONEDAY = 24 * 60 * 60 * 1000;
 
@@ -68,6 +68,11 @@ export interface CriticalPath {
   totalDelayDays: number;
 }
 
+export interface ICriticalPathData {
+  path: Array<ITaskData | IMilestoneData>;
+  totalDelayDays;
+}
+
 /**
  * Encuentra todos los caminos críticos en el grafo.
  * Un camino crítico es aquel donde cada nodo empieza justo después de que termine su dependencia más tardía.
@@ -88,7 +93,7 @@ export function getCriticalPathsFromGraph(
   const DFS = (current: Task | Milestone) => {
     path.push(current);
 
-    if (current._id === endId) {
+    if (current.id === endId) {
       rawPaths.push([...path]);
       path.pop();
       return;
@@ -101,7 +106,7 @@ export function getCriticalPathsFromGraph(
     }
 
     const successors = graph
-      .getSuccessors(current._id)
+      .getSuccessors(current.id)
       .map((id) => graph.nodes.get(id))
       .filter((i): i is Task | Milestone => !!i);
 

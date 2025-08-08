@@ -24,7 +24,7 @@
             <td>{{ i + 1 }}</td>
             <td style="font-size: 0.75rem;">{{ item.id }}</td>
             <td>{{ item.name }}</td>
-            <td style="font-size: 0.75rem;">{{ formatDateToDisplay(item.getStartDate()!) }}</td>
+            <td style="font-size: 0.75rem;">{{ item.startDate }}</td>
             <td>{{ item.getDelayInDays() }}</td>
           </tr>
         </tbody>
@@ -39,7 +39,7 @@ import { useProjectStore } from '../../stores/project'
 import { formatDateToDisplay } from '../../src/models/dateFunc';
 
 const projectStore = useProjectStore()
-const criticalPaths = computed(() => projectStore.controller.getProject().getCriticalPaths())
+const criticalPaths = projectStore.criticalPaths || []; // no debería ser así
 
 // Actualizar los caminos críticos cuando cambien las fechas del proyecto
 watch(

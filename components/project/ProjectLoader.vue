@@ -39,7 +39,7 @@ const handleFileLoad = async (event: Event) => {
       await projectStore.loadProjectFromFile(file);
 
       // Una vez cargado, obtén el ID del proyecto y navega
-      const projectId = projectStore.controller.getProject().getId();
+      const projectId = projectStore.project.id;
       if (projectId) {
         navigateTo(`/project/${projectId}`); // Navega a la ruta dinámica
       } else {

@@ -1,4 +1,4 @@
-import { defineEventHandler, getQuery, getRouterParam, readBody } from 'h3'
+import { createError, defineEventHandler, getQuery, getRouterParam, readBody } from 'h3'
 
 // Datos mock para usuarios
 const mockUsers = [
@@ -102,11 +102,11 @@ export default defineEventHandler(async (event) => {
           name: body.name,
           email: body.email,
           role: body.role || 'user',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          //createdAt: new Date().toISOString(),
+          //updatedAt: new Date().toISOString()
         }
         
-        mockUsers.push(newUser)
+        // mockUsers.push(newUser)
         
         return {
           success: true,
@@ -149,7 +149,7 @@ export default defineEventHandler(async (event) => {
         mockUsers[userIndex] = {
           ...mockUsers[userIndex],
           ...updateBody,
-          updatedAt: new Date().toISOString()
+          //updatedAt: new Date().toISOString()
         }
         
         return {

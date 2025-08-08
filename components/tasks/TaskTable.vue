@@ -24,11 +24,11 @@
             <td>{{ item instanceof Task ? item.duration : '-' }}</td>
             <td>{{ item.startDate }}</td>
             <td>{{ item.endDate }}</td>
-            <td>{{ item.predecessorIds.join(', ') }}</td>
+            <td>{{ item.predecessorIds.filter(pi => pi !== 1000).join(', ') }}</td>
 
             <td class="action-buttons">
               <div
-              v-if="(item.id !== 1000) && (item.id !== 1001)"
+              v-if="(item.id !== 1000) && (item.id !== 1002)"
               >
               <button
                 class="btn btn-sm btn-light"
@@ -77,29 +77,28 @@ import { Task } from '../../src/models/Task'
 import { processColorMap } from '../../src/views/colors'
 import type { IItemData, Item } from '../../src/models/Item'
 import { Milestone } from '../../src/models/Milestone'
-import { Process } from '../../src/models/Process'
+import { IProcessData, Process } from '../../src/models/Process'
 
 const projectStore = useProjectStore()
 const uiStore = useUIStore()
 
-// Obtener los items del proyecto
-const items = computed(() => {
-  const allItems: IItemData[] = []
-  projectStore.projectData?.items.forEach((item: IItemData) => {
-    //if (item !== projectStore.controller.getProject().getRoot()) {
-      allItems.push(item)
-    //}
-  })
-  return allItems
-})
+
+const items = computed(() => projectStore.flattennedItems);
+const getParent = (item: IItemData): IProcessData | undefined => {
+  const parent = projectStore.flattennedItems.find(fi => fi.id == item.parentId)
+  if (parent && parent.type === 'process') {
+    return parent as IProcessData
+  }
+  return undefined
+}
 
 // Obtener el nivel de profundidad del item
-const getDepth = (item: Item): number => {
+const getDepth = (item: IItemData): number => {
   let depth = 0
   let current = item
-  while (current.parent && current.parent.id !== 0) {
+  while (current.parentId && current.parentId !== 1001) { // mejorar
     depth++
-    current = current.parent
+    current = getParent(item)!;
   }
   return depth
 }
@@ -125,14 +124,14 @@ const addITem = () => {
 }
 
 // Editar un item
-const editItem = (item: Item) => {
-  projectStore.setupItemForEdit(item.id)
+const editItem = (item: IItemData) => {
+  projectStore.setupItemForEdit(item)
   uiStore.openAddModal()
 }
 
 // Eliminar un item
-const deleteItem = (item: Item) => {
-  projectStore.itemToDelete = item.id
+const deleteItem = (item: IItemData) => {
+  projectStore.itemToDelete = item
   uiStore.openDeleteModal()
 }
 
@@ -142,50 +141,43 @@ const changeOrder = (item: IItemData, sense: 'up' | 'down') => {
 }
 
 // Función para deshabilitar el botón de subir
-const canMoveUp = (item: Item, index: number): boolean => {
-  if (
-    item instanceof Milestone &&
-    (item.id === projectStore.controller.getProject().getStartMilestone().id ||
-      item.id === projectStore.controller.getProject().getEndMilestone().id)
-  ) {
-    return false
-  }
-  const parent = item.parent as Process | undefined;
+const canMoveUp = (item: IItemData, index: number): boolean => {
+  const parent = getParent(item);
   if (!parent) return false
   const children = parent.children
   if (children.indexOf(item) === 0) return false
   const prevSibling = children[children.indexOf(item) - 1]
-  if (prevSibling && prevSibling.id === projectStore.controller.getProject().getStartMilestone().id) {
+  if (prevSibling && prevSibling.id === 1000) { // mejorar
     return false
   }
   return true
 }
 
 // Función para deshabilitar el botón de bajar
-const canMoveDown = (item: Item, index: number): boolean => {
-  if (
-    item instanceof Milestone &&
-    (item.id === projectStore.controller.getProject().getStartMilestone().id ||
-      item.id === projectStore.controller.getProject().getEndMilestone().id)
-  ) {
-    return false
-  }
-  const parent = item.parent as Process | undefined;
+const canMoveDown = (item: IItemData, index: number): boolean => {
+  const parent = getParent(item);
   if (!parent) return false
   const children = parent.children
   if (children.indexOf(item) === children.length - 1) return false
   const nextSibling = children[children.indexOf(item) + 1]
-  if (nextSibling && nextSibling.id === projectStore.controller.getProject().getEndMilestone().id) {
+  if (nextSibling && nextSibling.id === 1002) { // mejorar
     return false
   }
   return true
 }
 
-
-// Actualizar la tabla cuando cambie el proyecto
-watch(() => projectStore.projectStartDate, () => {
-  projectStore.controller.getProject().calculateItemDates()
-})
+watch(
+  () => projectStore.projectData,
+  (newValue, oldValue) => {
+    if (newValue) {
+      console.log('projectData ha cambiado. La tabla debería actualizarse.');
+      // Aquí podrías agregar cualquier otra lógica que dependa del cambio de datos.
+      console.log(projectStore.projectData)
+      console.log(items)
+    }
+  },
+  { deep: true, immediate: true }
+);
 </script>
 
 <style>

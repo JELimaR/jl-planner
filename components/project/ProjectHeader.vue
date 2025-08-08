@@ -2,8 +2,8 @@
   <div id="project-header" class="container my-4">
     <div class="d-flex justify-content-between align-items-center">
       <div>
-        <h1 id="project-title" class="mb-0">{{ projectStore.controller.getProject().getTitle() }}</h1>
-        <p id="project-subtitle" class="text-muted">{{ projectStore.controller.getProject().getSubtitle() }}</p>
+        <h1 id="project-title" class="mb-0">{{ projectStore.projectTitle }}</h1>
+        <p id="project-subtitle" class="text-muted">{{ projectStore.projectSubtitle }}</p>
       </div>
       <button
         id="edit-title-button"
@@ -78,8 +78,8 @@ const editSubtitle = ref('');
 
 // Funciones para gestionar el modal
 const openEditModal = () => {
-  editTitle.value = projectStore.controller.getProject().getTitle();
-  editSubtitle.value = projectStore.controller.getProject().getSubtitle();
+  editTitle.value = projectStore.projectTitle;
+  editSubtitle.value = projectStore.projectSubtitle;
   editModalVisible.value = true;
 };
 
@@ -89,7 +89,7 @@ const closeEditModal = () => {
 
 // Función para guardar los cambios
 const saveTitle = () => {
-  projectStore.controller.saveTitle(editTitle.value, editSubtitle.value);
+  projectStore.saveTitle(editTitle.value, editSubtitle.value);
   closeEditModal();
 };
 </script>

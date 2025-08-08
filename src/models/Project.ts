@@ -1,7 +1,7 @@
 import { DAY_MS } from '../views/ganttHelpers';
 import { createDateString, displayStringToDate, formatDateToDisplay, TDateString } from './dateFunc';
 import { DependencyGraph } from './DependencyGraph';
-import { calculateDatesFromGraph, getCriticalPathsFromGraph, type CriticalPath, } from './graphCalculation';
+import { calculateDatesFromGraph, getCriticalPathsFromGraph, ICriticalPathData, type CriticalPath, } from './graphCalculation';
 import type { IItemData, Item } from './Item';
 import { IMilestoneData, Milestone } from './Milestone';
 import { IProcessData, Process } from './Process';
@@ -17,6 +17,7 @@ export interface IProjectHeader {
 
 export interface IProjectData extends IProjectHeader {
   items: IItemData[];
+  criticalPath: ICriticalPathData[];
 }
 
 export class Project {
@@ -343,6 +344,12 @@ export class Project {
     return {
       ...this.getHeaderData(),
       items,
+      criticalPath: this.getCriticalPaths().map(cp => {
+        return {
+          path: cp.path.map(i => i.data),
+          totalDelayDays: cp.totalDelayDays
+        }
+      })
     };
   }
 

@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import type { Scale } from '../src/views/ganttHelpers'
 import type { IProjectData, IProjectHeader } from '../src/models/Project'
 import type { IItemData } from '../src/models/Item'
-import { displayStringToDate, TDateString } from '../src/models/dateFunc'
+import { formatDateToDisplay, TDateString } from '../src/models/dateFunc'
+import { IProcessData } from '../src/models/Process'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
@@ -11,8 +12,8 @@ export const useProjectStore = defineStore('project', {
     
     // Estados de UI
     currentScale: 'week' as Scale,
-    itemToDelete: null as number | null,
-    itemToEdit: null as number | null,
+    itemToDelete: null as IItemData | null,
+    itemToEdit: null as IItemData | null,
     isInitialized: false,
     isLoading: false,
     error: null as string | null
@@ -26,6 +27,8 @@ export const useProjectStore = defineStore('project', {
     projectStartDate: (state) => state.projectData?.startDate,
     projectEndDate: (state) => state.projectData?.endDate,
     projectItems: (state) => state.projectData?.items || [],
+    flattennedItems: (state) => flattenItemsList(state.projectData?.items || []),
+    criticalPath: (state) => state.projectData?.criticalPath || [],
   },
   
   actions: {
@@ -54,7 +57,7 @@ export const useProjectStore = defineStore('project', {
         
           if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
           this.isInitialized = true
         }
       } catch (error) {
@@ -63,6 +66,7 @@ export const useProjectStore = defineStore('project', {
       } finally {
         this.setLoading(false)
       }
+      console.log(this.projectData)
     },
     
     // Cargar header del proyecto
@@ -87,13 +91,14 @@ export const useProjectStore = defineStore('project', {
           method: 'POST',
           body: {
             action: 'newProject',
-            data: { startDate: startDate?.toISOString() }
+            data: { startDate: formatDateToDisplay(startDate) }
           }
         })
         
         if ((response as { success: boolean }).success) {
+          console.log(response)
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error creating new project:', error)
@@ -118,7 +123,7 @@ export const useProjectStore = defineStore('project', {
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error changing item order:', error)
@@ -143,7 +148,7 @@ export const useProjectStore = defineStore('project', {
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error resetting actual start dates:', error)
@@ -172,7 +177,7 @@ export const useProjectStore = defineStore('project', {
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error loading project from file:', error)
@@ -222,7 +227,7 @@ export const useProjectStore = defineStore('project', {
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error changing start date:', error)
@@ -247,7 +252,7 @@ export const useProjectStore = defineStore('project', {
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error adding new item:', error)
@@ -272,7 +277,7 @@ export const useProjectStore = defineStore('project', {
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error editing item:', error)
@@ -293,13 +298,13 @@ export const useProjectStore = defineStore('project', {
           method: 'POST',
           body: {
             action: 'deleteItem',
-            data: { id: this.itemToDelete }
+            data: { id: this.itemToDelete .id}
           }
         })
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
           this.itemToDelete = null
         }
       } catch (error) {
@@ -325,13 +330,13 @@ export const useProjectStore = defineStore('project', {
     },
     
     // Configurar item para editar
-    setupItemForEdit(id: number | null) {
-      this.itemToEdit = id
+    setupItemForEdit(item: IItemData | null) {
+      this.itemToEdit = item;
     },
     
     // Configurar item para eliminar
-    setupItemForDelete(id: number | null) {
-      this.itemToDelete = id
+    setupItemForDelete(item: IItemData | null) {
+      this.itemToDelete = item;
     },
     
     // Cargar proyecto de ejemplo
@@ -350,7 +355,7 @@ export const useProjectStore = defineStore('project', {
         
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          await this.loadProjectHeader()
+          // await this.loadProjectHeader()
         }
       } catch (error) {
         console.error('Error loading example project:', error)
@@ -401,3 +406,25 @@ export const useProjectStore = defineStore('project', {
     }
   }
 })
+
+      /**
+ * Función que genera una lista plana de items, expandiendo los procesos para incluir sus hijos.
+ *
+ * @param items La lista de items de entrada, que puede contener procesos.
+ * @returns Una lista plana y única de items.
+ */
+export function flattenItemsList(items: IItemData[]): IItemData[] {
+  const flattenedList: IItemData[] = [];
+
+  for (const item of items) {
+    flattenedList.push(item);
+
+    // Si el item es un proceso, añade recursivamente sus hijos
+    if (item.type === 'process' && (item as IProcessData).children) {
+      const processItem = item as IProcessData;
+      flattenedList.push(...flattenItemsList(processItem.children));
+    }
+  }
+
+  return flattenedList;
+}

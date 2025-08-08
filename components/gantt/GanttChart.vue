@@ -24,6 +24,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useProjectStore } from '../../stores/project'
 import { ganttRenderer } from '../../src/views/ganttRenderer'
 import { setProjectItemsColors } from '../../src/views/colors'
+import { ProjectController } from '../../src/controllers/ProjectController'
 import type { Scale } from '../../src/views/ganttHelpers'
 
 const projectStore = useProjectStore()
@@ -49,11 +50,12 @@ function changeScale(newScale: Scale) {
 // Función para renderizar el diagrama de Gantt
 function renderGantt() {
   if (ganttContainer.value) {
+    const project = ProjectController.getInstance().getProject()
     // Aplicar colores a los elementos del proyecto
-    setProjectItemsColors(projectStore.controller.getProject())
+    setProjectItemsColors(project)
     
     // Renderizar el diagrama de Gantt usando la función ganttRenderer
-    ganttRenderer(projectStore.controller.getProject(), scale.value)
+    ganttRenderer(project, scale.value)
   }
 }
 

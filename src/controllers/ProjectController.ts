@@ -1,5 +1,6 @@
 import { displayStringToDate, formatDateToDisplay, TDateString } from '../models/dateFunc';
 import { getExampleProject } from '../models/getExampleProject';
+import { CriticalPath, ICriticalPathData } from '../models/graphCalculation';
 import type { Item, IItemData } from '../models/Item';
 import { IMilestoneData, Milestone } from '../models/Milestone';
 import { IProcessData, Process } from '../models/Process';
@@ -44,7 +45,18 @@ export class ProjectController {
     return this.project.getHeaderData();
   }
 
-  getAllItems(): Item[] {
+  getCriticalPahh(): ICriticalPathData[] {
+    const out: ICriticalPathData[] = []
+    this.project.getCriticalPaths().forEach((value: CriticalPath) => {
+      out.push({
+        path: value.path.map(i => i.data),
+        totalDelayDays: value.totalDelayDays
+      })
+    })
+    return out
+  }
+
+  getAllItems(): Item[] { // borrar
     const out: Item[] = [this.project.getRoot()];
     this.project.traverse((item: Item, _: number, __: Process) => {
       out.push(item);
@@ -61,11 +73,11 @@ export class ProjectController {
   }
 
 
-  getAllProcess(): Process[] {
-    const out: Process[] = []
+  getAllProcess(): IProcessData[] {
+    const out: IProcessData[] = []
     this.project.getAllItems().forEach(item => {
       if (item instanceof Process) {
-        out.push(item)
+        out.push(item.data as IProcessData)
       }
     })
 
@@ -273,12 +285,12 @@ export class ProjectController {
     });
   }
 
-   /**
-   * Calcula el gasto diario del proyecto, cubriendo cada día desde el inicio hasta el fin.
-   * @param spendingMethod El método de cálculo a usar.
-   * @returns Un mapa con las fechas como claves y el gasto total de ese día como valor.
-   */
-  calculateDailySpending(spendingMethod: SpendingMethod): Array<{d: string, v: number}> {
+  /**
+  * Calcula el gasto diario del proyecto, cubriendo cada día desde el inicio hasta el fin.
+  * @param spendingMethod El método de cálculo a usar.
+  * @returns Un mapa con las fechas como claves y el gasto total de ese día como valor.
+  */
+  calculateDailySpending(spendingMethod: SpendingMethod): Array<{ d: string, v: number }> {
 
     const dailySpending = new Map<string, number>();
     const project = this.getProject();
@@ -299,7 +311,7 @@ export class ProjectController {
       project.traverse((item: Item) => {
         dailyCost += item.getDailyCost(currentDate, spendingMethod);
       })
-      
+
       dailySpending.set(formattedDate, dailyCost);
       currentDate.setDate(currentDate.getDate() + 1);
     }
