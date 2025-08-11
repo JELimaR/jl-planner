@@ -21,7 +21,7 @@
     <div class="page-break"></div>
     
     <!-- Diagrama de Gantt -->
-    <!--  <GanttChart /> -->
+    <GanttChart />
 
     <div class="page-break"></div>
     
@@ -38,7 +38,6 @@ import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectStore } from '../../stores/project'
 import { useUIStore } from '../../stores/ui'
-import { setProjectItemsColors } from '../../src/views/colors'
 
 const route = useRoute()
 const projectStore = useProjectStore()
@@ -58,13 +57,4 @@ onMounted(async () => {
   }
 })
 
-// Escuchar eventos de renderizado global
-watch(() => [projectStore.projectStartDate, projectStore.projectEndDate], () => {
-  try {
-    // Actualizar la interfaz cuando cambien las fechas del proyecto
-    // setProjectItemsColors(projectStore.controller.getProject()) resolver
-  } catch (error) {
-    console.error('Error updating project colors:', error)
-  }
-})
 </script>

@@ -82,7 +82,8 @@ export default defineEventHandler(async (event) => {
                   const fs = await import('fs/promises');
                   const templateData = await fs.readFile(templatePath, 'utf-8');
                   const jsonData = JSON.parse(templateData);
-                  return { success: true, data: jsonData };
+                  controller.loadProjectFromJSON(jsonData)
+                  return { success: true, data: controller.getProjectData() };
                 } catch (err) {
                   console.error('Error reading template file:', err);
                   throw createError({

@@ -70,18 +70,14 @@
         </div>
         <div class="mb-3">
           <label for="addActualStartDate" class="form-label">Inicio real (opcional)</label>
-          <input type="date" class="form-control" id="addActualStartDate"
-            v-model="actualStartDateRef" />
-
+          <DateInput id="addActualStartDate" v-model="formItemStore.form.actualStartDate" />
         </div>
       </div>
 
       <div v-if="formItemStore.form.type === 'milestone'">
         <div class="mb-3">
           <label for="addActualStartDate" class="form-label">Inicio real (opcional)</label>
-          <input type="date" class="form-control" id="addActualStartDate"
-            v-model="actualStartDateRef" />
-
+          <DateInput id="addActualStartDate" v-model="formItemStore.form.actualStartDate" />
         </div>
       </div>
     </div>
@@ -89,7 +85,7 @@
     <div class="mb-3">
       <label for="addItemPredecessors" class="form-label">Predecesores</label>
       <select multiple class="form-select" id="addItemPredecessors" v-model="formItemStore.form.predecessorIds">
-        <option v-for="option in projectStore.projectItems" :key="option.id" :value="option.id">
+        <option v-for="option in getPredecessorOptions()" :key="option.id" :value="option.id">
           {{ option.name }} (#{{ option.id }})
         </option>
       </select>
@@ -100,7 +96,7 @@
       <label for="addItemParentProcess" class="form-label">Pertenece a proceso</label>
       <select class="form-select" id="addItemParentProcess" v-model="formItemStore.form.parentId"
         :disabled="formItemStore.form.id !== -1">
-        <option v-for="option in projectStore.getAllProcess()" :key="option.id" :value="option.id">
+        <option v-for="option in getAllProcess()" :key="option.id" :value="option.id">
           {{ option.name }}
         </option>
       </select>
@@ -117,39 +113,36 @@
 import { useProjectStore } from '../../stores/project';
 import { useFormItemStore } from '../../stores/formItem';
 import { useUIStore } from '../../stores/ui';
-import { displayStringToDate, TDateString } from '../../src/models/dateFunc';
-import { computed } from 'vue';
+import { flattenItemsList } from '../../stores/project';
+import type { IItemData } from '../../src/models/Item'
 
 const projectStore = useProjectStore();
 const formItemStore = useFormItemStore();
 const uiStore = useUIStore();
 
-const itemList = computed({
-  
-});
-// usar itemDate
-const actualStartDateRef = computed({
-  // Getter: Lee el valor del store y lo convierte para mostrarlo en el input
-  get() {
-    if (formItemStore.form.actualStartDate && formItemStore.form.actualStartDate !== '') {
-      return displayStringToDate(formItemStore.form.actualStartDate).toISOString().substring(0, 10)
-    }
-    return undefined;
-  },
-  // Setter: Actualiza el valor del store cuando el input cambia
-  set(newValue) {
-    if (!newValue) {
-      formItemStore.form.actualStartDate = undefined
-    } else {
-      formItemStore.form.actualStartDate = newValue.split('-').reverse().join('-') as TDateString;
-    }
-  }
-});
+// Obtiene todos los procesos, incluyendo el proceso raíz
+const getAllProcess = () => {
+  const processes = flattenItemsList(projectStore.projectItems)
+    .filter(item => item.type === 'process');
+
+  // Agregar el proceso raíz manualmente, ya que no es un ítem 'normal'
+  processes.unshift({
+    id: 1001,
+    name: 'Proyecto Raíz',
+  } as IItemData);
+
+  return processes;
+};
+
+// Obtiene la lista de opciones para los predecesores, excluyendo start (1000) y end (1002)
+const getPredecessorOptions = () => {
+  return flattenItemsList(projectStore.projectItems).filter(item => item.id !== 1000 && item.id !== 1002);
+}
 
 const close = () => {
-  uiStore.closeAddModal()
-  formItemStore.resetForm()
-} 
+  uiStore.closeAddModal();
+  formItemStore.resetForm();
+};
 
 const saveItem = () => {
   if (formItemStore.isFormValid) {
