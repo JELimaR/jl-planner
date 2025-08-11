@@ -1,34 +1,37 @@
-import type { Item } from '../models/Item';
-import { Milestone } from '../models/Milestone';
-import { Process } from '../models/Process';
-import type { Project } from '../models/Project';
-import { Task } from '../models/Task';
+import type { IProjectData } from '../models/Project';
+import type { IItemData } from '../models/Item';
+import type { ITaskData } from '../models/Task';
+import type { IMilestoneData } from '../models/Milestone';
+import type { IProcessData } from '../models/Process';
+import { flattenItemsList } from '../../stores/project';
 import { CRITICAL_COLOR, processColorMap } from './colors';
 import { getTimeUnitsBetween, SCALE_OPTIONS, type Scale } from './ganttHelpers';
+import { displayStringToDate } from '../models/dateFunc';
 
 export function drawItems(
-  project: Project,
+  projectData: IProjectData, // Refactorizado
   svg: SVGSVGElement,
   calendarStartDate: Date,
   scale: Scale,
   rowHeight: number
 ): void {
   let rowIndex = 0;
+  
+  const flattenedItems = flattenItemsList(projectData.items);
 
-  project.traverse((item: Item) => {
+  for (const item of flattenedItems) {
     const y = rowIndex * rowHeight + rowHeight / 2;
-    // const unitWidth = SCALE_OPTIONS[scale].pxPerDay;
 
-    if (item instanceof Milestone) {
-      drawMilestone(svg, item, calendarStartDate, scale, y);
-    } else if (item instanceof Task) {
-      drawTask(svg, item, calendarStartDate, scale, y);
-    } else if (item instanceof Process) {
-      drawProcess(svg, item, calendarStartDate, scale, y);
+    if (item.type === 'milestone') {
+      drawMilestone(svg, item as IMilestoneData, calendarStartDate, scale, y);
+    } else if (item.type === 'task') {
+      drawTask(svg, item as ITaskData, calendarStartDate, scale, y);
+    } else if (item.type === 'process') {
+      drawProcess(svg, item as IProcessData, calendarStartDate, scale, y);
     }
 
     rowIndex++;
-  });
+  }
 }
 
 function drawMilestoneIcon(
@@ -61,12 +64,12 @@ function drawMilestoneIcon(
 
 function drawMilestone(
   svg: SVGSVGElement,
-  item: Milestone,
+  item: IMilestoneData,
   calendarStartDate: Date,
   scale: Scale,
   y: number
 ) {
-  const start = item.getStartDate()!;
+  const start = displayStringToDate(item.startDate)!;
   const x =
     getTimeUnitsBetween(calendarStartDate, start, 'day') *
     SCALE_OPTIONS[scale].pxPerDay;
@@ -82,13 +85,13 @@ function drawMilestone(
 
 function drawTask(
   svg: SVGSVGElement,
-  item: Task,
+  item: ITaskData,
   calendarStartDate: Date,
   scale: Scale,
   y: number
 ): void {
-  const start = item.getStartDate();
-  const end = item.getEndDate();
+  const start = displayStringToDate(item.startDate);
+  const end = displayStringToDate(item.endDate);
   if (!start || !end) return;
 
   // Calcular posición horizontal de inicio y fin
@@ -120,7 +123,7 @@ function drawTask(
 
 function drawProcess(
   svg: SVGSVGElement,
-  item: Process,
+  item: IProcessData,
   calendarStartDate: Date,
   scale: Scale,
   y: number
@@ -128,8 +131,8 @@ function drawProcess(
   const color = item.isCritical
     ? CRITICAL_COLOR
     : processColorMap.get(item.id) || '#666';
-  const start = item.getStartDate();
-  const end = item.getEndDate();
+  const start = displayStringToDate(item.startDate);
+  const end = displayStringToDate(item.endDate);
   if (!start || !end) return;
 
   // Calcular posición horizontal de inicio y fin
@@ -212,7 +215,7 @@ function drawProcessGroupBracket(
   svg.appendChild(path);
 }
 
-function drawLabelItem(svg: SVGSVGElement, item: Item, x: number, y: number) {
+function drawLabelItem(svg: SVGSVGElement, item: IItemData, x: number, y: number) {
   const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   label.setAttribute('x', (x + 15).toString()); // pequeño espacio a la derecha
   label.setAttribute('y', (y + 4).toString()); // ajuste vertical

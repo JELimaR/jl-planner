@@ -13,6 +13,7 @@ export interface IItemData {
   cost: number;
   parentId: number;
   predecessorIds: number[];
+  isCritical: boolean;
   color?: string;
 }
 
@@ -116,6 +117,7 @@ export abstract class Item {
       detail: this.detail,
       startDate: startDate,
       endDate: endDate,
+      isCritical: this.isCritical,
       color: this._color,
       cost: this.getTotalCost(),
       parentId: this._parent?._id ?? -1,

@@ -413,3 +413,28 @@ export function flattenItemsList(items: IItemData[]): IItemData[] {
 
   return flattenedList;
 }
+
+/**
+ * Función que genera una lista plana de ítems, expandiendo los procesos para incluir a sus hijos
+ * y agregando el nivel de profundidad de cada ítem.
+ *
+ * @param items La lista de ítems de entrada, que puede contener procesos.
+ * @param depth El nivel de profundidad inicial (0 por defecto).
+ * @returns Una lista plana de ítems con su profundidad.
+ */
+export function flattenItemsListWithDepth(items: IItemData[], depth = 0): { item: IItemData, depth: number }[] {
+  const flattenedList: { item: IItemData, depth: number }[] = [];
+  
+  for (const iid of items) {
+    flattenedList.push({ item: iid, depth });
+    
+    // Si el ítem es un proceso, añade recursivamente sus hijos con un nivel de profundidad aumentado
+    if (iid.type === 'process' && (iid as IProcessData).children) {
+      const processItem = iid as IProcessData;
+      const childrenFlattened = flattenItemsListWithDepth(processItem.children, depth + 1);
+      childrenFlattened.forEach(c => flattenedList.push(c));
+    }
+  }
+
+  return flattenedList;
+}

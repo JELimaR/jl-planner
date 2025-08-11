@@ -14,7 +14,6 @@
       </div>
     </div>
     
-    <!-- Contenedor para el diagrama de Gantt renderizado por ganttRenderer -->
     <div ref="ganttContainer" id="gantt-container"></div>
   </div>
 </template>
@@ -23,8 +22,6 @@
 import { ref, onMounted, watch } from 'vue'
 import { useProjectStore } from '../../stores/project'
 import { ganttRenderer } from '../../src/views/ganttRenderer'
-import { setProjectItemsColors } from '../../src/views/colors'
-import { ProjectController } from '../../src/controllers/ProjectController'
 import type { Scale } from '../../src/views/ganttHelpers'
 
 const projectStore = useProjectStore()
@@ -44,18 +41,14 @@ const scaleOptions = [
 function changeScale(newScale: Scale) {
   scale.value = newScale
   projectStore.currentScale = newScale
-  renderGantt()
 }
 
 // Función para renderizar el diagrama de Gantt
 function renderGantt() {
-  if (ganttContainer.value) {
-    const project = ProjectController.getInstance().getProject()
-    // Aplicar colores a los elementos del proyecto
-    setProjectItemsColors(project)
-    
+  const projectData = projectStore.projectData
+  if (ganttContainer.value && projectData) {
     // Renderizar el diagrama de Gantt usando la función ganttRenderer
-    ganttRenderer(project, scale.value)
+    ganttRenderer(projectData, scale.value, ganttContainer.value)
   }
 }
 
@@ -66,10 +59,11 @@ onMounted(() => {
 
 // Volver a renderizar cuando cambien las fechas del proyecto o la escala
 watch(
-  () => [projectStore.projectStartDate, projectStore.projectEndDate, projectStore.currentScale],
+  () => [projectStore.projectData, projectStore.currentScale],
   () => {
     renderGantt()
-  }
+  },
+  { deep: true }
 )
 </script>
 

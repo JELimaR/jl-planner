@@ -1,32 +1,43 @@
-import type { Project } from '../models/Project';
+import type { IProjectData } from '../models/Project';
+import type { IItemData } from '../models/Item';
+import { flattenItemsList } from '../../stores/project';
+
 import { getCalendarLimitDates, renderDateRow } from './ganttCalendar';
 import { drawAllArrows } from './ganttDrawAllArrows';
 import { DAY_MS, SCALE_OPTIONS, type Scale } from './ganttHelpers';
 import { drawItems } from './ganttItems';
 import { renderItemRowsFromProject } from './ganttLeftTable';
+import { displayStringToDate } from '../models/dateFunc';
 
 // Función principal que renderiza el Gantt completo
-export function ganttRenderer(project: Project, currentScale: Scale) {
-  project.getCriticalPaths();
-  const container = document.getElementById('gantt-container');
-  if (!container) return;
+export function ganttRenderer(
+  projectData: IProjectData, 
+  currentScale: Scale,
+  container: HTMLElement // El contenedor ahora se pasa como argumento
+) {
+  if (!projectData) return;
 
-  // fechas
-  const projectStartDate: Date = project.getProjectStartDate();
-  const projectEndDate: Date = project.getProjectEndDate();
+  // Fechas: Acceso directo a las propiedades de projectData
+  const projectStartDate: Date = displayStringToDate(projectData.startDate);
+  const projectEndDate: Date = displayStringToDate(projectData.endDate);
+  
   let { calendarStartDate, calendarEndDate } = getCalendarLimitDates(
     projectStartDate,
     projectEndDate,
     currentScale
   );
-  // otros parametros
+
+  // Ítems: Se usa la lista aplanada del store
+  const flattenedItems = flattenItemsList(projectData.items);
+  
+  // Otros parámetros
   const rowHeight = 20;
   const svgWidth =
     ((calendarEndDate.getTime() - calendarStartDate.getTime()) / DAY_MS) *
     SCALE_OPTIONS[currentScale].pxPerDay;
-  const svgHeigth = project.getAllItems().size * rowHeight;
+  const svgHeigth = flattenedItems.length * rowHeight;
 
-  // se vacia el contenido del container
+  // Se vacia el contenido del container
   container.innerHTML = '';
 
   // envolvente del gantt
@@ -77,14 +88,14 @@ export function ganttRenderer(project: Project, currentScale: Scale) {
 
   // Fila de datos
   const ganttLabelItems = document.createElement('div');
-  renderItemRowsFromProject(project, ganttLabelItems, rowHeight);
+  renderItemRowsFromProject(projectData, ganttLabelItems, rowHeight);
   labels.appendChild(ganttLabelItems);
 
   // items
-  drawItems(project, svg, calendarStartDate, currentScale, rowHeight);
+  drawItems(projectData, svg, calendarStartDate, currentScale, rowHeight);
 
   // flechas
-  drawAllArrows(svg, project, calendarStartDate, currentScale, rowHeight);
+  drawAllArrows(svg, projectData, calendarStartDate, currentScale, rowHeight);
 
   wrapper.appendChild(labels);
   wrapper.appendChild(chartWrapper);

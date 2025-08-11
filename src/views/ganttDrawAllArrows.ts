@@ -1,8 +1,6 @@
-import type { CriticalPath } from '../models/graphCalculation';
-import type { Item } from '../models/Item';
-import { Milestone } from '../models/Milestone';
-import type { Project } from '../models/Project';
-import { Task } from '../models/Task';
+import type { IProjectData } from '../models/Project';
+import type { IItemData } from '../models/Item';
+import { flattenItemsList } from '../../stores/project';
 import { CRITICAL_COLOR } from './colors';
 import {
   getXPositionEnd,
@@ -12,10 +10,11 @@ import {
   type Scale,
 } from './ganttHelpers';
 
-function isCriticalArrow(project: Project, pred: Item, succ: Item) {
-  const criticalPaths = project.getCriticalPaths();
+function isCriticalArrow(projectData: IProjectData, pred: IItemData, succ: IItemData) {
+  const criticalPaths = projectData.criticalPaths; // Acceso directo
+  if (!criticalPaths) return false;
   let out = false;
-  criticalPaths.forEach((path: CriticalPath) => {
+  criticalPaths.forEach((path) => {
     for (let i = 1; i < path.path.length && !out; i++) {
       out = path.path[i - 1].id == pred.id && path.path[i].id == succ.id;
     }
@@ -23,12 +22,9 @@ function isCriticalArrow(project: Project, pred: Item, succ: Item) {
   return out;
 }
 
-/**
- * Dibuja todas las flechas entre ítems (excepto procesos).
- */
 export function drawAllArrows(
   svg: SVGSVGElement,
-  project: Project,
+  projectData: IProjectData, // Refactorizado
   calendarStartDate: Date,
   scale: Scale,
   rowHeight: number
@@ -36,15 +32,14 @@ export function drawAllArrows(
   addArrowHeadDef(svg);
   let rowIndex = 0;
 
-  project.traverse((item: Item) => {
-    if (item instanceof Task || item instanceof Milestone) {
-      const start = item.getStartDate();
-      const end = item.getEndDate();
-      if (!start || !end) return;
+  const flattenedItems = flattenItemsList(projectData.items);
+  for (const item of flattenedItems) {
+    if (item.type === 'task' || item.type === 'milestone') {
+      const start = item.startDate ? new Date(item.startDate) : null;
+      const end = item.endDate ? new Date(item.endDate) : null;
+      if (!start || !end) continue;
 
-      // Punto de llegada de la flecha: final del item (x fin)
       const startX = getXPositionStart(item, calendarStartDate, scale);
-      // Punto de salida de la flecha: final del item (x fin)
       const endX = getXPositionEnd(item, calendarStartDate, scale);
 
       const centerY = rowIndex * rowHeight + rowHeight / 2;
@@ -53,36 +48,37 @@ export function drawAllArrows(
     }
 
     rowIndex++;
-  });
+  }
 
-  // Dibujar flechas entre ítems (solo tareas e hitos)
-  for (const item of project.getAllItems().values()) {
-    if (!(item instanceof Task || item instanceof Milestone)) continue;
+  for (const item of flattenedItems) {
+    if (item.type !== 'task' && item.type !== 'milestone') continue;
 
     const targetPos = itemPositionLeft.get(item.id);
     if (!targetPos) continue;
 
-    for (const pred of item.predecessors) {
-      if (!(pred instanceof Task || pred instanceof Milestone)) continue;
+    for (const predId of item.predecessorIds) {
+      const pred = flattenedItems.find(i => i.id === predId);
+      if (!pred || (pred.type !== 'task' && pred.type !== 'milestone')) continue;
 
       const sourcePos = itemPositionRight.get(pred.id);
       if (!sourcePos) continue;
 
-      const color: string = isCriticalArrow(project, pred, item)
+      const color: string = isCriticalArrow(projectData, pred, item)
         ? CRITICAL_COLOR
-        : '#555'; //|| processColorMap.get(pred.id) || '#4545';
+        : '#555';
       drawArrow(
         svg,
         sourcePos,
         targetPos,
         rowHeight,
         color,
-        isCriticalArrow(project, pred, item)
+        isCriticalArrow(projectData, pred, item)
       );
     }
   }
 }
 
+// ... El resto de las funciones auxiliares se mantienen igual.
 /**
  * Dibuja una flecha desde un item fuente hasta uno destino.
  * Estilo ortogonal: derecha → abajo → (si es necesario) izquierda → abajo → llegada.

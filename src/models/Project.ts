@@ -17,7 +17,7 @@ export interface IProjectHeader {
 
 export interface IProjectData extends IProjectHeader {
   items: IItemData[];
-  criticalPath: ICriticalPathData[];
+  criticalPaths: ICriticalPathData[];
 }
 
 export class Project {
@@ -344,7 +344,7 @@ export class Project {
     return {
       ...this.getHeaderData(),
       items,
-      criticalPath: this.getCriticalPaths().map(cp => {
+      criticalPaths: this.getCriticalPaths().map(cp => {
         return {
           path: cp.path.map(i => i.data),
           totalDelayDays: cp.totalDelayDays

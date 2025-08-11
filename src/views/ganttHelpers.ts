@@ -1,4 +1,5 @@
-import type { Item } from '../models/Item';
+import type { IItemData } from '../models/Item';
+import { displayStringToDate } from '../models/dateFunc';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -37,23 +38,23 @@ export function getTimeUnitsBetween(
 }
 
 export function getXPositionStart(
-  item: Item,
+  item: IItemData,
   calendarStartDate: Date,
   scale: Scale
 ): number {
   return (
-    getTimeUnitsBetween(calendarStartDate, item.getStartDate()!, 'day') *
+    getTimeUnitsBetween(calendarStartDate, displayStringToDate(item.startDate)!, 'day') *
     SCALE_OPTIONS[scale].pxPerDay
   );
 }
 
 export function getXPositionEnd(
-  item: Item,
+  item: IItemData,
   calendarStartDate: Date,
   scale: Scale
 ): number {
   return (
-    getTimeUnitsBetween(calendarStartDate, item.getEndDate()!, 'day') *
+    getTimeUnitsBetween(calendarStartDate,  displayStringToDate(item.endDate)!, 'day') *
     SCALE_OPTIONS[scale].pxPerDay
   );
 }
