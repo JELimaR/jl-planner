@@ -27,7 +27,7 @@ export const useProjectStore = defineStore('project', {
     projectStartDate: (state) => state.projectData?.startDate,
     projectEndDate: (state) => state.projectData?.endDate,
     projectItems: (state) => state.projectData?.items || [],
-    criticalPath: (state) => state.projectData?.criticalPath || [],
+    criticalPaths: (state) => state.projectData?.criticalPaths || [],
   },
 
   actions: {

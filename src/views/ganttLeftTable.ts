@@ -6,6 +6,7 @@ import type { IProjectData } from '../models/Project';
 import { ITaskData } from '../models/Task';
 import { CRITICAL_COLOR } from './colors';
 import { DAY_MS } from './ganttHelpers';
+import { isCritical } from './ganttItems';
 
 // Renderiza la sección de etiquetas (nombres de tareas, fechas y números)
 export function renderItemRowsFromProject(
@@ -22,7 +23,7 @@ export function renderItemRowsFromProject(
   const flattenedList = flattenItemsListWithDepth(projectData.items);
 
   for (const { item, depth } of flattenedList) {
-    const color = item.isCritical ? CRITICAL_COLOR : 'black';
+    const color = isCritical(projectData, item) ? CRITICAL_COLOR : 'black';
     const labelRow = document.createElement('div');
     labelRow.className = 'label-row';
     labelRow.style.height = `${rowHeight}px`;

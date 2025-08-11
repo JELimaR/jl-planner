@@ -4,12 +4,35 @@ import type { ITaskData } from '../models/Task';
 import type { IMilestoneData } from '../models/Milestone';
 import type { IProcessData } from '../models/Process';
 import { flattenItemsList } from '../../stores/project';
-import { CRITICAL_COLOR, processColorMap } from './colors';
+import { CRITICAL_COLOR } from './colors';
 import { getTimeUnitsBetween, SCALE_OPTIONS, type Scale } from './ganttHelpers';
 import { displayStringToDate } from '../models/dateFunc';
 
+/**
+ * Determina si un ítem es parte de la ruta crítica del proyecto.
+ * @param projectData El objeto de datos del proyecto completo.
+ * @param item El ítem a verificar.
+ * @returns `true` si el ítem es parte de la ruta crítica, de lo contrario `false`.
+ */
+export function isCritical(projectData: IProjectData, item: IItemData): boolean {
+  const criticalPaths = projectData.criticalPaths;
+  
+  if (!criticalPaths || criticalPaths.length === 0) {
+    return false;
+  }
+
+  for (const path of criticalPaths) {
+    if (path.path.some(criticalItem => criticalItem.id === item.id)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// *** Función principal de dibujo ***
 export function drawItems(
-  projectData: IProjectData, // Refactorizado
+  projectData: IProjectData,
   svg: SVGSVGElement,
   calendarStartDate: Date,
   scale: Scale,
@@ -23,16 +46,18 @@ export function drawItems(
     const y = rowIndex * rowHeight + rowHeight / 2;
 
     if (item.type === 'milestone') {
-      drawMilestone(svg, item as IMilestoneData, calendarStartDate, scale, y);
+      drawMilestone(svg, projectData, item as IMilestoneData, calendarStartDate, scale, y);
     } else if (item.type === 'task') {
-      drawTask(svg, item as ITaskData, calendarStartDate, scale, y);
+      drawTask(svg, projectData, item as ITaskData, calendarStartDate, scale, y);
     } else if (item.type === 'process') {
-      drawProcess(svg, item as IProcessData, calendarStartDate, scale, y);
+      drawProcess(svg, projectData, item as IProcessData, calendarStartDate, scale, y);
     }
 
     rowIndex++;
   }
 }
+
+// ... Las funciones auxiliares de dibujo de elementos se refactorizan a continuación ...
 
 function drawMilestoneIcon(
   svg: SVGSVGElement,
@@ -40,12 +65,12 @@ function drawMilestoneIcon(
   x: number,
   y: number
 ) {
-  const size = 6; // tamaño del rombo
+  const size = 6;
   const points = [
-    [x, y - size], // arriba
-    [x + size, y], // derecha
-    [x, y + size], // abajo
-    [x - size, y], // izquierda
+    [x, y - size],
+    [x + size, y],
+    [x, y + size],
+    [x - size, y],
   ]
     .map((p) => p.join(','))
     .join(' ');
@@ -64,6 +89,7 @@ function drawMilestoneIcon(
 
 function drawMilestone(
   svg: SVGSVGElement,
+  projectData: IProjectData, // Nuevo argumento
   item: IMilestoneData,
   calendarStartDate: Date,
   scale: Scale,
@@ -74,17 +100,18 @@ function drawMilestone(
     getTimeUnitsBetween(calendarStartDate, start, 'day') *
     SCALE_OPTIONS[scale].pxPerDay;
 
-  const color = item.isCritical
+  // Sustitución de item.isCritical por la nueva función
+  const color = isCritical(projectData, item)
     ? CRITICAL_COLOR
-    : processColorMap.get(item.id) || '#d9534f';
-  drawMilestoneIcon(svg, color, x, y); // rojo de bootstrap
+    : item.color || '#d9534f';
+  drawMilestoneIcon(svg, color, x, y);
 
-  // Mostrar nombre del proceso a la derecha de la barra
   drawLabelItem(svg, item, x, y);
 }
 
 function drawTask(
   svg: SVGSVGElement,
+  projectData: IProjectData, // Nuevo argumento
   item: ITaskData,
   calendarStartDate: Date,
   scale: Scale,
@@ -94,7 +121,6 @@ function drawTask(
   const end = displayStringToDate(item.endDate);
   if (!start || !end) return;
 
-  // Calcular posición horizontal de inicio y fin
   const xs =
     getTimeUnitsBetween(calendarStartDate, start, 'day') *
     SCALE_OPTIONS[scale].pxPerDay;
@@ -102,40 +128,42 @@ function drawTask(
     getTimeUnitsBetween(calendarStartDate, end, 'day') *
     SCALE_OPTIONS[scale].pxPerDay;
 
-  const height = 10; // Barra delgada
+  const height = 10;
   const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   bar.setAttribute('x', xs.toString());
   bar.setAttribute('y', (y - height / 2).toString());
   bar.setAttribute('width', (xe - xs).toString());
   bar.setAttribute('height', height.toString());
-  const color = item.isCritical
+  
+  // Sustitución de item.isCritical por la nueva función
+  const color = isCritical(projectData, item)
     ? CRITICAL_COLOR
-    : processColorMap.get(item.id) || '#FF0000';
+    : item.color || '#FF0000';
   bar.setAttribute('fill', color);
-  bar.setAttribute('rx', '5'); // Bordes redondeados
-  bar.setAttribute('ry', '5'); // Bordes redondeados
+  bar.setAttribute('rx', '5');
+  bar.setAttribute('ry', '5');
 
   svg.appendChild(bar);
 
-  // Mostrar nombre del proceso a la derecha de la barra
   drawLabelItem(svg, item, xe, y);
 }
 
 function drawProcess(
   svg: SVGSVGElement,
+  projectData: IProjectData, // Nuevo argumento
   item: IProcessData,
   calendarStartDate: Date,
   scale: Scale,
   y: number
 ): void {
-  const color = item.isCritical
+  // Sustitución de item.isCritical por la nueva función
+  const color = isCritical(projectData, item)
     ? CRITICAL_COLOR
-    : processColorMap.get(item.id) || '#666';
+    : item.color || '#666';
   const start = displayStringToDate(item.startDate);
   const end = displayStringToDate(item.endDate);
   if (!start || !end) return;
 
-  // Calcular posición horizontal de inicio y fin
   const xs =
     (getTimeUnitsBetween(calendarStartDate, start, 'day') - 0.35) *
     SCALE_OPTIONS[scale].pxPerDay;
@@ -145,19 +173,18 @@ function drawProcess(
 
   drawProcessGroupBracket(svg, xs, xe, y, color);
 
-  const height = 5; // Barra delgada
+  const height = 5;
   const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   bar.setAttribute('x', xs.toString());
   bar.setAttribute('y', (y - height / 2).toString());
   bar.setAttribute('width', (xe - xs).toString());
   bar.setAttribute('height', height.toString());
   bar.setAttribute('fill', color);
-  bar.setAttribute('rx', '3'); // Bordes redondeados
+  bar.setAttribute('rx', '3');
   bar.setAttribute('ry', '3');
 
   svg.appendChild(bar);
 
-  // Mostrar nombre del proceso a la derecha de la barra
   drawLabelItem(svg, item, xe, y);
 }
 

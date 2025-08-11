@@ -25,7 +25,7 @@
             <td style="font-size: 0.75rem;">{{ item.id }}</td>
             <td>{{ item.name }}</td>
             <td style="font-size: 0.75rem;">{{ item.startDate }}</td>
-            <td>{{ item.getDelayInDays() }}</td>
+            <td>{{ getDelayInDays(item) }}</td>
           </tr>
         </tbody>
       </table>
@@ -34,19 +34,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { useProjectStore } from '../../stores/project'
-import { formatDateToDisplay } from '../../src/models/dateFunc';
+import { getDelayInDays } from '../../src/views/ganttLeftTable'
 
 const projectStore = useProjectStore()
-const criticalPaths = projectStore.criticalPaths || []; // no debería ser así
 
-// Actualizar los caminos críticos cuando cambien las fechas del proyecto
-watch(
-  () => [projectStore.projectStartDate, projectStore.projectEndDate],
-  () => {
-    // La reactividad de Vue actualizará automáticamente la vista
-    // cuando cambie criticalPaths
-  }
-)
+// 🆕 Usa una propiedad computada para obtener los caminos críticos de manera reactiva.
+const criticalPaths = computed(() => projectStore.criticalPaths || []);
+
+
 </script>
