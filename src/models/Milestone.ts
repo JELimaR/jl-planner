@@ -1,5 +1,5 @@
 import { SpendingMethod } from '../controllers/ProjectController';
-import { DAY_MS } from '../views/ganttHelpers';
+import { DAY_MS } from './dateFunc';
 import { IItemData, Item } from './Item';
 import type { Process } from './Process';
 import { TDateString, displayStringToDate, formatDateToDisplay } from './dateFunc';

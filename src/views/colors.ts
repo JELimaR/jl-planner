@@ -2,9 +2,6 @@ import type { Item } from '../models/Item';
 import type { Process } from '../models/Process';
 import { Project } from '../models/Project';
 
-/** */
-export const processColorMap = new Map<number, string>();
-
 export const COLOR_PALETTE: string[] = [
   '#5ade86',
   '#fc863c',
@@ -18,28 +15,14 @@ export const COLOR_PALETTE: string[] = [
 export const CRITICAL_COLOR = '#9f1118';
 
 /*************************************************************************************/
-export function ligthenColor(color: string, alpha: number): string {
+function ligthenColor(color: string, alpha: number): string {
   const parsedHex = color.replace('#', '');
   const r = parseInt(parsedHex.slice(0, 2), 16);
   const g = parseInt(parsedHex.slice(2, 4), 16);
   const b = parseInt(parsedHex.slice(4, 6), 16);
   return rgbaToHex(r, g, b, alpha);
 }
-
-export function hexToRgba(hex: string, alpha: number): string {
-  const parsedHex = hex.replace('#', '');
-  const r = parseInt(parsedHex.slice(0, 2), 16);
-  const g = parseInt(parsedHex.slice(2, 4), 16);
-  const b = parseInt(parsedHex.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-export function rgbaToHex(
-  r: number,
-  g: number,
-  b: number,
-  a: number = 1
-): string {
+function rgbaToHex(r: number, g: number, b: number, a: number = 1): string {
   const toHex = (value: number): string => {
     const hex = Math.round(value).toString(16).padStart(2, '0');
     return hex.toUpperCase();
@@ -50,8 +33,6 @@ export function rgbaToHex(
 }
 
 export function setProjectItemsColors(project: Project) {
-  processColorMap.clear();
-
   const traverseFunc = (item: Item, depth: number, parentProcess: Process) => {
     let bgColor = '';
     if (
@@ -62,10 +43,9 @@ export function setProjectItemsColors(project: Project) {
     } else if (parentProcess.id == project.getRoot().id) {
       bgColor = COLOR_PALETTE[item.id % COLOR_PALETTE.length];
     } else {
-      bgColor = processColorMap.get(parentProcess.id)!;
+      bgColor = parentProcess._color!;
       bgColor = ligthenColor(bgColor, 1 - 0.2 * depth);
     }
-    processColorMap.set(item.id, bgColor);
     item._color = bgColor;
   };
   project.traverse(traverseFunc);

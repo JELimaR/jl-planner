@@ -1,8 +1,7 @@
 import { SpendingMethod } from '../controllers/ProjectController';
-import { DAY_MS } from '../views/ganttHelpers';
 import { IItemData, Item } from './Item';
 import type { Process } from './Process';
-import { TDateString, displayStringToDate, formatDateToDisplay } from './dateFunc';
+import { DAY_MS, TDateString, displayStringToDate, formatDateToDisplay } from './dateFunc';
 
 export interface ITaskData extends IItemData {
   type: 'task';

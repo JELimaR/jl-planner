@@ -1,5 +1,5 @@
 import { SpendingMethod } from '../controllers/ProjectController';
-import { DAY_MS } from '../views/ganttHelpers';
+import { DAY_MS } from './dateFunc';
 import { type IItemData, Item } from './Item';
 
 export interface IProcessData extends IItemData {
@@ -35,18 +35,16 @@ export class Process extends Item {
         return endDate && date >= endDate ? 0 : cost;
       case 'started':
         return startDate && date >= startDate ? cost : 0;
-
       case 'linear':
-        if (date >= endDate!) {
+        if (date >= endDate) {
           return cost;
         }
-        const duration = (endDate!.getTime() - startDate!.getTime())/DAY_MS;
+        const duration = (endDate.getTime() - startDate.getTime())/DAY_MS;
         const daysProgress = Math.ceil((date.getTime() - startDate.getTime()) / DAY_MS);
         return cost / duration * daysProgress;
 
       default:
         throw new Error('Invalid spending method');
-        break;
     }
   }
 

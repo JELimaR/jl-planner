@@ -1,8 +1,8 @@
 <template>
-  <NuxtLink 
-    :to="`/project/${project.id}`" 
+  <div
     class="list-group-item list-group-item-action"
     :class="{ 'border-primary': true }"
+    @click="handleProjectClick"
   >
     <div class="d-flex w-100 justify-content-between align-items-start">
       <div class="flex-grow-1">
@@ -46,17 +46,21 @@
         </ul>
       </div>
     </div>
-  </NuxtLink>
+  </div>
 </template>
 
 <script setup lang="ts">
 import type { IProjectData } from '../../src/models/Project';
+import { useProjectStore } from '../../stores/project';
+import { navigateTo } from 'nuxt/app';
 
 // Props
 interface Props {
   project: IProjectData;
 }
 const props = defineProps<Props>();
+
+const projectStore = useProjectStore();
 
 // Emits
 const emit = defineEmits<{
@@ -74,6 +78,14 @@ const deleteProject = (project: IProjectData) => {
 };
 const duplicateProject = (project: IProjectData) => {
   emit('duplicate-project', project);
+};
+
+// Método para manejar el clic en el proyecto
+const handleProjectClick = async () => {
+  // Cargar el proyecto basado en el ID de la plantilla
+  await projectStore.getTemplate(props.project.id);
+  // Navegar a la página del proyecto
+  navigateTo('/project');
 };
 </script>
 

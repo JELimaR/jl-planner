@@ -1,19 +1,19 @@
-import type { IProjectData } from '../models/Project';
-import type { IItemData } from '../models/Item';
+import type { IProjectData } from '../../src/models/Project';
 import { flattenItemsList } from '../../stores/project';
 
 import { getCalendarLimitDates, renderDateRow } from './ganttCalendar';
 import { drawAllArrows } from './ganttDrawAllArrows';
-import { DAY_MS, SCALE_OPTIONS, type Scale } from './ganttHelpers';
+import { SCALE_OPTIONS, type Scale } from './ganttHelpers';
 import { drawItems } from './ganttItems';
 import { renderItemRowsFromProject } from './ganttLeftTable';
-import { displayStringToDate } from '../models/dateFunc';
+import { DAY_MS, displayStringToDate } from '../../src/models/dateFunc';
 
 // Función principal que renderiza el Gantt completo
 export function ganttRenderer(
   projectData: IProjectData, 
   currentScale: Scale,
-  container: HTMLElement // El contenedor ahora se pasa como argumento
+  container: HTMLElement,
+  criticalPathIndex: number | undefined,
 ) {
   if (!projectData) return;
 
@@ -92,10 +92,10 @@ export function ganttRenderer(
   labels.appendChild(ganttLabelItems);
 
   // items
-  drawItems(projectData, svg, calendarStartDate, currentScale, rowHeight);
-
+  drawItems(projectData, svg, calendarStartDate, currentScale, rowHeight, criticalPathIndex);
+  
   // flechas
-  drawAllArrows(svg, projectData, calendarStartDate, currentScale, rowHeight);
+  drawAllArrows(svg, projectData, calendarStartDate, currentScale, rowHeight, criticalPathIndex);
 
   wrapper.appendChild(labels);
   wrapper.appendChild(chartWrapper);

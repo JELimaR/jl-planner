@@ -1,9 +1,6 @@
-import {
-  DAY_MS,
-  getTimeUnitsBetween,
-  SCALE_OPTIONS,
-  type Scale,
-} from './ganttHelpers';
+import { DAY_MS } from "../../src/models/dateFunc";
+import { getTimeUnitsBetween, Scale, SCALE_OPTIONS } from "./ganttHelpers";
+
 
 // Devuelve una fecha desplazada desde la inicial según el índice y la escala
 function getTickDate(start: Date, index: number, scale: Scale): Date {

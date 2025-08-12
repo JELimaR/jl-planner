@@ -34,23 +34,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useProjectStore } from '../../stores/project'
-import { useUIStore } from '../../stores/ui'
+import { onMounted } from 'vue'
+import { useProjectStore } from '../stores/project'
+import { useUIStore } from '../stores/ui'
 
-const route = useRoute()
 const projectStore = useProjectStore()
 const uiStore = useUIStore()
 
-// Obtener el ID del proyecto desde la ruta
-const tempId = route.params.id as string
-
 onMounted(async () => {
   try {
-    // La lógica de carga de proyecto se ha movido al `onMounted`
-    // para asegurar que el store esté listo.
-    await projectStore.getTemplate(tempId)
+    // Si no hay proyecto cargado, crear uno vacío
+    if (!projectStore.projectData) {
+      await projectStore.newProject()
+    }
   } catch (error) {
     console.error('Error al inicializar el proyecto:', error)
     projectStore.newProject()

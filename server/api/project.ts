@@ -3,16 +3,12 @@ import type { IProjectData, IProjectHeader } from '../../src/models/Project'
 import type { IItemData } from '../../src/models/Item'
 import { createError, defineEventHandler, getQuery, readBody, setHeader } from 'h3';
 import { displayStringToDate, TDateString } from '../../src/models/dateFunc';
-import fs from 'node:fs';
-import {join} from 'node:path'; 
 
 // Singleton del controlador para mantener estado en el servidor
 let projectController: ProjectController | null = null
 
 function getController(): ProjectController {
-  if (!projectController) {
-    projectController = ProjectController.getInstance()
-  }
+  projectController ??= ProjectController.getInstance();
   return projectController
 }
 
@@ -34,7 +30,7 @@ export default defineEventHandler(async (event) => {
           const projectData: IProjectData = controller.getProjectData()
           setHeader(event, 'Content-Type', 'application/json')
           setHeader(event, 'Content-Disposition', `attachment; filename="${projectData.title || 'proyecto'}.jlprj"`)
-          return projectData
+          return { success: true, data: projectData }
         } else {
           // Obtener datos completos del proyecto
           const projectData: IProjectData = controller.getProjectData()
@@ -56,8 +52,8 @@ export default defineEventHandler(async (event) => {
             } else {
               // Inicializar proyecto por defecto
               try {
-                // Intentar cargar template00.jlprj
-                const templatePath = './public/template00.jlprj'
+                // Intentar cargar template-p001.jlprj
+                const templatePath = './public/template-p001.jlprj'
                 const fs = await import('fs/promises')
                 const templateData = await fs.readFile(templatePath, 'utf-8')
                 const jsonData = JSON.parse(templateData)
@@ -101,11 +97,8 @@ export default defineEventHandler(async (event) => {
                 return { success: true, data: controller.getProjectData() };
               default:
                 controller.createNewProject(new Date());
+                controller.resetActualStartDates() // borrar
                 return { success: true, data: controller.getProjectData() };
-                throw createError({
-                  statusCode: 404,
-                  statusMessage: `Template ID '${tid}' not found.`
-                });
             }
           }
 

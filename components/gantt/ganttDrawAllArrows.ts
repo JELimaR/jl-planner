@@ -1,7 +1,6 @@
-import type { IProjectData } from '../models/Project';
-import type { IItemData } from '../models/Item';
+import type { IProjectData } from '../../src/models/Project';
+import type { IItemData } from '../../src/models/Item';
 import { flattenItemsList } from '../../stores/project';
-import { CRITICAL_COLOR } from './colors';
 import {
   getXPositionEnd,
   getXPositionStart,
@@ -9,17 +8,42 @@ import {
   itemPositionRight,
   type Scale,
 } from './ganttHelpers';
+import { CRITICAL_COLOR } from '../../src/views/colors';
 
-function isCriticalArrow(projectData: IProjectData, pred: IItemData, succ: IItemData) {
-  const criticalPaths = projectData.criticalPaths; // Acceso directo
-  if (!criticalPaths) return false;
-  let out = false;
-  criticalPaths.forEach((path) => {
-    for (let i = 1; i < path.path.length && !out; i++) {
-      out = path.path[i - 1].id == pred.id && path.path[i].id == succ.id;
+function isCriticalArrow(projectData: IProjectData, pred: IItemData, succ: IItemData, criticalPathIndex: number | undefined) {
+  const criticalPaths = projectData.criticalPaths;
+  
+  if (!criticalPaths || criticalPaths.length === 0) {
+    return false;
+  }
+
+   //
+  if (criticalPathIndex == undefined) {
+    return false
+  }
+  
+  // If no specific path is selected, check if arrow is in any critical path
+  if (criticalPathIndex == -1) {
+    let out = false;
+    criticalPaths.forEach((path) => {
+      for (let i = 1; i < path.path.length && !out; i++) {
+        out = path.path[i - 1].id == pred.id && path.path[i].id == succ.id;
+      }
+    });
+    return out;
+  }
+  
+  // If a specific path is selected, check only that path
+  if (criticalPathIndex >= 0 && criticalPathIndex < criticalPaths.length) {
+    const selectedPath = criticalPaths[criticalPathIndex];
+    for (let i = 1; i < selectedPath.path.length; i++) {
+      if (selectedPath.path[i - 1].id == pred.id && selectedPath.path[i].id == succ.id) {
+        return true;
+      }
     }
-  });
-  return out;
+  }
+  
+  return false;
 }
 
 export function drawAllArrows(
@@ -27,7 +51,8 @@ export function drawAllArrows(
   projectData: IProjectData, // Refactorizado
   calendarStartDate: Date,
   scale: Scale,
-  rowHeight: number
+  rowHeight: number,
+  criticalPathIndex: number | undefined
 ) {
   addArrowHeadDef(svg);
   let rowIndex = 0;
@@ -63,7 +88,7 @@ export function drawAllArrows(
       const sourcePos = itemPositionRight.get(pred.id);
       if (!sourcePos) continue;
 
-      const color: string = isCriticalArrow(projectData, pred, item)
+      const color: string = isCriticalArrow(projectData, pred, item, criticalPathIndex)
         ? CRITICAL_COLOR
         : '#555';
       drawArrow(
@@ -72,7 +97,7 @@ export function drawAllArrows(
         targetPos,
         rowHeight,
         color,
-        isCriticalArrow(projectData, pred, item)
+        isCriticalArrow(projectData, pred, item, criticalPathIndex)
       );
     }
   }

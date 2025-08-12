@@ -1,3 +1,5 @@
+export const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Un tipo de dato 'branded' que representa una fecha en formato 'dd-mm-yyyy'.
  * Esto ayuda a TypeScript a diferenciar entre un string normal y uno que
@@ -15,7 +17,7 @@ export type TDateString = string & { __brand: 'DateString' };
  */
 export function isValidDateString(dateString: string): dateString is TDateString {
     const dateRegex = /^(\d{2})-(\d{2})-(\d{4})$/;
-    const match = dateString.match(dateRegex);
+    const match = dateRegex.exec(dateString);
 
     if (!match) return false;
 

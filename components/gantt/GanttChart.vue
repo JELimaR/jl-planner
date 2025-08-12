@@ -21,10 +21,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useProjectStore } from '../../stores/project'
-import { ganttRenderer } from '../../src/views/ganttRenderer'
-import type { Scale } from '../../src/views/ganttHelpers'
+import { ganttRenderer } from './ganttRenderer'
+import type { Scale } from './ganttHelpers'
+import { useUIStore } from '../../stores/ui';
 
-const projectStore = useProjectStore()
+const projectStore = useProjectStore();
+const uiStore = useUIStore();
 const ganttContainer = ref<HTMLElement | null>(null)
 
 // Obtener la escala actual del store
@@ -48,7 +50,7 @@ function renderGantt() {
   const projectData = projectStore.projectData
   if (ganttContainer.value && projectData) {
     // Renderizar el diagrama de Gantt usando la función ganttRenderer
-    ganttRenderer(projectData, scale.value, ganttContainer.value)
+    ganttRenderer(projectData, scale.value, ganttContainer.value, uiStore.criticalPathIndex)
   }
 }
 
@@ -59,7 +61,7 @@ onMounted(() => {
 
 // Volver a renderizar cuando cambien las fechas del proyecto o la escala
 watch(
-  () => [projectStore.projectData, projectStore.currentScale],
+  () => [projectStore.projectData, projectStore.currentScale, uiStore.criticalPathIndex],
   () => {
     renderGantt()
   },

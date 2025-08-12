@@ -1,8 +1,9 @@
 import type { IItemData, Item } from '../models/Item';
-import { Milestone } from '../models/Milestone';
+import { Milestone, IMilestoneData } from '../models/Milestone';
 import { IProcessData, Process } from '../models/Process';
 import type { Project } from '../models/Project';
 import { ITaskData, Task } from '../models/Task';
+import { displayStringToDate } from '../models/dateFunc';
 
 /**
  * Crea un nuevo Item (Task, Milestone o Process) desde los datos de un item.
@@ -11,44 +12,73 @@ import { ITaskData, Task } from '../models/Task';
  * @param project - El proyecto al que pertenece el item.
  * @returns El item creado.
  */
-export function itemDataToItem(  id: number,  data: IItemData,  project: Project): Item {
+export function itemDataToItem(id: number, data: IItemData, project: Project): Item {
   try {
     const parent = data.parentId
       ? (project.getItemById(data.parentId) as Process)
       : undefined;
 
+    let item: Item;
+
     switch (data.type) {
-      case 'task':
-        return new Task(
+      case 'task': {
+        const taskData = data as ITaskData;
+        item = new Task(
           id,
-          data.name,
-          (data as ITaskData).duration || 1,
+          taskData.name,
+          taskData.duration || 1,
           parent,
-          data.detail,
-          data.cost || 0
+          taskData.detail,
+          taskData.cost || 0
         );
-      case 'milestone':
-        return new Milestone(
+        // Manejar actualStartDate si está presente
+        if (taskData.actualStartDate) {
+          item.setActualStartDate(displayStringToDate(taskData.actualStartDate));
+        }        
+        // Manejar manualDuration si está presente
+        if (taskData.manualDuration !== undefined) {
+          (item as Task).setManualDuration(taskData.manualDuration);
+        }
+        break;
+      }
+      
+      case 'milestone': {
+        const milestoneData = data as IMilestoneData;
+        item = new Milestone(
           id,
-          data.name,
+          milestoneData.name,
           parent,
-          data.detail,
-          data.cost || 0
+          milestoneData.detail,
+          milestoneData.cost || 0
         );
-      case 'process':
-        return new Process(
+        // Manejar actualStartDate si está presente
+        if (milestoneData.actualStartDate) {
+          item.setActualStartDate(displayStringToDate(milestoneData.actualStartDate));
+        }
+        break;
+      }
+      
+      case 'process': {
+        const processData = data as IProcessData;
+        item = new Process(
           id,
-          data.name,
+          processData.name,
           parent,
-          data.detail,
-          data.cost || 0,
-          (data as IProcessData).useManualCost || false
-        );
+          processData.detail,
+          processData.cost || 0,
+          processData.useManualCost || false
+        );  
+        // Nota: Los children del proceso se manejan típicamente en otro lugar
+        // durante la deserialización del proyecto completo
+        break;
+      }
       default:
-        throw new Error(`Tipo de item no válido: ${data.type}`);
+        throw new Error(`Tipo de item no válido: ${(data as any).type}`);
     }
+
+    return item;
   } catch (error) {
-    console.error('Error creating item from form values:', error);
-    throw new Error(`Error al crear item: ${error.message}`);
+    console.error('Error creating item from data:', error);
+    throw new Error(`Error al crear item: ${error instanceof Error ? error.message : 'Error desconocido'}`);
   }
 }

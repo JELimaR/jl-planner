@@ -1,16 +1,15 @@
 import { flattenItemsListWithDepth } from '../../stores/project';
-import { displayStringToDate, formatDateToDisplay } from '../models/dateFunc';
-import type { IItemData } from '../models/Item';
-import { IMilestoneData } from '../models/Milestone';
-import type { IProjectData } from '../models/Project';
-import { ITaskData } from '../models/Task';
-import { CRITICAL_COLOR } from './colors';
-import { DAY_MS } from './ganttHelpers';
+import { DAY_MS, displayStringToDate } from '../../src/models/dateFunc';
+import type { IItemData } from '../../src/models/Item';
+import { IMilestoneData } from '../../src/models/Milestone';
+import type { IProjectData } from '../../src/models/Project';
+import { ITaskData } from '../../src/models/Task';
 import { isCritical } from './ganttItems';
+import { CRITICAL_COLOR } from '../../src/views/colors';
 
-// Renderiza la sección de etiquetas (nombres de tareas, fechas y números)
+// Renderiza la sección de etiquetas (nombres de tareas, fechas y delay)
 export function renderItemRowsFromProject(
-  projectData: IProjectData, // Ahora recibe IProjectData
+  projectData: IProjectData,
   ganttLabelItems: HTMLElement,
   rowHeight: number
 ) {

@@ -1,12 +1,12 @@
-import type { IProjectData } from '../models/Project';
-import type { IItemData } from '../models/Item';
-import type { ITaskData } from '../models/Task';
-import type { IMilestoneData } from '../models/Milestone';
-import type { IProcessData } from '../models/Process';
+import type { IProjectData } from '../../src/models/Project';
+import type { IItemData } from '../../src/models/Item';
+import type { ITaskData } from '../../src/models/Task';
+import type { IMilestoneData } from '../../src/models/Milestone';
+import type { IProcessData } from '../../src/models/Process';
 import { flattenItemsList } from '../../stores/project';
-import { CRITICAL_COLOR } from './colors';
 import { getTimeUnitsBetween, SCALE_OPTIONS, type Scale } from './ganttHelpers';
-import { displayStringToDate } from '../models/dateFunc';
+import { displayStringToDate } from '../../src/models/dateFunc';
+import { CRITICAL_COLOR } from '../../src/views/colors';
 
 /**
  * Determina si un ítem es parte de la ruta crítica del proyecto.
@@ -14,19 +14,33 @@ import { displayStringToDate } from '../models/dateFunc';
  * @param item El ítem a verificar.
  * @returns `true` si el ítem es parte de la ruta crítica, de lo contrario `false`.
  */
-export function isCritical(projectData: IProjectData, item: IItemData): boolean {
+export function isCritical(projectData: IProjectData, item: IItemData, criticalPathIndex: number | undefined): boolean {
   const criticalPaths = projectData.criticalPaths;
   
   if (!criticalPaths || criticalPaths.length === 0) {
     return false;
   }
 
-  for (const path of criticalPaths) {
-    if (path.path.some(criticalItem => criticalItem.id === item.id)) {
-      return true;
-    }
+  //
+  if (criticalPathIndex == undefined) {
+    return false
   }
-
+  
+  // If no specific path is selected, check if item is in any critical path
+  if (criticalPathIndex == -1) {
+    for (const path of criticalPaths) {
+      if (path.path.some(criticalItem => criticalItem.id === item.id)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  // If a specific path is selected, check only that path
+  if (criticalPathIndex >= 0 && criticalPathIndex < criticalPaths.length) {
+    const selectedPath = criticalPaths[criticalPathIndex];
+    return selectedPath.path.some(criticalItem => criticalItem.id === item.id);
+  }
+  
   return false;
 }
 
@@ -36,28 +50,27 @@ export function drawItems(
   svg: SVGSVGElement,
   calendarStartDate: Date,
   scale: Scale,
-  rowHeight: number
+  rowHeight: number,
+  criticalPathIndex: number | undefined,
 ): void {
   let rowIndex = 0;
-  
+
   const flattenedItems = flattenItemsList(projectData.items);
 
   for (const item of flattenedItems) {
     const y = rowIndex * rowHeight + rowHeight / 2;
 
     if (item.type === 'milestone') {
-      drawMilestone(svg, projectData, item as IMilestoneData, calendarStartDate, scale, y);
+      drawMilestone(svg, projectData, item as IMilestoneData, calendarStartDate, scale, y, criticalPathIndex);
     } else if (item.type === 'task') {
-      drawTask(svg, projectData, item as ITaskData, calendarStartDate, scale, y);
+      drawTask(svg, projectData, item as ITaskData, calendarStartDate, scale, y, criticalPathIndex);
     } else if (item.type === 'process') {
-      drawProcess(svg, projectData, item as IProcessData, calendarStartDate, scale, y);
+      drawProcess(svg, projectData, item as IProcessData, calendarStartDate, scale, y, criticalPathIndex);
     }
 
     rowIndex++;
   }
 }
-
-// ... Las funciones auxiliares de dibujo de elementos se refactorizan a continuación ...
 
 function drawMilestoneIcon(
   svg: SVGSVGElement,
@@ -93,15 +106,16 @@ function drawMilestone(
   item: IMilestoneData,
   calendarStartDate: Date,
   scale: Scale,
-  y: number
+  y: number,
+  criticalPathIndex: number | undefined
 ) {
-  const start = displayStringToDate(item.startDate)!;
+  const start = displayStringToDate(item.startDate);
   const x =
     getTimeUnitsBetween(calendarStartDate, start, 'day') *
     SCALE_OPTIONS[scale].pxPerDay;
 
   // Sustitución de item.isCritical por la nueva función
-  const color = isCritical(projectData, item)
+  const color = isCritical(projectData, item, criticalPathIndex)
     ? CRITICAL_COLOR
     : item.color || '#d9534f';
   drawMilestoneIcon(svg, color, x, y);
@@ -115,7 +129,8 @@ function drawTask(
   item: ITaskData,
   calendarStartDate: Date,
   scale: Scale,
-  y: number
+  y: number,
+  criticalPathIndex: number | undefined
 ): void {
   const start = displayStringToDate(item.startDate);
   const end = displayStringToDate(item.endDate);
@@ -134,9 +149,9 @@ function drawTask(
   bar.setAttribute('y', (y - height / 2).toString());
   bar.setAttribute('width', (xe - xs).toString());
   bar.setAttribute('height', height.toString());
-  
+
   // Sustitución de item.isCritical por la nueva función
-  const color = isCritical(projectData, item)
+  const color = isCritical(projectData, item, criticalPathIndex)
     ? CRITICAL_COLOR
     : item.color || '#FF0000';
   bar.setAttribute('fill', color);
@@ -154,10 +169,11 @@ function drawProcess(
   item: IProcessData,
   calendarStartDate: Date,
   scale: Scale,
-  y: number
+  y: number,
+  criticalPathIndex: number | undefined
 ): void {
   // Sustitución de item.isCritical por la nueva función
-  const color = isCritical(projectData, item)
+  const color = isCritical(projectData, item, criticalPathIndex)
     ? CRITICAL_COLOR
     : item.color || '#666';
   const start = displayStringToDate(item.startDate);

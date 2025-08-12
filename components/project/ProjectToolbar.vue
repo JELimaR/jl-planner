@@ -22,7 +22,7 @@
         class="btn btn-outline-secondary btn-sm"
         @click="projectStore.saveProject()"
       >
-        💾 Guardar
+        💾 Guardar Proyecto
       </button>
 
       <!-- Cambiar fecha de inicio -->
@@ -30,15 +30,10 @@
         <DateInput
           v-model="selectedDate"
         />
-        <!-- <input
-          type="date"
-          class="form-control form-control-sm ms-2"
-          v-model="projectStore.projectStartDate"
-        /> -->
+
         <button
           class="btn btn-outline-primary btn-sm ms-2"
           @click="changeStartDate"
-
         >
           Cambiar inicio
         </button>

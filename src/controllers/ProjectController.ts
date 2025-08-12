@@ -2,12 +2,13 @@ import { displayStringToDate, formatDateToDisplay, TDateString } from '../models
 import { getExampleProject } from '../models/getExampleProject';
 import { CriticalPath, ICriticalPathData } from '../models/graphCalculation';
 import type { Item, IItemData } from '../models/Item';
-import { IMilestoneData, Milestone } from '../models/Milestone';
+import { IMilestoneData } from '../models/Milestone';
 import { IProcessData, Process } from '../models/Process';
 import { IProjectData, IProjectHeader, Project } from '../models/Project';
 import { ITaskData, Task } from '../models/Task';
 import { setProjectItemsColors } from '../views/colors';
 import { itemDataToItem } from './dataHelpers';
+
 
 // ver donde va
 export type SpendingMethod = 'finished' | 'started' | 'linear';
@@ -73,7 +74,7 @@ export class ProjectController {
     const out: IProcessData[] = []
     this.project.getAllItems().forEach(item => {
       if (item instanceof Process) {
-        out.push(item.data as IProcessData)
+        out.push(item.data)
       }
     })
 
@@ -132,8 +133,9 @@ export class ProjectController {
         const pred = this.project.getItemById(predId);
         if (pred) this.project.addRelation(pred, item);
       });
+      
       // Agregar actualStartDate
-      if (!!(itemData as ITaskData | IMilestoneData).actualStartDate) {
+      if ((itemData as ITaskData | IMilestoneData).actualStartDate) {
         const dateString = (itemData as ITaskData | IMilestoneData).actualStartDate as TDateString
         item.setActualStartDate(displayStringToDate(dateString));
       }
@@ -235,7 +237,6 @@ export class ProjectController {
 
   private normalizeItemIds(): void {
     const newMap = new Map<number, Item>();
-    const idMap = new Map<number, number>(); // oldId → newId
 
     let counter = 1;
 
@@ -258,7 +259,6 @@ export class ProjectController {
           : parent.children.indexOf(item) + 1
         }`
       );
-      idMap.set(item.id, newId);
 
       item.forceSetId(newId);
       newMap.set(newId, item);
@@ -285,7 +285,6 @@ export class ProjectController {
   * @returns Un mapa con las fechas como claves y el gasto total de ese día como valor.
   */
   calculateDailySpending(spendingMethod: SpendingMethod): Array<{ d: string, v: number }> {
-
     const dailySpending = new Map<string, number>();
     const project = this.getProject();
 

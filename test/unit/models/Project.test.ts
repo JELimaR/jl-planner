@@ -162,6 +162,8 @@ describe('Project', () => {
         detail: 'Updated detail',
         cost: 1000,
         duration: 7,
+        startDate: '2024-01-01' as TDateString,
+        endDate: '2024-01-07' as TDateString,
         parentId: project.getRoot().id,
         predecessorIds: []
       }
@@ -183,7 +185,7 @@ describe('Project', () => {
     })
 
     it('should throw error when changing item type', () => {
-      taskData.type = 'milestone'
+      (taskData as any).type = 'milestone';
       expect(() => project.editItem(taskData)).toThrow('Cannot change the type of an item')
     })
 
@@ -302,6 +304,7 @@ describe('Project', () => {
         subtitle: 'Test Subtitle',
         startDate: '01-01-2024' as TDateString,
         endDate: '01-31-2024' as TDateString,
+        criticalPaths: [],
         items: [
           {
             id: 100,

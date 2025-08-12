@@ -4,6 +4,7 @@ export const useUIStore = defineStore('ui', {
   state: () => ({
     addModalVisible: false,
     deleteModalVisible: false,
+    criticalPathIndex: undefined as number | undefined,
   }),
   
   actions: {
@@ -22,5 +23,12 @@ export const useUIStore = defineStore('ui', {
     closeDeleteModal() {
       this.deleteModalVisible = false
     },
+    setCriticalPathIndex(index: number) {
+      this.criticalPathIndex = index
+    },
+    removeCriticalPathIndex() {
+      this.criticalPathIndex = undefined
+    }
+
   }
 })

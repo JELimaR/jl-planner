@@ -1,11 +1,11 @@
-import { DAY_MS } from '../views/ganttHelpers';
-import { createDateString, displayStringToDate, formatDateToDisplay, TDateString } from './dateFunc';
+import { DAY_MS, displayStringToDate, formatDateToDisplay, TDateString } from './dateFunc';
 import { DependencyGraph } from './DependencyGraph';
 import { calculateDatesFromGraph, getCriticalPathsFromGraph, ICriticalPathData, type CriticalPath, } from './graphCalculation';
 import type { IItemData, Item } from './Item';
-import { IMilestoneData, Milestone } from './Milestone';
+import { Milestone } from './Milestone';
 import { IProcessData, Process } from './Process';
-import { ITaskData, Task } from './Task';
+import { Task } from './Task';
+import { itemDataToItem } from '../controllers/dataHelpers';
 
 export interface IProjectHeader {
   id: string;
@@ -369,20 +369,12 @@ export class Project {
     };
   }
 
-  /**
-   * 
-   */
   static deserializeProject(data: IProjectData): Project {
     const project = new Project(data.id, displayStringToDate(data.startDate));
     project.setTitle(data.title);
     project.setSubtitle(data.subtitle);
     data.items.forEach((iid: IItemData) => {
-      if (
-        !(
-          iid.id == project.getEndMilestone().id ||
-          iid.id == project.getStartMilestone().id
-        )
-      ) {
+      if (!(iid.id == project.getEndMilestone().id || iid.id == project.getStartMilestone().id)) {
         serial2Item(project, iid, project.getRoot());
       }
     });
@@ -399,55 +391,13 @@ function serial2Item(project: Project, data: IItemData, parent: Process): void {
     console.log(project)
     throw new Error(`data parent: ${data.parentId} - praent.id: ${parent.id}`);
   }
-  let item: Item;
-  switch (data.type) {
-    case 'task':
-      const tdata = data as ITaskData;
-      if (!tdata.duration) throw new Error(``);
-      item = new Task(
-        tdata.id,
-        tdata.name,
-        tdata.duration,
-        parent,
-        tdata.detail,
-        tdata.cost,
-      );
-      project.addItem(item, parent);
-      if (!!tdata.actualStartDate) {
-        const asd = createDateString(tdata.actualStartDate)
-        item.setActualStartDate(displayStringToDate(asd));
-      }
-      break;
-    case 'milestone':
-      const mdata = data as IMilestoneData;
-      item = new Milestone(
-        mdata.id,
-        mdata.name,
-        parent,
-        mdata.detail,
-        mdata.cost
-      );
-      project.addItem(item, parent);
-      if (!!mdata.actualStartDate) {
-        const asd = createDateString(mdata.actualStartDate)
-        item.setActualStartDate(displayStringToDate(asd));
-      }
-      break;
-    case 'process':
-      const pdata = data as IProcessData
-      item = new Process(
-        pdata.id,
-        pdata.name,
-        parent,
-        pdata.detail
-      );
-      project.addItem(item, parent);
-      pdata.children.forEach((child: IItemData) => {
-        serial2Item(project, child, item as Process);
-      });
-      break;
-    default:
-      throw new Error(``);
+  let item: Item = itemDataToItem(data.id, data, project);
+  project.addItem(item, parent);
+
+  if (data.type == 'process') {
+    (data as IProcessData).children.forEach((child: IItemData) => {
+      serial2Item(project, child, item as Process);
+    });
   }
 }
 

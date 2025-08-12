@@ -2,10 +2,12 @@ import { SpendingMethod } from "../controllers/ProjectController";
 import { formatDateToDisplay, TDateString } from "./dateFunc";
 import { Process } from "./Process";
 
+export type TypeItem = 'task' | 'milestone' | 'process';
+
 // Interfaz base para herencia
 export interface IItemData {
   id: number;
-  type: 'task' | 'milestone' | 'process';
+  type: TypeItem;
   name: string;
   detail?: string;
   startDate: TDateString;

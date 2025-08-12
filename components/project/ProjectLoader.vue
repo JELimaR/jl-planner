@@ -38,14 +38,8 @@ const handleFileLoad = async (event: Event) => {
       // Llama a la acción del store para cargar el proyecto desde el archivo
       await projectStore.loadProjectFromFile(file);
 
-      // Una vez cargado, obtén el ID del proyecto y navega
-      const projectId = projectStore.projectId;
-      if (projectId) {
-        navigateTo(`/project/${projectId}`); // Navega a la ruta dinámica
-      } else {
-        console.warn('El proyecto cargado no tiene un ID válido para la navegación.');
-        // Opcional: manejar el caso de un ID no válido, quizás redirigir a una página de error o a la raíz
-      }
+      // Una vez cargado, navega a la página del proyecto
+      navigateTo('/project');
     } catch (error) {
       console.error('Error al cargar el proyecto:', error);
       // Aquí puedes mostrar un mensaje de error al usuario, por ejemplo, con un toast o un modal.

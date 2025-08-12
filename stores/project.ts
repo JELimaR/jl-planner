@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
-import type { Scale } from '../src/views/ganttHelpers'
 import type { IProjectData, IProjectHeader } from '../src/models/Project'
 import type { IItemData } from '../src/models/Item'
 import { formatDateToDisplay, TDateString } from '../src/models/dateFunc'
 import { IProcessData } from '../src/models/Process'
+import { Scale } from '../components/gantt/ganttHelpers'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
@@ -303,7 +303,13 @@ export const useProjectStore = defineStore('project', {
     saveProject() {
       if (!this.projectData) return
 
-      const dataStr = JSON.stringify(this.projectData, null, 2)
+      // Create a copy of projectData and clear criticalPaths to make the file lighter
+      const dataToSave = {
+        ...this.projectData,
+        criticalPaths: []
+      };
+
+      const dataStr = JSON.stringify(dataToSave, null, 2)
       const dataBlob = new Blob([dataStr], { type: 'application/json' })
       const url = URL.createObjectURL(dataBlob)
       const link = document.createElement('a')

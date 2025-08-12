@@ -86,12 +86,12 @@ const loadProjectList = async () => {
 }
 
 // Handlers para eventos del componente
-const createProject = () => {
+const createProject = async () => {
   // Lógica para crear nuevo proyecto
-  console.log('Crear nuevo proyectooO')
+  console.log('Crear nuevo proyecto')
   // Aquí podrías abrir un modal o navegar a una página de creación
-  projectStore.newProject()
-  navigateTo(`project/${projectStore.projectId}`)
+  await projectStore.newProject()
+  navigateTo('/project')
 }
 
 const editProject = (project: IProjectHeader) => {
