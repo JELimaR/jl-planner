@@ -60,24 +60,24 @@ const loadProjectList = async () => {
     projects.value = [
       {
         id: 'p001',
-        title: 'Blank Project',
-        subtitle: 'Caso en blanco',
-        startDate: formatDateToDisplay(new Date())!,
-        endDate: formatDateToDisplay(new Date())!,
+        title: 'SS MT con SB',
+        subtitle: 'Solicitud de suministro en MT con SB nueva.',
+        startDate: '15-07-2025' as TDateString,
+        endDate: '15-07-2025' as TDateString,
       },
       {
         id: 'p002',
-        title: 'SS MT',
-        subtitle: 'Ejemplo solicitud de suministro en MT.',
+        title: 'Ejemplo',
+        subtitle: 'Ejemplo de pruebas.',
         startDate: '15-07-2025' as TDateString,
         endDate: '15-07-2025' as TDateString,
       },
       {
         id: 'p003',
-        title: 'Ejemplo',
-        subtitle: 'Ejemplo de pruebas.',
-        startDate: '15-07-2025' as TDateString,
-        endDate: '15-07-2025' as TDateString,
+        title: 'Blank Project',
+        subtitle: 'Caso en blanco',
+        startDate: formatDateToDisplay(new Date())!,
+        endDate: formatDateToDisplay(new Date())!,
       },
     ]
   } catch (error) {
