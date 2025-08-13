@@ -22,7 +22,7 @@ export function renderItemRowsFromProject(
   const flattenedList = flattenItemsListWithDepth(projectData.items);
 
   for (const { item, depth } of flattenedList) {
-    const color = isCritical(projectData, item) ? CRITICAL_COLOR : 'black';
+    const color = isCritical(projectData, item, -1) ? CRITICAL_COLOR : 'black';
     const labelRow = document.createElement('div');
     labelRow.className = 'label-row';
     labelRow.style.height = `${rowHeight}px`;

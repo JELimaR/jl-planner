@@ -43,30 +43,7 @@ export default defineEventHandler(async (event) => {
         const { action, data } = body
 
         switch (action) {
-          case 'initialize': {
-            const { projectId } = data
-            if (projectId) {
-              // Cargar proyecto específico (implementar según necesidades)
-              // Por ahora carga el proyecto de ejemplo
-              controller.chargeExampleProject()
-            } else {
-              // Inicializar proyecto por defecto
-              try {
-                // Intentar cargar template-p001.jlprj
-                const templatePath = './public/template-p001.jlprj'
-                const fs = await import('fs/promises')
-                const templateData = await fs.readFile(templatePath, 'utf-8')
-                const jsonData = JSON.parse(templateData)
-                controller.loadProjectFromJSON(jsonData)
-              } catch (err) {
-                console.warn('No se pudo cargar template00.jlprj:', err)
-                controller.createNewProject(new Date())
-                controller.chargeExampleProject()
-              }
-            }
-            return { success: true, data: controller.getProjectData() }
-          }
-
+          
           case 'getTemplate': {
             const { tid } = data as { tid: string }
             let templatePath: string;
