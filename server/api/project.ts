@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
 
             switch (tid) {
               case 'p001':
-                templatePath = '~/public/template-p001.jlprj';
+                templatePath = '~/template-p001.jlprj';
                 try {
                   const fs = await import('fs/promises');
                   const templateData = await fs.readFile(templatePath, 'utf-8');
