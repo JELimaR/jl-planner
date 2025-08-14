@@ -1,9 +1,9 @@
-import { DAY_MS, displayStringToDate, formatDateToDisplay, TDateString } from './dateFunc';
+import { DAY_MS, displayStringToDate, formatDateToDisplay, type TDateString } from './dateFunc';
 import { DependencyGraph } from './DependencyGraph';
-import { calculateDatesFromGraph, getCriticalPathsFromGraph, ICriticalPathData, type CriticalPath, } from './graphCalculation';
+import { calculateDatesFromGraph, getCriticalPathsFromGraph, type ICriticalPathData, type CriticalPath, } from './graphCalculation';
 import type { IItemData, Item } from './Item';
 import { Milestone } from './Milestone';
-import { IProcessData, Process } from './Process';
+import { type IProcessData, Process } from './Process';
 import { Task } from './Task';
 import { itemDataToItem } from '../controllers/dataHelpers';
 
@@ -140,7 +140,7 @@ export class Project {
       suc.addPredecessor(pre);
     } catch (error) {
       // Capturar el error y re-lanzarlo para indicar que la operación falló.
-      throw new Error(`Failed to add relation ${pre.id} -> ${suc.id}: ${error.message}`);
+      throw new Error(`Failed to add relation ${pre.id} -> ${suc.id}: ${(error as any).message}`); // corregir
     }
   }
 

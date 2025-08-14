@@ -1,13 +1,13 @@
 import { displayStringToDate, formatDateToDisplay, TDateString } from '../models/dateFunc';
-import { getExampleProject } from '../models/getExampleProject';
 import { CriticalPath, ICriticalPathData } from '../models/graphCalculation';
 import type { Item, IItemData } from '../models/Item';
 import { IMilestoneData } from '../models/Milestone';
 import { IProcessData, Process } from '../models/Process';
 import { IProjectData, IProjectHeader, Project } from '../models/Project';
-import { ITaskData, Task } from '../models/Task';
+import { ITaskData } from '../models/Task';
 import { setProjectItemsColors } from '../views/colors';
 import { itemDataToItem } from './dataHelpers';
+import { getAllTemplateProjectHeaders, getTemplateProject, TTemplateID } from '../templates/templateProjects';
 
 
 // ver donde va
@@ -41,7 +41,6 @@ export class ProjectController {
   }
 
   getProjectData(): IProjectData {
-    console.log('getPojectData')
     setProjectItemsColors(this.project)
     this.project.calculateItemDates()
     return this.project.getData();
@@ -313,7 +312,7 @@ export class ProjectController {
   }
 
 
-  /** Descarga el proyecto como archivo jlprj */
+  /** Descarga el proyecto como archivo prj */
   downloadProjectAsJSON(): void {
     const data = this.project.getData()
     data.items = data.items.map((iid: IItemData) => {
@@ -334,7 +333,7 @@ export class ProjectController {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${this.project.getTitle()}.jlprj`;
+    a.download = `${this.project.getTitle()}.prj`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -360,27 +359,24 @@ export class ProjectController {
     this.normalizeItemIds();
   }
 
-  /** Carga un proyecto desde un archivo jlprj */
+  /** Carga un proyecto desde un archivo prj */
   async loadProjectFromFile(file: File): Promise<void> {
     const text = await file.text();
     const json = JSON.parse(text);
     this.loadProjectFromJSON(json);
   }
 
+  /******************************************************************************************************* */
+  // TEMPLATES
+  /**
+   * 
+   * @param tid 
+   */
+  chargeTemplate(tid: TTemplateID) {
+    this.project = getTemplateProject(tid)
+  }
 
-  chargeExampleProject() {
-    const P = getExampleProject();
-
-    P.getItemById(21)!.setActualStartDate(displayStringToDate('29-08-2025' as TDateString));
-    P.getItemById(3)!.setActualStartDate(displayStringToDate('29-09-2025' as TDateString));
-    (P.getItemById(3) as Task).setManualDuration(3);
-    P.getCriticalPaths();
-
-    P.setTitle('Example')
-    P.setSubtitle('Example subtitle')
-
-    setProjectItemsColors(P)
-
-    this.project = P;
+  getAllTemplatesHeaders(): IProjectHeader[] {
+    return getAllTemplateProjectHeaders()
   }
 }

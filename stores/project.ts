@@ -7,6 +7,7 @@ import { Scale } from '../components/gantt/ganttHelpers'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
+    templates: [] as IProjectHeader[],
     // Estado basado en IProjectData
     projectData: null as IProjectData | null,
 
@@ -38,6 +39,30 @@ export const useProjectStore = defineStore('project', {
 
     setLoading(loading: boolean) {
       this.isLoading = loading
+    },
+
+    // obtener los templates
+    async getTemplateHeaders() {
+      this.setLoading(true)
+      this.setError(null)
+
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'getTemplateHeaders',
+          }
+        })
+
+        if ((response as { success: boolean }).success) {
+          this.templates = (response as { data: IProjectHeader[] }).data;
+        }
+      } catch (error) {
+        console.error('Error getting template:', error)
+        this.setError('Error al obtener la plantilla')
+      } finally {
+        this.setLoading(false)
+      }
     },
 
     // 🆕 Obtener plantilla por ID
@@ -299,7 +324,7 @@ export const useProjectStore = defineStore('project', {
       }
     },
 
-    // Descargar proyecto como JSON
+    // Descargar proyecto como JSON // DOS VECES
     saveProject() {
       if (!this.projectData) return
 
@@ -309,14 +334,32 @@ export const useProjectStore = defineStore('project', {
         criticalPaths: []
       };
 
-      const dataStr = JSON.stringify(dataToSave, null, 2)
+      const dataStr = JSON.stringify(dataToSave, null, 2) // mejorar
       const dataBlob = new Blob([dataStr], { type: 'application/json' })
       const url = URL.createObjectURL(dataBlob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${this.projectData.title || 'proyecto'}.jlprj`
+      link.download = `${this.projectData.title || 'proyecto'}.prj`
       link.click()
       URL.revokeObjectURL(url)
+    },
+    // Descargar proyecto desde servidor // DOS VECES
+    async downloadProject() {
+      try {
+        const response = await fetch('/api/project?type=download')
+        if (response.ok) {
+          const blob = await response.blob()
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = `${this.projectTitle || 'proyecto'}.prj`
+          link.click()
+          URL.revokeObjectURL(url)
+        }
+      } catch (error) {
+        console.error('Error downloading project:', error)
+        this.setError('Error al descargar el proyecto')
+      }
     },
 
     // Configurar item para editar
@@ -327,32 +370,6 @@ export const useProjectStore = defineStore('project', {
     // Configurar item para eliminar
     setupItemForDelete(item: IItemData | null) {
       this.itemToDelete = item;
-    },
-
-    // Cargar proyecto de ejemplo
-    async loadExampleProject() {
-      this.setLoading(true)
-      this.setError(null)
-
-      try {
-        const response = await $fetch('/api/project', {
-          method: 'POST',
-          body: {
-            action: 'loadExample',
-            data: {}
-          }
-        })
-
-        if ((response as { success: boolean }).success) {
-          this.projectData = (response as { data: IProjectData }).data
-          // await this.loadProjectHeader()
-        }
-      } catch (error) {
-        console.error('Error loading example project:', error)
-        this.setError('Error al cargar el proyecto de ejemplo')
-      } finally {
-        this.setLoading(false)
-      }
     },
 
     // Exportar PDF
@@ -375,28 +392,10 @@ export const useProjectStore = defineStore('project', {
         this.setError('Error al exportar PDF')
       }
     },
-
-    // Descargar proyecto desde servidor
-    async downloadProject() {
-      try {
-        const response = await fetch('/api/project?type=download')
-        if (response.ok) {
-          const blob = await response.blob()
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `${this.projectTitle || 'proyecto'}.jlprj`
-          link.click()
-          URL.revokeObjectURL(url)
-        }
-      } catch (error) {
-        console.error('Error downloading project:', error)
-        this.setError('Error al descargar el proyecto')
-      }
-    }
   }
 })
 
+// mover estas funciones
 /**
 * Función que genera una lista plana de items, expandiendo los procesos para incluir sus hijos.
 *
@@ -405,10 +404,10 @@ export const useProjectStore = defineStore('project', {
 */
 export function flattenItemsList(items: IItemData[]): IItemData[] {
   const flattenedList: IItemData[] = [];
-  
+
   for (const iid of items) {
     flattenedList.push(iid);
-    
+
     // Si el item es un proceso, añade recursivamente sus hijos
     if (iid.type === 'process' && (iid as IProcessData).children) {
       const processItem = iid as IProcessData;
@@ -430,10 +429,10 @@ export function flattenItemsList(items: IItemData[]): IItemData[] {
  */
 export function flattenItemsListWithDepth(items: IItemData[], depth = 0): { item: IItemData, depth: number }[] {
   const flattenedList: { item: IItemData, depth: number }[] = [];
-  
+
   for (const iid of items) {
     flattenedList.push({ item: iid, depth });
-    
+
     // Si el ítem es un proceso, añade recursivamente sus hijos con un nivel de profundidad aumentado
     if (iid.type === 'process' && (iid as IProcessData).children) {
       const processItem = iid as IProcessData;

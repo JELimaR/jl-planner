@@ -22,7 +22,7 @@
             </div>
           </div>
 
-          <div v-if="projects.length === 0" class="text-center py-5">
+          <div v-if="projectStore.templates.length === 0" class="text-center py-5">
             <div class="text-muted">
               <i class="bi bi-folder2-open" style="font-size: 3rem;"></i>
               <p class="mt-3">No tienes proyectos aún</p>
@@ -30,7 +30,7 @@
           </div>
 
           <div v-else class="list-group">
-            <ProjectCard v-for="project in projects" :key="project.id" :project="project" />
+            <ProjectCard v-for="project in projectStore.templates" :key="project.id" :project="project" />
           </div>
         </div>
       </div>
@@ -46,41 +46,7 @@ import { navigateTo } from 'nuxt/app';
 import { formatDateToDisplay, TDateString } from '../src/models/dateFunc';
 
 const projectStore = useProjectStore()
-
-// Estado reactivo
-const projects = ref<IProjectHeader[]>([])
-
-// Cargar proyectos (simulado - aquí conectarías con tu API/store)
-const loadTemplatesList = async () => {
-  try {
-    // Simulación de datos - reemplaza con tu lógica real
-    projects.value = [
-      {
-        id: 'p001',
-        title: 'SS MT con SB',
-        subtitle: 'Solicitud de suministro en MT con SB nueva.',
-        startDate: '15-07-2025' as TDateString,
-        endDate: '15-07-2025' as TDateString,
-      },
-      {
-        id: 'p002',
-        title: 'Ejemplo',
-        subtitle: 'Ejemplo de pruebas.',
-        startDate: '15-07-2025' as TDateString,
-        endDate: '15-07-2025' as TDateString,
-      },
-      {
-        id: 'p003',
-        title: 'Blank Project',
-        subtitle: 'Caso en blanco',
-        startDate: formatDateToDisplay(new Date())!,
-        endDate: formatDateToDisplay(new Date())!,
-      },
-    ]
-  } catch (error) {
-    console.error('Error loading projects:', error)
-  }
-}
+projectStore.getTemplateHeaders();
 
 // Handlers para eventos del componente
 const createProject = async () => {
@@ -93,7 +59,7 @@ const createProject = async () => {
 
 // Lifecycle
 onMounted(() => {
-  loadTemplatesList()
+  projectStore.getTemplateHeaders();
 })
 </script>
 

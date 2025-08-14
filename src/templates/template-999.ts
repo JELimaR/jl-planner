@@ -1,11 +1,11 @@
-import { Milestone } from './Milestone';
-import { Process } from './Process';
-import { Project } from './Project';
-import { Task } from './Task';
-import { TDateString, displayStringToDate } from './dateFunc';
+import { Milestone } from '../models/Milestone';
+import { Process } from '../models/Process';
+import { Project } from '../models/Project';
+import { Task } from '../models/Task';
+import { TDateString, displayStringToDate } from '../models/dateFunc';
 
-export function getExampleProject(): Project {
-  const project = new Project('example', displayStringToDate('01-09-2025' as TDateString));
+export function getTemplate999(): Project {
+  const project = new Project('t999', displayStringToDate('01-09-2025' as TDateString));
 
   const p1 = new Process(1, 'Planificación');
   project.addItem(p1);
@@ -29,9 +29,17 @@ export function getExampleProject(): Project {
   const m231 = new Milestone(231, 'LISTO');
   project.addItem(m231, p23);
 
-  const t3 = new Task(3, 'Pruebas', 2);
+  const t3 = new Task(3, 'Pruebas', 3);
   project.addItem(t3);
   project.addRelation(m231, t3);
+
+  /****************************************************************** */
+  t21.setActualStartDate(displayStringToDate('29-08-2025' as TDateString));
+  t3.setActualStartDate(displayStringToDate('29-09-2025' as TDateString));
+  project.getCriticalPaths();
+
+  project.setTitle('Example')
+  project.setSubtitle('Example subtitle')
 
   return project;
 }

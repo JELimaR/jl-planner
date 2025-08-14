@@ -10,7 +10,7 @@
     <!-- Input oculto para cargar archivos -->
     <input
       type="file"
-      accept=".json,.jlprj"
+      accept=".json,.jlprj,.prj"
       style="display: none"
       ref="fileInput"
       @change="handleFileLoad"

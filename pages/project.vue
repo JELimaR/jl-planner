@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { onBeforeRouteLeave } from 'nuxt/app';
 import { useProjectStore } from '../stores/project'
 import { useUIStore } from '../stores/ui'
 
@@ -52,5 +53,10 @@ onMounted(async () => {
     projectStore.newProject()
   }
 })
+
+onBeforeRouteLeave((to, from, next) => {
+  projectStore.projectData = null;
+  next();
+});
 
 </script>

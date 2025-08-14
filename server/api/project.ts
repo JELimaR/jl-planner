@@ -2,7 +2,8 @@ import { ProjectController } from '../../src/controllers/ProjectController'
 import type { IProjectData, IProjectHeader } from '../../src/models/Project'
 import type { IItemData } from '../../src/models/Item'
 import { createError, defineEventHandler, getQuery, readBody, setHeader } from 'h3';
-import { displayStringToDate, TDateString } from '../../src/models/dateFunc';
+import { displayStringToDate, type TDateString } from '../../src/models/dateFunc';
+import { TTemplateID } from '../../src/templates/templateProjects';
 
 // Singleton del controlador para mantener estado en el servidor
 let projectController: ProjectController | null = null
@@ -21,15 +22,15 @@ export default defineEventHandler(async (event) => {
       case 'GET': {
         const query = getQuery(event)
         
-        if (query.type === 'header') {
+        if (query.type === 'headers') {
           // Obtener solo el header del proyecto
-          const headerData: IProjectHeader = controller.getHeaderData()
+          const headerData: IProjectHeader[] = controller.getAllTemplatesHeaders()
           return { success: true, data: headerData }
         } else if (query.type === 'download') {
           // Descargar proyecto como JSON
           const projectData: IProjectData = controller.getProjectData()
           setHeader(event, 'Content-Type', 'application/json')
-          setHeader(event, 'Content-Disposition', `attachment; filename="${projectData.title || 'proyecto'}.jlprj"`)
+          setHeader(event, 'Content-Disposition', `attachment; filename="${projectData.title || 'proyecto'}.prj"`)
           return { success: true, data: projectData }
         } else {
           // Obtener datos completos del proyecto
@@ -43,46 +44,16 @@ export default defineEventHandler(async (event) => {
         const { action, data } = body
 
         switch (action) {
+
+          case 'getTemplateHeaders': {
+            const headerData: IProjectHeader[] = controller.getAllTemplatesHeaders()
+            return { success: true, data: headerData }
+          }
           
           case 'getTemplate': {
-            const { tid } = data as { tid: string }
-            let templatePath: string;
-
-            switch (tid) {
-              case 'p001':
-                templatePath = '~/template-p001.jlprj';
-                try {
-                  const fs = await import('fs/promises');
-                  const templateData = await fs.readFile(templatePath, 'utf-8');
-                  const jsonData = JSON.parse(templateData);
-                  controller.loadProjectFromJSON(jsonData)
-                  return { success: true, data: controller.getProjectData() };
-                } catch (err) {
-                  console.error('Error reading template file:', err);
-                  throw createError({
-                    statusCode: 500,
-                    statusMessage: `Error loading template for ID '${tid}'.`
-                  });
-                }
-              case 'p002':
-                // Cargar proyecto de ejemplo
-                controller.chargeExampleProject();
-                return { success: true, data: controller.getProjectData() };
-              case 'p003':
-                // Crear un nuevo proyecto
-                controller.createNewProject(new Date());
-                return { success: true, data: controller.getProjectData() };
-              default:
-                controller.createNewProject(new Date());
-                controller.resetActualStartDates() // borrar
-                return { success: true, data: controller.getProjectData() };
-            }
-          }
-
-          case 'loadExample': {
-            // Cargar proyecto de ejemplo
-            controller.chargeExampleProject()
-            return { success: true, data: controller.getProjectData() }
+            const { tid } = data as { tid: TTemplateID }
+            controller.chargeTemplate(tid)
+            return { success: true, data: controller.getProjectData() };
           }
 
           case 'newProject': {
@@ -150,13 +121,6 @@ export default defineEventHandler(async (event) => {
           default:
             throw new Error(`Unknown action: ${action}`)
         }
-      }
-
-      case 'PUT': {
-        const body = await readBody(event)
-        const projectData: IProjectData = body
-        controller.loadProjectFromJSON(projectData)
-        return { success: true, data: controller.getProjectData() }
       }
 
       default:
