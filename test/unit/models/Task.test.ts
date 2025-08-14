@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ITaskData, Task } from '../../../src/models/Task'
 import { Process } from '../../../src/models/Process'
+import { SpendingMethod } from '../../../src/controllers/ProjectController'
 
 describe('Task', () => {
   let task: Task
@@ -119,14 +120,14 @@ describe('Task', () => {
 
   describe('data serialization', () => {
     it('should return correct task data structure', () => {
-      const calculatedDate = new Date('2024-01-01')
-      const actualDate = new Date('2024-01-03')
+      const calculatedDate = new Date(2024, 0, 1)
+      const actualDate = new Date(2024, 0, 3)
       
       task.setCalculatedStartDate(calculatedDate)
       task.setActualStartDate(actualDate)
       task.setManualDuration(7)
       
-      const data = task.data as ITaskData
+      const data = task.data;
       
       expect(data.id).toBe(2)
       expect(data.type).toBe('task')
@@ -135,17 +136,109 @@ describe('Task', () => {
       expect(data.cost).toBe(150)
       expect(data.parentId).toBe(1)
       expect(data.duration).toBe(7)
-      expect(data.actualStartDate).toBe(actualDate.toISOString())
-      expect(data.calculatedStartDate).toBe(calculatedDate.toISOString())
+      expect(data.actualStartDate).toBe('03-01-2024')
+      expect(data.calculatedStartDate).toBe('01-01-2024')
       expect(data.manualDuration).toBe(7)
     })
 
     it('should handle undefined dates in data', () => {
-      const data = task.data as ITaskData
+      const data = task.data;
       
       expect(data.actualStartDate).toBeUndefined()
       expect(data.calculatedStartDate).toBeUndefined()
       expect(data.manualDuration).toBeUndefined()
+    })
+  })
+
+  describe('edit method', () => {
+    it('should update task properties', () => {
+      const newData: ITaskData = {
+        id: 2,
+        type: 'task',
+        name: 'Updated Task',
+        detail: 'Updated detail',
+        startDate: '01-01-2024' as any,
+        endDate: '01-06-2024' as any,
+        cost: 300,
+        parentId: 1,
+        predecessorIds: [],
+        duration: 10,
+        manualDuration: 8,
+        actualStartDate: '02-01-2024' as any,
+        calculatedStartDate: '01-01-2024' as any
+      }
+      
+      task.edit(newData)
+      
+      expect(task.name).toBe('Updated Task')
+      expect(task.detail).toBe('Updated detail')
+      expect(task.getTotalCost()).toBe(300)
+      expect(task.duration).toBe(8)
+    })
+
+    it('should reset manual duration if not provided', () => {
+      task.setManualDuration(10)
+      expect(task.duration).toBe(10)
+      
+      const newData: ITaskData = {
+        id: 2,
+        type: 'task',
+        name: 'Updated Task',
+        detail: 'Updated detail',
+        startDate: '01-01-2024' as any,
+        endDate: '01-06-2024' as any,
+        cost: 300,
+        parentId: 1,
+        predecessorIds: [],
+        duration: 5
+      }
+      
+      task.edit(newData)
+      expect(task.duration).toBe(5)
+    })
+  })
+
+  describe('getDailyCost method', () => {
+    beforeEach(() => {
+      task.setCost(1000)
+      task.setCalculatedStartDate(new Date('2024-01-01'))
+    })
+
+    it('should calculate daily cost for finished method', () => {
+      // Before end date
+      expect(task.getDailyCost(new Date('2024-01-03'), 'finished')).toBe(1000)
+      
+      // After end date
+      expect(task.getDailyCost(new Date('2024-01-10'), 'finished')).toBe(0)
+    })
+
+    it('should calculate daily cost for started method', () => {
+      // Before start date
+      expect(task.getDailyCost(new Date('2023-12-30'), 'started')).toBe(0)
+      
+      // After start date
+      expect(task.getDailyCost(new Date('2024-01-03'), 'started')).toBe(1000)
+    })
+
+    it('should calculate daily cost for linear method', () => {
+      // Before start date
+      expect(task.getDailyCost(new Date('2023-12-30'), 'linear')).toBe(0)
+      
+      // After end date
+      expect(task.getDailyCost(new Date('2024-01-10'), 'linear')).toBe(1000)
+      
+      // During the task (day 3 of 5)
+      const cost = task.getDailyCost(new Date('2024-01-03'), 'linear')
+      expect(cost).toBeCloseTo(600, 0) // 1000 * 3/5 = 600
+    })
+
+    it('should throw error for invalid spending method', () => {
+      expect(() => task.getDailyCost(new Date('2024-01-03'), 'invalid' as SpendingMethod)).toThrow('Invalid spending method')
+    })
+
+    it('should throw error when start or end date is not defined', () => {
+      const taskWithoutDates = new Task(3, 'Test', 5)
+      expect(() => taskWithoutDates.getDailyCost(new Date('2024-01-03'), 'finished')).toThrow('Start date and end date must be defined to calculate daily cost')
     })
   })
 })

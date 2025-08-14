@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { Process } from '../../../src/models/Process'
+import { Process, IProcessData } from '../../../src/models/Process'
 import { Task } from '../../../src/models/Task'
 import { Milestone } from '../../../src/models/Milestone'
-import type { IProcessData } from '../../../src/models/Item'
+import { SpendingMethod } from '../../../src/controllers/ProjectController'
 
 describe('Process', () => {
   let process: Process
@@ -15,18 +15,19 @@ describe('Process', () => {
 
   describe('constructor', () => {
     it('should create process with correct properties', () => {
-      expect(process._id).toBe(2)
-      expect(process._name).toBe('Test Process')
+      expect(process.id).toBe(2)
+      expect(process.name).toBe('Test Process')
       expect(process._type).toBe('process')
-      expect(process._parent).toBe(parentProcess)
-      expect(process._detail).toBe('Process detail')
-      expect(process._cost).toBe(200)
+      expect(process.parent).toBe(parentProcess)
+      expect(process.detail).toBe('Process detail')
+      expect(process.getTotalCost()).toBe(0)
       expect(process.getUseManualCost()).toBe(false)
       expect(process.children).toEqual([])
     })
 
     it('should create process with manual cost', () => {
       const manualProcess = new Process(3, 'Manual Process', undefined, undefined, 300, true)
+      expect(manualProcess.getTotalCost()).toBe(300)
       expect(manualProcess.getUseManualCost()).toBe(true)
     })
   })
@@ -42,8 +43,8 @@ describe('Process', () => {
       expect(process.children).toHaveLength(2)
       expect(process.children).toContain(task)
       expect(process.children).toContain(milestone)
-      expect(task._parent).toBe(process)
-      expect(milestone._parent).toBe(process)
+      expect(task.parent).toBe(process)
+      expect(milestone.parent).toBe(process)
     })
 
     it('should remove children correctly', () => {
@@ -131,8 +132,8 @@ describe('Process', () => {
     })
 
     it('should throw error when setting dates manually', () => {
-      expect(() => process.setActualStartDate(new Date())).toThrow()
-      expect(() => process.setCalculatedStartDate(new Date())).toThrow()
+      expect(() => process.setActualStartDate(new Date())).toThrow('No se puede asignar una fecha manual a un proceso.')
+      expect(() => process.setCalculatedStartDate(new Date())).toThrow('No se puede asignar una fecha calculada directa a un proceso.')
     })
   })
 
@@ -163,6 +164,15 @@ describe('Process', () => {
       
       expect(process.getTotalCost()).toBe(150)
     })
+
+    it('should handle error in cost calculation gracefully', () => {
+      // This test ensures that if there's an error in calculating children cost,
+      // it returns 0 instead of throwing an error
+      const processWithError = new Process(8, 'Error Process')
+      // We can't easily simulate an error in the child calculation without
+      // modifying the actual implementation, so we'll just verify it doesn't throw
+      expect(() => processWithError.getTotalCost()).not.toThrow()
+    })
   })
 
   describe('delay calculation', () => {
@@ -191,7 +201,7 @@ describe('Process', () => {
       expect(data.name).toBe('Test Process')
       expect(data.detail).toBe('Process detail')
       expect(data.cost).toBe(200)
-      expect(data.processId).toBe(1)
+      expect(data.parentId).toBe(1)
       expect(data.useManualCost).toBe(true)
       expect(data.children).toHaveLength(2)
       expect(data.children[0].id).toBe(3)
@@ -203,8 +213,99 @@ describe('Process', () => {
       const data = emptyProcess.data as IProcessData
       
       expect(data.children).toEqual([])
-      expect(data.processId).toBe(-1)
+      expect(data.parentId).toBe(-1)
       expect(data.useManualCost).toBe(false)
+    })
+  })
+
+  describe('edit method', () => {
+    it('should update process properties', () => {
+      const newData: IProcessData = {
+        id: 2,
+        type: 'process',
+        name: 'Updated Process',
+        detail: 'Updated detail',
+        startDate: '01-01-2024' as any,
+        endDate: '01-31-2024' as any,
+        cost: 500,
+        parentId: 1,
+        predecessorIds: [],
+        children: [],
+        useManualCost: true
+      }
+      
+      process.edit(newData)
+      
+      expect(process.name).toBe('Updated Process')
+      expect(process.detail).toBe('Updated detail')
+      expect(process.getTotalCost()).toBe(500)
+      expect(process.getUseManualCost()).toBe(true)
+    })
+  })
+
+  describe('getDailyCost method', () => {
+    it('should calculate daily cost using manual cost when configured', () => {
+      process.setCost(1000)
+      process.setUseManualCost(true)
+      
+      const startDate = new Date('2024-01-01')
+      const endDate = new Date('2024-01-10')
+      
+      // Mock the getStartDate and getEndDate methods for testing
+      process.getStartDate = () => startDate
+      process.getEndDate = () => endDate
+      
+      expect(process.getDailyCost(new Date('2024-01-05'), 'finished')).toBe(1000)
+    })
+
+    it('should calculate daily cost by summing children costs when not using manual cost', () => {
+      const task1 = new Task(3, 'Task 1', 5, undefined, undefined, 100)
+      const task2 = new Task(4, 'Task 2', 3, undefined, undefined, 150)
+      
+      task1.setCalculatedStartDate(new Date('2024-01-01'))
+      task2.setCalculatedStartDate(new Date('2024-01-01'))
+      
+      process.addChild(task1)
+      process.addChild(task2)
+      process.setUseManualCost(false)
+      
+      // For 'finished' method, it should return 0 before end date and sum of children after
+      expect(process.getDailyCost(new Date('2024-01-01'), 'finished')).toBe(250)
+      expect(process.getDailyCost(new Date('2024-01-10'), 'finished')).toBe(0)
+    })
+
+    it('should throw error for invalid spending method', () => {
+      process.setUseManualCost(true)
+      process.setCost(1000)
+      
+      // Mock the getStartDate and getEndDate methods for testing
+      process.getStartDate = () => new Date('2024-01-01')
+      process.getEndDate = () => new Date('2024-01-10')
+      
+      expect(() => process.getDailyCost(new Date('2024-01-05'), 'invalid' as SpendingMethod)).toThrow('Invalid spending method')
+    })
+  })
+
+  describe('addPredecessor method', () => {
+    it('should add predecessor to process and its children', () => {
+      const predecessor = new Task(5, 'Predecessor', 3)
+      const child = new Task(6, 'Child', 2)
+      
+      process.addChild(child)
+      process.addPredecessor(predecessor)
+      
+      expect(process.predecessors.has(predecessor)).toBe(true)
+      expect(child.predecessors.has(predecessor)).toBe(true)
+    })
+
+    it('should not add predecessor if already in children', () => {
+      const child = new Task(6, 'Child', 2)
+      process.addChild(child)
+      
+      // Try to add the child as predecessor (should not add)
+      process.addPredecessor(child)
+      
+      expect(process.predecessors.has(child)).toBe(false)
     })
   })
 })

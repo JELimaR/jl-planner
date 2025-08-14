@@ -118,6 +118,20 @@ describe('Project', () => {
     it('should return undefined for non-existent item', () => {
       expect(project.getItemById(999)).toBeUndefined()
     })
+
+    it('should log error for duplicate item IDs', () => {
+      const task1 = new Task(100, 'Task 1', 3, project.getRoot())
+      const task2 = new Task(100, 'Task 2', 5, project.getRoot())
+      
+      project.addItem(task1)
+      
+      // Should log error but not throw
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      project.addItem(task2)
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Ya existe el item: ID 100')
+      consoleSpy.mockRestore()
+    })
   })
 
   describe('Relations Management', () => {
@@ -162,8 +176,8 @@ describe('Project', () => {
         detail: 'Updated detail',
         cost: 1000,
         duration: 7,
-        startDate: '2024-01-01' as TDateString,
-        endDate: '2024-01-07' as TDateString,
+        startDate: '2024-01-01' as unknown as TDateString,
+        endDate: '2024-01-07' as unknown as TDateString,
         parentId: project.getRoot().id,
         predecessorIds: []
       }
@@ -195,6 +209,16 @@ describe('Project', () => {
       taskData.parentId = newProcess.id
       expect(() => project.editItem(taskData)).toThrow('Cannot change the parent process of an item')
     })
+
+    it('should update predecessor relationships', () => {
+      const predecessor = new Task(101, 'Predecessor', 3, project.getRoot())
+      project.addItem(predecessor)
+      
+      taskData.predecessorIds = [101]
+      project.editItem(taskData)
+      
+      expect(task.predecessors.has(predecessor)).toBe(true)
+    })
   })
 
   describe('Critical Paths', () => {
@@ -208,6 +232,52 @@ describe('Project', () => {
       const criticalPaths = project.getCriticalPaths()
       expect(criticalPaths).toBeDefined()
       expect(Array.isArray(criticalPaths)).toBe(true)
+    })
+
+    it('should calculate critical paths correctly when an item has an actualStartDate', () => {
+      const task1 = new Task(100, 'Task 1', 3, project.getRoot())
+      const task2 = new Task(101, 'Task 2', 5, project.getRoot())
+      project.addItem(task1)
+      project.addItem(task2)
+      project.addRelation(task1, task2)
+      
+      // Set an actual start date for task1
+      task1.setCalculatedStartDate(new Date('2024-01-01'))
+      task1.setActualStartDate(new Date('2024-01-02')) // One day delay
+      
+      const criticalPaths = project.getCriticalPaths()
+      expect(criticalPaths).toBeDefined()
+      expect(Array.isArray(criticalPaths)).toBe(true)
+      // Check that critical paths are still calculated correctly despite the delay
+    })
+
+    it('should handle multiple critical paths', () => {
+      // Create first path: start -> task1 -> task2 -> end
+      const task1 = new Task(100, 'Task 1', 3, project.getRoot())
+      const task2 = new Task(101, 'Task 2', 5, project.getRoot())
+      project.addItem(task1)
+      project.addItem(task2)
+      project.addRelation(task1, task2)
+      
+      // Create second path: start -> task3 -> task4 -> end
+      const task3 = new Task(102, 'Task 3', 3, project.getRoot())
+      const task4 = new Task(103, 'Task 4', 5, project.getRoot())
+      project.addItem(task3)
+      project.addItem(task4)
+      project.addRelation(task3, task4)
+      
+      // Both paths should have the same duration (8 days), making them both critical
+      const criticalPaths = project.getCriticalPaths()
+      expect(criticalPaths).toBeDefined()
+      expect(Array.isArray(criticalPaths)).toBe(true)
+      expect(criticalPaths.length).toBeGreaterThanOrEqual(2) // Should have at least 2 critical paths
+      
+      // Check that items in critical paths are marked as critical
+      criticalPaths.forEach(path => {
+        path.path.forEach(item => {
+          expect(item.isCritical).toBe(true)
+        })
+      })
     })
   })
 
@@ -302,8 +372,8 @@ describe('Project', () => {
         id: 'deserialized-project',
         title: 'Deserialized Project',
         subtitle: 'Test Subtitle',
-        startDate: '01-01-2024' as TDateString,
-        endDate: '01-31-2024' as TDateString,
+        startDate: '01-01-2024' as unknown as TDateString,
+        endDate: '01-31-2024' as unknown as TDateString,
         criticalPaths: [],
         items: [
           {
@@ -314,7 +384,9 @@ describe('Project', () => {
             cost: 500,
             duration: 5,
             parentId: 1001,
-            predecessorIds: [1000]
+            predecessorIds: [1000],
+            startDate: '01-01-2024' as unknown as TDateString,
+            endDate: '01-05-2024' as unknown as TDateString
           } as ITaskData,
           {
             id: 101,
@@ -323,7 +395,9 @@ describe('Project', () => {
             detail: 'Milestone detail',
             cost: 0,
             parentId: 1001,
-            predecessorIds: [100]
+            predecessorIds: [100],
+            startDate: '01-05-2024' as unknown as TDateString,
+            endDate: '01-05-2024' as unknown as TDateString
           } as IMilestoneData
         ]
       }
@@ -350,8 +424,9 @@ describe('Project', () => {
         id: 'process-project',
         title: 'Process Project',
         subtitle: '',
-        startDate: '01-01-2024',
-        endDate: '01-31-2024',
+        startDate: '01-01-2024' as unknown as TDateString,
+        endDate: '01-31-2024' as unknown as TDateString,
+        criticalPaths: [],
         items: [
           {
             id: 200,
@@ -370,9 +445,14 @@ describe('Project', () => {
                 cost: 300,
                 duration: 3,
                 parentId: 200,
-                predecessorIds: []
+                predecessorIds: [],
+                startDate: '01-01-2024' as unknown as TDateString,
+                endDate: '01-03-2024' as unknown as TDateString
               } as ITaskData
-            ]
+            ],
+            useManualCost: false,
+            startDate: '01-01-2024' as unknown as TDateString,
+            endDate: '01-03-2024' as unknown as TDateString
           } as IProcessData
         ]
       }

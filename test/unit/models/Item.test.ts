@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { IItemData, Item } from '../../../src/models/Item'
 import { SpendingMethod } from '../../../src/controllers/ProjectController'
-import { DAY_MS } from '../../../src/views/ganttHelpers'
+import { DAY_MS } from '../../../src/models/dateFunc'
 import { Process } from '../../../src/models/Process'
+
 // Clase concreta para testing de la clase abstracta Item
 class TestItem extends Item {
   getDailyCost(date: Date, method: SpendingMethod): number {
-    throw new Error('Method not implemented.')
+    // Implementación de prueba
+    return this.getTotalCost()
   }
+  
   private startDate?: Date
   private endDate?: Date
   private calculatedStartDate?: Date
@@ -58,20 +61,6 @@ class TestItem extends Item {
     const diff = this.actualStartDate.getTime() - this.calculatedStartDate.getTime()
     return Math.ceil(diff / DAY_MS)
   }
-
-  /*get data(): IItemData {
-    return {
-      id: this.id,
-      type: this._type,
-      name: this.name,
-      detail: this.detail,
-      cost: this.getTotalCost(),
-      parentId: this.parent?.id ?? -1,
-      predecessorIds: Array.from(this.predecessors).map((item) => item.id),
-      startDate: formatDateToDisplay(this.getStartDate())!,
-      endDate: formatDateToDisplay(this.getEndDate())!,
-    }
-  }*/
 }
 
 describe('Item', () => {
@@ -199,6 +188,37 @@ describe('Item', () => {
       item.setActualStartDate(actualDate)
       
       expect(item.getDelayInDays()).toBe(4)
+    })
+  })
+
+  describe('edit method', () => {
+    it('should update item properties', () => {
+      const newData: IItemData = {
+        id: 2,
+        type: 'task',
+        name: 'Updated Item',
+        detail: 'Updated detail',
+        startDate: '01-01-2024' as any,
+        endDate: '01-02-2024' as any,
+        cost: 250,
+        parentId: 1,
+        predecessorIds: [],
+        color: 'red'
+      }
+      
+      item.edit(newData)
+      
+      expect(item.name).toBe('Updated Item')
+      expect(item.detail).toBe('Updated detail')
+      expect(item.getTotalCost()).toBe(250)
+    })
+  })
+
+  describe('forceSetId method', () => {
+    it('should change the item id', () => {
+      expect(item.id).toBe(2)
+      item.forceSetId(999)
+      expect(item.id).toBe(999)
     })
   })
 })

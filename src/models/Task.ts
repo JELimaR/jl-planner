@@ -65,6 +65,7 @@ export class Task extends Item {
 
     // Cast the IItemData to ITaskData to access task-specific properties
     const taskData = data as ITaskData;
+    this.setDuration(taskData.duration)
 
     // Handle task-specific editable properties
     if (taskData.manualDuration !== undefined) {
@@ -103,6 +104,10 @@ export class Task extends Item {
   /** Duración efectiva, prioriza la manual si está definida */
   get duration(): number {
     return this.manualDuration ?? this.calculatedDuration;
+  }
+
+  setDuration(days: number): void {
+    this.calculatedDuration = days > 0 ? days : 1;
   }
 
   /** Establece una duración manual (por ejemplo si se modifica en campo) */
