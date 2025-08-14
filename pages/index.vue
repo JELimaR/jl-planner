@@ -30,12 +30,9 @@
           </div>
 
           <div v-else class="list-group">
-            <ProjectCard v-for="project in projects" :key="project.id" :project="project" @edit-project="editProject"
-              @delete-project="deleteProject" @duplicate-project="duplicateProject" />
+            <ProjectCard v-for="project in projects" :key="project.id" :project="project" />
           </div>
         </div>
-
-
       </div>
     </div>
   </div>
@@ -54,7 +51,7 @@ const projectStore = useProjectStore()
 const projects = ref<IProjectHeader[]>([])
 
 // Cargar proyectos (simulado - aquí conectarías con tu API/store)
-const loadProjectList = async () => {
+const loadTemplatesList = async () => {
   try {
     // Simulación de datos - reemplaza con tu lógica real
     projects.value = [
@@ -94,37 +91,9 @@ const createProject = async () => {
   navigateTo('/project')
 }
 
-const editProject = (project: IProjectHeader) => {
-  // Lógica para editar proyecto
-  console.log('Editar proyecto:', project)
-  // Aquí podrías abrir un modal de edición
-}
-
-const deleteProject = (project: IProjectHeader) => {
-  // Lógica para eliminar proyecto
-  console.log('Eliminar proyecto:', project)
-  // Aquí podrías mostrar un modal de confirmación
-  if (confirm(`¿Estás seguro de que quieres eliminar el proyecto "${project.title}"?`)) {
-    projects.value = projects.value.filter(p => p.id !== project.id)
-  }
-}
-
-const duplicateProject = (project: IProjectHeader) => {
-  // Lógica para duplicar proyecto
-  console.log('Duplicar proyecto:', project)
-  const newProject: IProjectHeader = {
-    ...project,
-    id: `${project.id}-copy-${Date.now()}`,
-    title: `${project.title} (Copia)`,
-    subtitle: `${project.subtitle}`,
-    startDate: project.startDate
-  }
-  projects.value.unshift(newProject)
-}
-
 // Lifecycle
 onMounted(() => {
-  loadProjectList()
+  loadTemplatesList()
 })
 </script>
 

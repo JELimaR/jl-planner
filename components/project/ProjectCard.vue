@@ -1,8 +1,8 @@
 <template>
-  <div
-    class="list-group-item list-group-item-action"
-    :class="{ 'border-primary': true }"
-    @click="handleProjectClick"
+  <NuxtLink
+    to="project"
+    class="list-group-item list-group-item-action border-secondary"
+    @click="handleTemplateClick"
   >
     <div class="d-flex w-100 justify-content-between align-items-start">
       <div class="flex-grow-1">
@@ -16,72 +16,25 @@
             </div>
         </div>
       </div>
-      <div class="dropdown ms-2" @click.prevent>
-        <button 
-          class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-          type="button" 
-          :id="`dropdown-${project.id}`"
-          data-bs-toggle="dropdown" 
-          aria-expanded="false"
-        >
-          <i class="bi bi-three-dots-vertical"></i>
-        </button>
-        <ul class="dropdown-menu" :aria-labelledby="`dropdown-${project.id}`">
-          <li>
-            <button class="dropdown-item" @click="editProject(project)">
-              <i class="bi bi-pencil"></i> Editar
-            </button>
-          </li>
-          <li>
-            <button class="dropdown-item" @click="duplicateProject(project)">
-              <i class="bi bi-files"></i> Duplicar
-            </button>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          <li>
-            <button class="dropdown-item text-danger" @click="deleteProject(project)">
-              <i class="bi bi-trash"></i> Eliminar
-            </button>
-          </li>
-        </ul>
-      </div>
     </div>
-  </div>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
-import type { IProjectData } from '../../src/models/Project';
+import type { IProjectHeader } from '../../src/models/Project';
 import { useProjectStore } from '../../stores/project';
 import { navigateTo } from 'nuxt/app';
 
 // Props
 interface Props {
-  project: IProjectData;
+  project: IProjectHeader;
 }
 const props = defineProps<Props>();
 
 const projectStore = useProjectStore();
 
-// Emits
-const emit = defineEmits<{
-  'edit-project': [project: IProjectData];
-  'delete-project': [project: IProjectData];
-  'duplicate-project': [project: IProjectData];
-}>();
-
-// Métodos para emitir eventos
-const editProject = (project: IProjectData) => {
-  emit('edit-project', project);
-};
-const deleteProject = (project: IProjectData) => {
-  emit('delete-project', project);
-};
-const duplicateProject = (project: IProjectData) => {
-  emit('duplicate-project', project);
-};
-
 // Método para manejar el clic en el proyecto
-const handleProjectClick = async () => {
+const handleTemplateClick = async () => {
   // Cargar el proyecto basado en el ID de la plantilla
   await projectStore.getTemplate(props.project.id);
   // Navegar a la página del proyecto
