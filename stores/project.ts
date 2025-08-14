@@ -4,6 +4,7 @@ import type { IItemData } from '../src/models/Item'
 import { formatDateToDisplay, TDateString } from '../src/models/dateFunc'
 import { IProcessData } from '../src/models/Process'
 import { Scale } from '../components/gantt/ganttHelpers'
+import { SpendingMethod } from '../src/controllers/ProjectController' // no debe estar acá
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
@@ -81,6 +82,7 @@ export const useProjectStore = defineStore('project', {
 
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
+          this.isInitialized = true
         }
       } catch (error) {
         console.error('Error getting template:', error)
@@ -105,8 +107,8 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          console.log(response)
           this.projectData = (response as { data: IProjectData }).data
+          this.isInitialized = true
           // await this.loadProjectHeader()
         }
       } catch (error) {
@@ -114,6 +116,30 @@ export const useProjectStore = defineStore('project', {
         this.setError('Error al crear nuevo proyecto')
       } finally {
         this.setLoading(false)
+      }
+    },
+
+    async getDailySpending(spendingMethod: SpendingMethod) {
+      this.setLoading(true);
+      this.setError(null);
+  
+      try {
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'getDailySpending',
+            data: { spendingMethod }
+          }
+        });
+  
+        if ((response as { success: boolean }).success) {
+          return (response as { data: Array<{ d: string, v: number }> }).data;
+        }
+      } catch (error) {
+        console.error('Error getting daily spending data:', error);
+        this.setError('Error al obtener datos de gasto diario.');
+      } finally {
+        this.setLoading(false);
       }
     },
 
@@ -186,6 +212,7 @@ export const useProjectStore = defineStore('project', {
 
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
+          this.isInitialized = true
           // await this.loadProjectHeader()
         }
       } catch (error) {
@@ -208,12 +235,13 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          this.projectHeader = (response as { data: IProjectHeader }).data
+          this.projectHeader = (response as { data: IProjectHeader }).data // corregir
           // Actualizar también en projectData
           if (this.projectData) {
             this.projectData.title = title
             this.projectData.subtitle = subtitle
           }
+          this.isInitialized = true
         }
       } catch (error) {
         console.error('Error saving title:', error)

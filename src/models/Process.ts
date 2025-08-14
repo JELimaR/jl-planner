@@ -22,27 +22,50 @@ export class Process extends Item {
 
   }
 
-    private getDailyCostLikeTask(date: Date, method: SpendingMethod): number {
+  private getDailyCostLikeTask(date: Date, method: SpendingMethod): number {
     const cost = this.getTotalCost();
     const startDate = this.getStartDate();
     const endDate = this.getEndDate();
+  
+    // Si no hay fechas definidas, no se puede calcular el costo.
     if (!startDate || !endDate) {
       throw new Error('Start date and end date must be defined to calculate daily cost');
     }
-
+  
+    // Si la fecha está fuera del rango del proceso, el costo es 0.
+    // Usamos el getTime() para comparar las fechas correctamente, ignorando la hora.
+    const isDateInRange = date.getTime() >= startDate.getTime() && date.getTime() <= endDate.getTime();
+    if (!isDateInRange) {
+      return 0;
+    }
+  
+    // Calcular la duración en días, asegurando que no sea cero.
+    const durationInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / DAY_MS);
+  
     switch (method) {
       case 'finished':
-        return endDate && date >= endDate ? 0 : cost;
-      case 'started':
-        return startDate && date >= startDate ? cost : 0;
-      case 'linear':
-        if (date >= endDate) {
+        // Se paga el costo total solo si la fecha actual es el día de finalización.
+        if (date.getTime() === endDate.getTime()) {
           return cost;
         }
-        const duration = (endDate.getTime() - startDate.getTime())/DAY_MS;
-        const daysProgress = Math.ceil((date.getTime() - startDate.getTime()) / DAY_MS);
-        return cost / duration * daysProgress;
-
+        return 0;
+  
+      case 'started':
+        // Se paga el costo total solo si la fecha actual es el día de inicio.
+        if (date.getTime() === startDate.getTime()) {
+          return cost;
+        }
+        return 0;
+  
+      case 'linear':
+        // Si la duración es 0 o 1 día, se paga todo el costo en la fecha de inicio.
+        if (durationInDays <= 1) {
+          return date.getTime() === startDate.getTime() ? cost : 0;
+        }
+        
+        // Se divide el costo total de manera uniforme a lo largo de la duración.
+        return cost / durationInDays;
+  
       default:
         throw new Error('Invalid spending method');
     }

@@ -16,27 +16,41 @@ export class Task extends Item {
     const cost = this.getTotalCost();
     const startDate = this.getStartDate();
     const endDate = this.getEndDate();
+
     if (!startDate || !endDate) {
       throw new Error('Start date and end date must be defined to calculate daily cost');
     }
 
+    // Asegurarse de que la fecha esté dentro del rango del proyecto
+    if (date < startDate || date > endDate) {
+      return 0;
+    }
+
+    const durationInDays = this.duration;
+
     switch (method) {
       case 'finished':
-        return endDate && date >= endDate ? 0 : cost;
-      case 'started':
-        return startDate && date >= startDate ? cost : 0;
-
-      case 'linear':
-        if (date >= endDate!) {
+        // Si la fecha actual es el día de finalización, paga el costo total.
+        // De lo contrario, el costo diario es 0.
+        if (date.getTime() === endDate.getTime()) {
           return cost;
         }
-        const duration = this.duration;
-        const daysProgress = Math.ceil((date.getTime() - startDate.getTime()) / DAY_MS);
-        return cost / duration * daysProgress;
+        return 0;
+
+      case 'started':
+        // Si la fecha actual es el día de inicio, paga el costo total.
+        // De lo contrario, el costo diario es 0.
+        if (date.getTime() === startDate.getTime()) {
+          return cost;
+        }
+        return 0;
+
+      case 'linear':
+        // Distribuye el costo total uniformemente a lo largo de la duración.
+        return cost / durationInDays;
 
       default:
         throw new Error('Invalid spending method');
-        break;
     }
   }
 

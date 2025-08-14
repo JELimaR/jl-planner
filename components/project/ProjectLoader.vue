@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useProjectStore } from '../../stores/project'; // Ajusta la ruta a tu store
+import { useProjectStore } from '../../stores/project';
 import { navigateTo } from 'nuxt/app';
 
 const projectStore = useProjectStore();

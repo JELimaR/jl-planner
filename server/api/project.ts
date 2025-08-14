@@ -1,4 +1,4 @@
-import { ProjectController } from '../../src/controllers/ProjectController'
+import { ProjectController, SpendingMethod } from '../../src/controllers/ProjectController'
 import type { IProjectData, IProjectHeader } from '../../src/models/Project'
 import type { IItemData } from '../../src/models/Item'
 import { createError, defineEventHandler, getQuery, readBody, setHeader } from 'h3';
@@ -111,6 +111,12 @@ export default defineEventHandler(async (event) => {
               return { success: true, data: controller.getProjectData() }
             }
             throw new Error(`Item with ID ${itemId} not found`)
+          }
+
+          case 'getDailySpending': {
+            const { spendingMethod } = data as { spendingMethod: SpendingMethod };
+            const dailySpending = controller.calculateDailySpending(spendingMethod);
+            return { success: true, data: dailySpending };
           }
 
           case 'exportPDF': {

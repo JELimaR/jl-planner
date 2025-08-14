@@ -29,6 +29,7 @@
     <CriticalPaths />
 
     <!-- {{ projectStore.controller.calculateDailySpending('linear') }} -->
+    <ProjectSpending />
 
   </div>
 </template>
@@ -44,9 +45,9 @@ const uiStore = useUIStore()
 
 onMounted(async () => {
   try {
-    // Si no hay proyecto cargado, crear uno vacío
-    if (!projectStore.projectData) {
-      await projectStore.newProject()
+    // Solo inicializa el proyecto si no se ha hecho antes
+    if (!projectStore.isInitialized) {
+      await projectStore.getTemplate('t000')
     }
   } catch (error) {
     console.error('Error al inicializar el proyecto:', error)
@@ -55,7 +56,9 @@ onMounted(async () => {
 })
 
 onBeforeRouteLeave((to, from, next) => {
-  projectStore.projectData = null;
+  if (to.path !== from.path) {
+    projectStore.projectData = null;
+  }
   next();
 });
 
