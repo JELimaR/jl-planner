@@ -58,7 +58,7 @@
 import { computed } from 'vue'
 import { useProjectStore } from '../../stores/project'
 import { useUIStore } from '../../stores/ui';
-import { getDelayInDays } from '../gantt/ganttLeftTable';
+import { getDelayInDays } from '../gantt/ganttHelpers';
 
 const projectStore = useProjectStore()
 const uiStore = useUIStore()

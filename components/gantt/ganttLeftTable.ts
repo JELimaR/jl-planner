@@ -1,11 +1,7 @@
 import { flattenItemsListWithDepth } from '../../stores/project';
-import { DAY_MS, displayStringToDate } from '../../src/models/dateFunc';
-import type { IItemData } from '../../src/models/Item';
-import { IMilestoneData } from '../../src/models/Milestone';
 import type { IProjectData } from '../../src/models/Project';
-import { ITaskData } from '../../src/models/Task';
-import { isCritical } from './ganttItems';
 import { CRITICAL_COLOR } from '../../src/views/colors';
+import { getDelayInDays, isCritical } from './ganttHelpers';
 
 // Renderiza la sección de etiquetas (nombres de tareas, fechas y delay)
 export function renderItemRowsFromProject(
@@ -64,30 +60,4 @@ export function renderItemRowsFromProject(
   }
 
   ganttLabelItems.appendChild(labelColumn);
-}
-
-/**
- * Calculates the delay in days for an item.
- *
- * @param item The IItemData object (task, milestone, or process).
- * @returns The delay in days, or 0 if no delay or if the item is a process.
- */
-export function getDelayInDays(item: IItemData): number {
-  if (item.type === 'process') {
-    return 0;
-  }
-
-  const actualStartDate = (item as ITaskData | IMilestoneData).actualStartDate
-    ? displayStringToDate((item as ITaskData | IMilestoneData).actualStartDate!)
-    : null;
-  const calculatedStartDate = (item as ITaskData | IMilestoneData).calculatedStartDate
-    ? displayStringToDate((item as ITaskData | IMilestoneData).calculatedStartDate!)
-    : null;
-
-  if (actualStartDate && calculatedStartDate) {
-    const diffInMs = actualStartDate.getTime() - calculatedStartDate.getTime();
-    return Math.ceil(diffInMs / DAY_MS);
-  }
-
-  return 0;
 }

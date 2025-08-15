@@ -1,50 +1,14 @@
 import type { IProjectData } from '../../src/models/Project';
-import type { IItemData } from '../../src/models/Item';
 import { flattenItemsList } from '../../stores/project';
 import {
   getXPositionEnd,
   getXPositionStart,
+  isCriticalArrow,
   itemPositionLeft,
   itemPositionRight,
   type Scale,
 } from './ganttHelpers';
 import { CRITICAL_COLOR } from '../../src/views/colors';
-
-function isCriticalArrow(projectData: IProjectData, pred: IItemData, succ: IItemData, criticalPathIndex: number | undefined) {
-  const criticalPaths = projectData.criticalPaths;
-  
-  if (!criticalPaths || criticalPaths.length === 0) {
-    return false;
-  }
-
-   //
-  if (criticalPathIndex == undefined) {
-    return false
-  }
-  
-  // If no specific path is selected, check if arrow is in any critical path
-  if (criticalPathIndex == -1) {
-    let out = false;
-    criticalPaths.forEach((path) => {
-      for (let i = 1; i < path.path.length && !out; i++) {
-        out = path.path[i - 1].id == pred.id && path.path[i].id == succ.id;
-      }
-    });
-    return out;
-  }
-  
-  // If a specific path is selected, check only that path
-  if (criticalPathIndex >= 0 && criticalPathIndex < criticalPaths.length) {
-    const selectedPath = criticalPaths[criticalPathIndex];
-    for (let i = 1; i < selectedPath.path.length; i++) {
-      if (selectedPath.path[i - 1].id == pred.id && selectedPath.path[i].id == succ.id) {
-        return true;
-      }
-    }
-  }
-  
-  return false;
-}
 
 export function drawAllArrows(
   svg: SVGSVGElement,

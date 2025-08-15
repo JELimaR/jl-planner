@@ -1,9 +1,9 @@
 import type { IProjectData } from '../../src/models/Project';
 import { flattenItemsList } from '../../stores/project';
 
-import { getCalendarLimitDates, renderDateRow } from './ganttCalendar';
+import { renderDateRow } from './ganttCalendar';
 import { drawAllArrows } from './ganttDrawAllArrows';
-import { SCALE_OPTIONS, type Scale } from './ganttHelpers';
+import { SCALE_OPTIONS, getCalendarLimitDates, type Scale } from './ganttHelpers';
 import { drawItems } from './ganttItems';
 import { renderItemRowsFromProject } from './ganttLeftTable';
 import { DAY_MS, displayStringToDate } from '../../src/models/dateFunc';

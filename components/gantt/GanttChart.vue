@@ -1,77 +1,118 @@
 <template>
-  <div class="gantt-container">
-    <div class="gantt-scale-selector mb-3">
-      <div class="btn-group">
-        <button 
-          v-for="option in scaleOptions" 
-          :key="option.value"
-          class="btn btn-sm" 
-          :class="{ 'btn-primary': scale === option.value, 'btn-outline-primary': scale !== option.value }"
-          @click="changeScale(option.value as Scale)"
-        >
-          {{ option.label }}
-        </button>
-      </div>
+  <div class="gantt-chart-wrapper">
+    <div class="gantt-svg-container" :style="{ width: `${svgWidth}px` }">
+      <svg :width="svgWidth" :height="svgHeight" id="gantt-svg">
+        <defs>
+          <marker id="arrowhead" markerWidth="7" markerHeight="4" refX="7" refY="2" orient="auto"
+            markerUnits="strokeWidth">
+            <path d="M0,0 L10,3.5 L0,7 Z" fill="#333" />
+          </marker>
+        </defs>
+
+        <g class="gantt-items-group">
+          <GanttItem 
+            v-for="(item, index) in flattenedItems" 
+            :key="item.id"
+            :item="item" 
+            :row-index="index"
+            :row-height="rowHeight"
+            :project-data="projectData"
+            :critical-path-index="criticalPathIndex"
+            :calendar-start-date="calendarLimits.calendarStartDate"
+            :scale="scale"
+          />
+        </g>
+
+        <g class="gantt-arrows-group">
+          <GanttArrow v-for="(arrow, index) in arrows" :key="index" :source="arrow.source" :target="arrow.target"
+            :row-height="rowHeight" :is-critical="arrow.isCritical" />
+        </g>
+      </svg>
     </div>
-    
-    <div ref="ganttContainer" id="gantt-container"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useProjectStore } from '../../stores/project'
-import { ganttRenderer } from './ganttRenderer'
-import type { Scale } from './ganttHelpers'
+import { computed } from 'vue';
+import { flattenItemsList, useProjectStore } from '../../stores/project';
 import { useUIStore } from '../../stores/ui';
+import { SCALE_OPTIONS, Scale, getXPositionEnd, getXPositionStart, isCriticalArrow, getCalendarLimitDates } from './ganttHelpers';
+import type { IProjectData } from '../../src/models/Project';
+import { DAY_MS, displayStringToDate } from '../../src/models/dateFunc';
 
 const projectStore = useProjectStore();
 const uiStore = useUIStore();
-const ganttContainer = ref<HTMLElement | null>(null)
 
-// Obtener la escala actual del store
-const scale = ref<Scale>(projectStore.currentScale || 'week')
+// Define las props que el componente padre pasará
+const props = defineProps<{
+  scale: Scale;
+  rowHeight: number;
+}>();
 
-// Opciones de escala para los botones
-const scaleOptions = [
-  { value: 'day', label: 'Día' },
-  { value: 'week', label: 'Semana' },
-  { value: 'month', label: 'Mes' }
-]
+// Propiedades computadas para la visualización de los datos
+const projectData = computed(() => projectStore.projectData as IProjectData);
+const criticalPathIndex = computed(() => uiStore.criticalPathIndex);
+const flattenedItems = computed(() => flattenItemsList(projectData.value.items));
 
-// Función para cambiar la escala
-function changeScale(newScale: Scale) {
-  scale.value = newScale
-  projectStore.currentScale = newScale
-}
+// Calcula los límites de fecha del calendario
+const calendarLimits = computed(() => {
+  const projectStartDate = displayStringToDate(projectData.value.startDate);
+  const projectEndDate = displayStringToDate(projectData.value.endDate);
+  return getCalendarLimitDates(projectStartDate, projectEndDate, props.scale);
+});
 
-// Función para renderizar el diagrama de Gantt
-function renderGantt() {
-  const projectData = projectStore.projectData
-  if (ganttContainer.value && projectData) {
-    // Renderizar el diagrama de Gantt usando la función ganttRenderer
-    ganttRenderer(projectData, scale.value, ganttContainer.value, uiStore.criticalPathIndex)
-  }
-}
+// Calcula el ancho y alto del SVG
+const svgWidth = computed(() => {
+  const start = calendarLimits.value.calendarStartDate;
+  const end = calendarLimits.value.calendarEndDate;
+  const totalDays = (end.getTime() - start.getTime()) / (DAY_MS);
+  return totalDays * SCALE_OPTIONS[props.scale].pxPerDay;
+});
+const svgHeight = computed(() => flattenedItems.value.length * props.rowHeight);
 
-// Renderizar el diagrama de Gantt cuando el componente se monte
-onMounted(() => {
-  renderGantt()
-})
+// Lógica para generar los datos de las flechas
+const arrows = computed(() => {
+  const arrowsData: { source: { x: number; y: number }; target: { x: number; y: number }; isCritical: boolean }[] = [];
+  const itemPositions = new Map<number, { startX: number; endX: number; y: number }>();
 
-// Volver a renderizar cuando cambien las fechas del proyecto o la escala
-watch(
-  () => [projectStore.projectData, projectStore.currentScale, uiStore.criticalPathIndex],
-  () => {
-    renderGantt()
-  },
-  { deep: true }
-)
+  flattenedItems.value.forEach((item, index) => {
+    const startX = getXPositionStart(item, calendarLimits.value.calendarStartDate, props.scale);
+    const endX = getXPositionEnd(item, calendarLimits.value.calendarStartDate, props.scale);
+    const centerY = index * props.rowHeight + props.rowHeight / 2;
+    itemPositions.set(item.id, { startX, endX, y: centerY });
+  });
+
+  flattenedItems.value.forEach((item) => {
+    if (item.predecessorIds) {
+      for (const predId of item.predecessorIds) {
+        const pred = flattenedItems.value.find(i => i.id === predId);
+        if (pred) {
+          const sourcePos = itemPositions.get(pred.id);
+          const targetPos = itemPositions.get(item.id);
+
+          if (sourcePos && targetPos) {
+            const isCrit = isCriticalArrow(projectData.value, pred, item, uiStore.criticalPathIndex);
+            arrowsData.push({
+              source: { x: sourcePos.endX, y: sourcePos.y },
+              target: { x: targetPos.startX, y: targetPos.y },
+              isCritical: isCrit,
+            });
+          }
+        }
+      }
+    }
+  });
+
+  return arrowsData;
+});
 </script>
 
 <style scoped>
-.gantt-container {
+.gantt-chart-wrapper {
   overflow-x: auto;
-  padding: 10px;
+}
+
+.gantt-svg-container {
+  min-width: 100%;
 }
 </style>

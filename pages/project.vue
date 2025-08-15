@@ -21,7 +21,7 @@
     <div class="page-break"></div>
     
     <!-- Diagrama de Gantt -->
-    <GanttChart />
+    <GanttProject2 />
 
     <div class="page-break"></div>
     
@@ -39,6 +39,7 @@ import { onMounted } from 'vue'
 import { onBeforeRouteLeave } from 'nuxt/app';
 import { useProjectStore } from '../stores/project'
 import { useUIStore } from '../stores/ui'
+import GanttProject from '../components/gantt/GanttProject.vue';
 
 const projectStore = useProjectStore()
 const uiStore = useUIStore()

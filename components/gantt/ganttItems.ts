@@ -4,45 +4,9 @@ import type { ITaskData } from '../../src/models/Task';
 import type { IMilestoneData } from '../../src/models/Milestone';
 import type { IProcessData } from '../../src/models/Process';
 import { flattenItemsList } from '../../stores/project';
-import { getTimeUnitsBetween, SCALE_OPTIONS, type Scale } from './ganttHelpers';
+import { getTimeUnitsBetween, isCritical, SCALE_OPTIONS, type Scale } from './ganttHelpers';
 import { displayStringToDate } from '../../src/models/dateFunc';
 import { CRITICAL_COLOR } from '../../src/views/colors';
-
-/**
- * Determina si un ítem es parte de la ruta crítica del proyecto.
- * @param projectData El objeto de datos del proyecto completo.
- * @param item El ítem a verificar.
- * @returns `true` si el ítem es parte de la ruta crítica, de lo contrario `false`.
- */
-export function isCritical(projectData: IProjectData, item: IItemData, criticalPathIndex: number | undefined): boolean {
-  const criticalPaths = projectData.criticalPaths;
-  
-  if (!criticalPaths || criticalPaths.length === 0) {
-    return false;
-  }
-
-  //
-  if (criticalPathIndex == undefined) {
-    return false
-  }
-  
-  // If no specific path is selected, check if item is in any critical path
-  if (criticalPathIndex == -1) {
-    for (const path of criticalPaths) {
-      if (path.path.some(criticalItem => criticalItem.id === item.id)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  // If a specific path is selected, check only that path
-  if (criticalPathIndex >= 0 && criticalPathIndex < criticalPaths.length) {
-    const selectedPath = criticalPaths[criticalPathIndex];
-    return selectedPath.path.some(criticalItem => criticalItem.id === item.id);
-  }
-  
-  return false;
-}
 
 // *** Función principal de dibujo ***
 export function drawItems(
