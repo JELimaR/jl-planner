@@ -102,7 +102,7 @@ const calendarLimits = computed(() => {
 
 .gantt-scrollable-area {
   flex-grow: 1;
-  overflow-x: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
