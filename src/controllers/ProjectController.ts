@@ -300,7 +300,7 @@ export class ProjectController {
     while (currentDate <= projectEndDate) {
       const formattedDate = formatDateToDisplay(currentDate) as TDateString;
       let dailyCost = 0;
-      project.traverse((item: Item) => {
+      project.getRoot().children.forEach((item: Item) => {
         dailyCost += item.getDailyCost(currentDate, spendingMethod);
       })
 

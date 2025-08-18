@@ -79,7 +79,7 @@ export class Project {
    * Se agrega el item a las dependencias de endMilestone
    */
   addItem(item: Item, parent?: Process): void {
-    if (this.allItemsMap.has(item.id)) {
+    if (!!this.allItemsMap.has(item.id)) {
       console.error(`Ya existe el item: ID ${item.id}`);
     } else {
       this.allItemsMap.set(item.id, item);
