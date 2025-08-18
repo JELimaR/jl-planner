@@ -40,5 +40,5 @@
 import { ref } from 'vue'
 import { SpendingMethod } from '../../src/controllers/ProjectController';
 
-const spendingMethod = ref<SpendingMethod>('linear')
+const spendingMethod = ref<SpendingMethod>('finished')
 </script>

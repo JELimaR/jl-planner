@@ -1,23 +1,19 @@
 <template>
-  <NuxtLink
-    to="project"
-    class="list-group-item list-group-item-action border-secondary"
-    @click="handleTemplateClick"
-  >
+  <div class="list-group-item list-group-item-action border-secondary" @click="handleTemplateClick">
     <div class="d-flex w-100 justify-content-between align-items-start">
       <div class="flex-grow-1">
         <div class="d-flex w-100 justify-content-between">
           <h6 class="mb-1">{{ project.title || 'Sin título' }}</h6>
-          </div>
+        </div>
         <p class="mb-1 text-muted">{{ project.subtitle || 'Sin descripción' }}</p>
         <div class="d-flex justify-content-between align-items-center">
           <small class="text-muted">ID: {{ project.id }}</small>
           <div class="d-flex gap-2">
-            </div>
+          </div>
         </div>
       </div>
     </div>
-  </NuxtLink>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -46,11 +42,25 @@ const handleTemplateClick = async () => {
 .list-group-item {
   transition: all 0.2s ease;
 }
+
 .list-group-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .dropdown-toggle::after {
   display: none;
+}
+
+/* ✅ Estilos para que el div se vea y se sienta como un enlace */
+.hoverable-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* Opcional: Estilo al estar activo (clickeado) */
+.hoverable-link:active {
+  background-color: #e9ecef;
+  transform: translateY(0);
 }
 </style>

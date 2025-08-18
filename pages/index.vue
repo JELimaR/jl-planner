@@ -46,7 +46,6 @@ import { navigateTo } from 'nuxt/app';
 import { formatDateToDisplay, TDateString } from '../src/models/dateFunc';
 
 const projectStore = useProjectStore()
-projectStore.getTemplateHeaders();
 
 // Handlers para eventos del componente
 const createProject = async () => {
