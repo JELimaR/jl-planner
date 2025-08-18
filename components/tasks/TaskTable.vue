@@ -6,18 +6,22 @@
         <thead>
           <tr>
             <th style="width: 5%">ID</th>
-            <th style="width: 19%">Nombre</th>
-            <th style="width: 19%">Detalle</th>
+            <th style="width: 20%">Nombre</th>
+            <th style="width: 20%">Detalle</th>
             <th style="width: 7%">Duración</th>
             <th style="width: 15%">Inicio</th>
             <th style="width: 15%">Fin</th>
-            <th style="width: 10%">Dependencias</th>
-            <th style="width: 10%">Acciones</th>
+            <th style="width: 12%">Dependencias</th>
+            <th style="">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in flattenedItems" :key="item.id" 
-              :style="getRowStyle(item)">
+          <tr v-for="(item, index) in flattenedItems"
+            :key="item.id" 
+            :style="getRowStyle(item)"
+            @dblclick="editItem(item)"
+            @contextmenu.prevent="deleteItem(item)"
+          >
             <td :style="`padding-left: ${5 + getDepth(item) * 8}px; font-size: 8px;`">{{ item.id }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.detail || '' }}</td>
@@ -42,14 +46,14 @@
                 >
                   ⬇️
                 </button>
-                <button
+                <!-- <button
                   class="btn btn-sm btn-primary"
                   @click="editItem(item)"
                 >✏️</button>
                 <button
                   class="btn btn-sm btn-danger"
                   @click="deleteItem(item)"
-                >🗑️</button>
+                >🗑️</button> -->
               </div>
             </td>
           </tr>
