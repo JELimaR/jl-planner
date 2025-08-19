@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
           
           case 'getTemplate': {
             const { tid } = data as { tid: TTemplateID }
-            controller.chargeTemplate(tid)
+            await controller.chargeTemplate(tid)
             return { success: true, data: controller.getProjectData() };
           }
 

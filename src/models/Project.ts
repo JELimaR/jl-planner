@@ -369,6 +369,24 @@ export class Project {
     };
   }
 
+  /**
+   * Crea una copia profunda del proyecto actual.
+   * La copia es una nueva instancia de la clase Project y todos sus ítems
+   * son nuevos objetos, no referencias.
+   *
+   * @returns Una nueva instancia de Project que es una copia idéntica del original.
+   */
+  copy(): Project {
+    // Paso 1: Obtener los datos serializados del proyecto actual.
+    const projectData = this.getData();
+
+    // Paso 2: Usar el método estático de deserialización
+    // para crear una nueva instancia de Project a partir de esos datos.
+    const newProject = Project.deserializeProject(projectData);
+
+    return newProject;
+  }
+
   static deserializeProject(data: IProjectData): Project {
     const project = new Project(data.id, displayStringToDate(data.startDate));
     project.setTitle(data.title);

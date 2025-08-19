@@ -34,7 +34,7 @@ export function getTemplateProject(tid: TTemplateID): Project {
   if (!project) {
     project = new Project('n', new Date())
   }
-  return project;
+  return project.copy();
 }
 
 export function getAllTemplateProjectHeaders(): IProjectHeader[] {

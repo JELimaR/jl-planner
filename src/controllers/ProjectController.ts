@@ -372,7 +372,7 @@ export class ProjectController {
    * 
    * @param tid 
    */
-  chargeTemplate(tid: TTemplateID) {
+  async chargeTemplate(tid: TTemplateID) {
     this.project = getTemplateProject(tid)
   }
 
