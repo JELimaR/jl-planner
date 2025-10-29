@@ -47,6 +47,8 @@ const uiStore = useUIStore();
 const props = defineProps<{
   scale: Scale;
   rowHeight: number;
+  calendarStartDate: Date;
+  calendarEndDate: Date;
 }>();
 
 // Propiedades computadas para la visualización de los datos
@@ -54,12 +56,11 @@ const projectData = computed(() => projectStore.projectData as IProjectData);
 const criticalPathIndex = computed(() => uiStore.criticalPathIndex);
 const flattenedItems = computed(() => flattenItemsList(projectData.value.items));
 
-// Calcula los límites de fecha del calendario
-const calendarLimits = computed(() => {
-  const projectStartDate = displayStringToDate(projectData.value.startDate);
-  const projectEndDate = displayStringToDate(projectData.value.endDate);
-  return getCalendarLimitDates(projectStartDate, projectEndDate, props.scale);
-});
+// Usar las fechas del calendario pasadas como props
+const calendarLimits = computed(() => ({
+  calendarStartDate: props.calendarStartDate,
+  calendarEndDate: props.calendarEndDate
+}));
 
 // Calcula el ancho y alto del SVG
 const svgWidth = computed(() => {
@@ -109,7 +110,7 @@ const arrows = computed(() => {
 
 <style scoped>
 .gantt-chart-wrapper {
-  overflow-x: auto;
+  /* El scroll ahora está en el contenedor padre */
 }
 
 .gantt-svg-container {

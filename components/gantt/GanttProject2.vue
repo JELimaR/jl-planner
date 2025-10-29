@@ -18,11 +18,19 @@
           <GanttLeftTable :project-data="projectData" :row-height="rowHeight"
             :critical-path-index="criticalPathIndex" />
 
-          <div class="gantt-scrollable-area">
-            <GanttCalendar :project-start-date="calendarLimits.calendarStartDate"
-              :project-end-date="calendarLimits.calendarEndDate" :scale="currentScale" />
+          <div class="gantt-chart">
+            <GanttCalendar 
+              :project-start-date="calendarLimits.projectStartDate"
+              :project-end-date="calendarLimits.projectEndDate" 
+              :calendar-start-date="calendarLimits.calendarStartDate"
+              :calendar-end-date="calendarLimits.calendarEndDate"
+              :scale="currentScale" />
 
-            <GanttChart :scale="currentScale" :row-height="rowHeight" />
+            <GanttChart 
+              :scale="currentScale" 
+              :row-height="rowHeight"
+              :calendar-start-date="calendarLimits.calendarStartDate"
+              :calendar-end-date="calendarLimits.calendarEndDate" />
           </div>
         </div>
       </div>
@@ -68,14 +76,26 @@ const projectData = computed(() => projectStore.projectData);
 const currentScale = computed(() => projectStore.currentScale);
 const criticalPathIndex = computed(() => uiStore.criticalPathIndex);
 
-// Calcula los límites de fecha del calendario
+// Calcula los límites de fecha del calendario de forma centralizada
 const calendarLimits = computed(() => {
   if (!projectData.value || !projectData.value.startDate || !projectData.value.endDate) {
-    return { calendarStartDate: new Date(), calendarEndDate: new Date() };
+    return { 
+      calendarStartDate: new Date(), 
+      calendarEndDate: new Date(),
+      projectStartDate: new Date(),
+      projectEndDate: new Date()
+    };
   }
+  
   const projectStartDate = displayStringToDate(projectData.value.startDate);
   const projectEndDate = displayStringToDate(projectData.value.endDate);
-  return getCalendarLimitDates(projectStartDate, projectEndDate, currentScale.value);
+  const calendarDates = getCalendarLimitDates(projectStartDate, projectEndDate, currentScale.value);
+  
+  return {
+    ...calendarDates,
+    projectStartDate,
+    projectEndDate
+  };
 });
 </script>
 
@@ -83,27 +103,21 @@ const calendarLimits = computed(() => {
 .gantt-view {
   display: flex;
   flex-direction: column;
-  /*height: 100vh;*/
   overflow: hidden;
 }
 
 .gantt-container {
-  display: flex;
-  flex-grow: 1;
-  overflow: hidden;
+  overflow-x: auto;
   padding: 10px;
 }
 
 .gantt-chart-content {
   display: flex;
-  flex-grow: 1;
-  overflow: hidden;
+  position: relative;
 }
 
-.gantt-scrollable-area {
+.gantt-chart {
   flex-grow: 1;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
+  overflow-x: auto;
 }
 </style>

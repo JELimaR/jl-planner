@@ -49,6 +49,7 @@
           <div v-if="currentView === 'ganttAndCriticalPaths'">
             <div class="page-break"></div>
             <GanttProject2 />
+            <!-- <GanttProject /> -->
             <div class="page-break"></div>
             <CriticalPaths />
           </div>

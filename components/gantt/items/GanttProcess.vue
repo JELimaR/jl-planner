@@ -10,6 +10,16 @@
       ry="3"
     />
     <path :d="bracketPath" :fill="color" stroke="none" />
+    <text
+      :x="x + width + 15"
+      :y="y + barHeight/2 + 4"
+      fill="#333"
+      font-size="10px"
+      font-family="monospace"
+      class="gantt-process-label"
+    >
+      {{ item.name }}
+    </text>
   </g>
 </template>
 

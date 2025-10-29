@@ -1,11 +1,23 @@
 <template>
-  <polygon
-    :points="points"
-    :fill="color"
-    stroke="#000"
-    stroke-width="1"
-    class="gantt-milestone"
-  />
+  <g class="gantt-milestone-group">
+    <polygon
+      :points="points"
+      :fill="color"
+      stroke="#000"
+      stroke-width="1"
+      class="gantt-milestone"
+    />
+    <text
+      :x="x + 15"
+      :y="y + 4"
+      fill="#333"
+      font-size="10px"
+      font-family="monospace"
+      class="gantt-milestone-label"
+    >
+      {{ item.name }}
+    </text>
+  </g>
 </template>
 
 <script setup lang="ts">

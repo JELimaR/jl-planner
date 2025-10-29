@@ -32,18 +32,19 @@ import { SCALE_OPTIONS, Scale, getCalendarLimitDates, getTimeUnitsBetween } from
 const props = defineProps<{
   projectStartDate: Date;
   projectEndDate: Date;
+  calendarStartDate: Date;
+  calendarEndDate: Date;
   scale: Scale;
 }>();
 
-// Datos del calendario
-const calendarData = computed(() => getCalendarLimitDates(props.projectStartDate, props.projectEndDate, props.scale));
-const totalUnits = computed(() => getTimeUnitsBetween(calendarData.value.calendarStartDate, calendarData.value.calendarEndDate, props.scale));
+// Usar las fechas del calendario pasadas como props (centralizadas)
+const totalUnits = computed(() => getTimeUnitsBetween(props.calendarStartDate, props.calendarEndDate, props.scale));
 
 // Propiedad computada para generar los ticks (días/semanas/meses)
 const ticks = computed(() => {
-  const generatedTicks: {label: string, width: number}[] = [];
+  const generatedTicks: {label: string, width: number, date: Date}[] = [];
   for (let i = 0; i < totalUnits.value; i++) {
-    const tickDate = getTickDate(calendarData.value.calendarStartDate, i, props.scale);
+    const tickDate = getTickDate(props.calendarStartDate, i, props.scale);
     let unitWidth = SCALE_OPTIONS[props.scale].pxPerDay;
     if (props.scale === 'week') unitWidth *= 7;
     if (props.scale === 'month') unitWidth *= getDaysInMonth(tickDate);
@@ -51,6 +52,7 @@ const ticks = computed(() => {
     generatedTicks.push({
       label: formatTickLabel(tickDate, props.scale),
       width: unitWidth,
+      date: tickDate,
     });
   }
   return generatedTicks;
@@ -62,12 +64,11 @@ const years = computed(() => {
   let currentYear = '';
   let currentYearWidth = 0;
   
-  for (const tick of ticks.value) {
-    const tickDate = getTickDate(calendarData.value.calendarStartDate, ticks.value.indexOf(tick), props.scale);
-    const year = tickDate.getFullYear().toString();
+  ticks.value.forEach((tick, index) => {
+    const year = tick.date.getFullYear().toString();
     
-    if (ticks.value.indexOf(tick) === 0 || year !== currentYear) {
-      if (ticks.value.indexOf(tick) > 0) {
+    if (index === 0 || year !== currentYear) {
+      if (index > 0) {
         generatedYears.push({ label: currentYear, width: currentYearWidth });
       }
       currentYear = year;
@@ -75,7 +76,7 @@ const years = computed(() => {
     } else {
       currentYearWidth += tick.width;
     }
-  }
+  });
   
   if (currentYear) {
     generatedYears.push({ label: currentYear, width: currentYearWidth });

@@ -1,14 +1,26 @@
 <template>
-  <rect
-    :x="x"
-    :y="y"
-    :width="width"
-    :height="height"
-    :fill="color"
-    rx="5"
-    ry="5"
-    class="gantt-task"
-  />
+  <g class="gantt-task-group">
+    <rect
+      :x="x"
+      :y="y"
+      :width="width"
+      :height="height"
+      :fill="color"
+      rx="5"
+      ry="5"
+      class="gantt-task"
+    />
+    <text
+      :x="x + width + 15"
+      :y="y + height/2 + 4"
+      fill="#333"
+      font-size="10px"
+      font-family="monospace"
+      class="gantt-task-label"
+    >
+      {{ item.name }}
+    </text>
+  </g>
 </template>
 
 <script setup lang="ts">
