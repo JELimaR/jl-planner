@@ -5,6 +5,7 @@ import { formatDateToDisplay, TDateString } from '../src/models/dateFunc'
 import { Scale } from '../components/gantt/ganttHelpers'
 import { SpendingMethod } from '../src/controllers/ProjectController'
 import { IProcessData } from '../src/models/Process' // ✅ Importación movida a la parte superior
+import { useToast } from '../composables/useToast'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
@@ -85,7 +86,7 @@ export const useProjectStore = defineStore('project', {
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           // ❌ Eliminado: this.isInitialized = true
-          console.log('✅ getTemplate - Datos del proyecto respuesta:', response.data)
+          console.log('✅ getTemplate - Datos del proyecto respuesta:', (response as { data: IProjectData }).data)
 
         }
       } catch (error) {
@@ -115,10 +116,12 @@ export const useProjectStore = defineStore('project', {
           this.projectData = (response as { data: IProjectData }).data
           // ❌ Eliminado: this.isInitialized = true
           console.log('✅ newProject - Nuevo proyecto creado:', this.projectData?.title)
+          this.showSuccess('Proyecto Creado', 'Se ha creado un nuevo proyecto exitosamente')
         }
       } catch (error) {
         console.error('❌ Error creating new project:', error)
         this.setError('Error al crear nuevo proyecto')
+        this.showError('Error al Crear', 'No se pudo crear el nuevo proyecto')
       } finally {
         this.setLoading(false)
       }
@@ -169,6 +172,7 @@ export const useProjectStore = defineStore('project', {
       } catch (error) {
         console.error('❌ Error changing item order:', error)
         this.setError('Error al reordenar el ítem')
+        this.showError('Error al Reordenar', 'No se pudo cambiar el orden del ítem')
       } finally {
         this.setLoading(false)
       }
@@ -190,10 +194,12 @@ export const useProjectStore = defineStore('project', {
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           console.log('✅ Fechas reseteadas:', this.projectData?.items.map(item => ({ id: item.id, startDate: item.startDate })))
+          this.showSuccess('Fechas Reseteadas', 'Las fechas manuales han sido reseteadas exitosamente')
         }
       } catch (error) {
         console.error('❌ Error resetting actual start dates:', error)
         this.setError('Error al resetear fechas')
+        this.showError('Error al Resetear', 'No se pudieron resetear las fechas manuales')
       } finally {
         this.setLoading(false)
       }
@@ -220,10 +226,12 @@ export const useProjectStore = defineStore('project', {
           this.projectData = (response as { data: IProjectData }).data
           // ❌ Eliminado: this.isInitialized = true
           console.log('✅ Proyecto cargado desde archivo:', this.projectData?.title)
+          this.showSuccess('Proyecto Cargado', `El proyecto "${this.projectData?.title}" se ha cargado correctamente`)
         }
       } catch (error) {
         console.error('❌ Error loading project from file:', error)
         this.setError('Error al cargar el archivo del proyecto')
+        this.showError('Error al Cargar', 'No se pudo cargar el proyecto desde el archivo')
       } finally {
         this.setLoading(false)
       }
@@ -249,10 +257,12 @@ export const useProjectStore = defineStore('project', {
           }
           // ❌ Eliminado: this.isInitialized = true
           console.log('✅ Título y subtítulo guardados con éxito.')
+          this.showSuccess('Título Guardado', 'El título del proyecto se ha actualizado correctamente')
         }
       } catch (error) {
         console.error('❌ Error saving title:', error)
         this.setError('Error al guardar el título')
+        this.showError('Error al Guardar', 'No se pudo guardar el título del proyecto')
       }
     },
 
@@ -272,10 +282,15 @@ export const useProjectStore = defineStore('project', {
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           console.log('✅ Fecha de inicio cambiada. Nueva fecha:', this.projectData?.startDate)
+          this.showSuccess('Fecha Actualizada', 'La fecha de inicio del proyecto se ha actualizado correctamente')
+        } else {
+          console.log('❌ Respuesta no exitosa al cambiar fecha')
+          this.showError('Error de Fecha', 'No se pudo actualizar la fecha de inicio del proyecto')
         }
       } catch (error) {
         console.error('❌ Error changing start date:', error)
         this.setError('Error al cambiar la fecha de inicio')
+        this.showError('Error de Conexión', 'No se pudo conectar con el servidor para cambiar la fecha')
       } finally {
         this.setLoading(false)
       }
@@ -297,10 +312,12 @@ export const useProjectStore = defineStore('project', {
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           console.log('✅ Ítem añadido. Total de ítems:', this.projectData?.items.length)
+          this.showSuccess('Ítem Añadido', 'El nuevo ítem se ha agregado al proyecto exitosamente')
         }
       } catch (error) {
         console.error('❌ Error adding new item:', error)
         this.setError('Error al agregar el ítem')
+        this.showError('Error al Agregar', 'No se pudo agregar el nuevo ítem al proyecto')
       } finally {
         this.setLoading(false)
       }
@@ -322,10 +339,12 @@ export const useProjectStore = defineStore('project', {
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           console.log('✅ Ítem editado:', this.projectData?.items.find(item => item.id === data.id)?.name)
+          this.showSuccess('Ítem Editado', 'Los cambios se han guardado correctamente')
         }
       } catch (error) {
         console.error('❌ Error editing item:', error)
         this.setError('Error al editar el ítem')
+        this.showError('Error al Editar', 'No se pudieron guardar los cambios del ítem')
       } finally {
         this.setLoading(false)
       }
@@ -349,17 +368,19 @@ export const useProjectStore = defineStore('project', {
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
           console.log('✅ Ítem eliminado. Total de ítems restantes:', this.projectData?.items.length)
+          this.showSuccess('Ítem Eliminado', 'El ítem se ha eliminado del proyecto exitosamente')
           this.itemToDelete = null
         }
       } catch (error) {
         console.error('❌ Error deleting item:', error)
         this.setError('Error al eliminar el ítem')
+        this.showError('Error al Eliminar', 'No se pudo eliminar el ítem del proyecto')
       } finally {
         this.setLoading(false)
       }
     },
 
-    saveProject() {
+    async saveProject() {
       if (!this.projectData) return
       console.log('🔄 Acción: saveProject - Descargando archivo JSON')
 
@@ -377,6 +398,7 @@ export const useProjectStore = defineStore('project', {
       link.click()
       URL.revokeObjectURL(url)
       console.log('✅ Archivo JSON preparado para descarga.')
+      this.showSuccess('Proyecto Guardado', 'El archivo del proyecto se ha descargado correctamente')
     },
 
     async downloadProject() {
@@ -413,23 +435,28 @@ export const useProjectStore = defineStore('project', {
     },
 
     async exportPDF() {
-      console.log('🔄 Acción: exportPDF - Solicitando exportación a PDF')
-      try {
-        const response = await $fetch('/api/project', {
-          method: 'POST',
-          body: {
-            action: 'exportPDF',
-            data: {}
-          }
-        })
+      this.showInfo('Función no disponible', 'La generación de PDF está temporalmente deshabilitada')
+    },
 
-        if ((response as { success: boolean }).success) {
-          console.log('✅ Exportación a PDF exitosa:', (response as { message: string }).message)
-        }
-      } catch (error) {
-        console.error('❌ Error exporting PDF:', error)
-        this.setError('Error al exportar PDF')
-      }
+    // Métodos de Toast
+    showSuccess(title: string, message: string) {
+      const { showSuccess } = useToast()
+      return showSuccess(title, message)
+    },
+
+    showError(title: string, message: string) {
+      const { showError } = useToast()
+      return showError(title, message)
+    },
+
+    showInfo(title: string, message: string) {
+      const { showInfo } = useToast()
+      return showInfo(title, message)
+    },
+
+    showWarning(title: string, message: string) {
+      const { showWarning } = useToast()
+      return showWarning(title, message)
     },
   }
 })

@@ -18,6 +18,9 @@
       <slot />
     </main>
 
+    <!-- Toast Container -->
+    <ToastContainer />
+
     <!-- Footer -->
     <footer class="footer bg-light mt-auto py-3">
       <div class="container text-center">

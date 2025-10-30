@@ -44,7 +44,7 @@
         class="btn btn-outline-primary btn-sm" 
         @click="projectStore.exportPDF()"
       >
-        🖨️ Imprimir Informe
+        📄 Generar PDF
       </button>
     </div>
 
@@ -56,14 +56,23 @@
 import { ref } from 'vue'
 import { TDateString } from '../../src/models/dateFunc';
 import { useProjectStore } from '../../stores/project'
+import { useToast } from '../../composables/useToast'
 import DateInput from '../DateInput.vue'
 
 const selectedDate = ref<TDateString | undefined>(undefined);
 
 const projectStore = useProjectStore()
-const changeStartDate = () => {
-  if (selectedDate.value)
-    projectStore.changeStartDate(selectedDate.value)
+const { showWarning } = useToast()
+
+const changeStartDate = async () => {
+  if (selectedDate.value) {
+    await projectStore.changeStartDate(selectedDate.value)
+    // Limpiar el input después de cambiar la fecha
+    selectedDate.value = undefined
+  } else {
+    // Mostrar toast de advertencia cuando no hay fecha seleccionada
+    showWarning('Fecha Requerida', 'Por favor selecciona una fecha antes de cambiar el inicio del proyecto')
+  }
 }
 
 </script>
