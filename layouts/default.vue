@@ -31,7 +31,16 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useAuthStore } from '../stores/auth'
+
 // Layout básico sin lógica específica de proyecto
+const authStore = useAuthStore()
+
+// Restaurar sesión al cargar la aplicación
+onMounted(() => {
+  authStore.restoreSession()
+})
 </script>
 
 <style scoped>
