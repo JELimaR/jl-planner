@@ -24,6 +24,13 @@
 
           <!-- Enlaces de usuario -->
           <ul class="navbar-nav">
+            <!-- Documentación -->
+            <li class="nav-item">
+              <NuxtLink to="/info" class="nav-link">
+                <i class="bi bi-book me-1"></i>Doc
+              </NuxtLink>
+            </li>
+
             <!-- Enlace de admin (solo para admins) -->
             <li class="nav-item" v-if="authStore.isAuthenticated && authStore.user?.role === 'admin'">
               <NuxtLink to="/admin" class="nav-link text-danger">

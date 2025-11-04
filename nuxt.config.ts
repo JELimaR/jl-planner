@@ -26,5 +26,15 @@ export default defineNuxtConfig({
   typescript: {
     strict: true
   },
-  ssr: false // Para mantener compatibilidad con el código existente que usa DOM
+  ssr: false, // Para mantener compatibilidad con el código existente que usa DOM
+  
+  // Configuración para servir archivos estáticos de documentación
+  nitro: {
+    publicAssets: [
+      {
+        baseURL: '/docs',
+        dir: 'docs'
+      }
+    ]
+  }
 })
