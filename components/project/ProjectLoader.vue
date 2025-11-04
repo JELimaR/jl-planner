@@ -3,6 +3,7 @@
     <button
       class="btn btn-outline-secondary btn-sm"
       @click="triggerFileInput"
+      style="border-top-left-radius: 0.375rem; border-bottom-left-radius: 0.375rem; border-top-right-radius: 0; border-bottom-right-radius: 0;"
     >
       <i class="bi bi-folder-open me-1"></i>Cargar Proyecto
     </button>

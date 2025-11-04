@@ -1,34 +1,24 @@
 <template>
-  <div class="gantt-chart-wrapper">
-    <div class="gantt-svg-container" :style="{ width: `${svgWidth}px` }">
-      <svg :width="svgWidth" :height="svgHeight" id="gantt-svg">
-        <defs>
-          <marker id="arrowhead" markerWidth="7" markerHeight="4" refX="7" refY="2" orient="auto"
-            markerUnits="strokeWidth">
-            <path d="M0,0 L10,3.5 L0,7 Z" fill="#333" />
-          </marker>
-        </defs>
+  <div class="gantt-svg-container" :style="{ width: `${svgWidth}px` }">
+    <svg :width="svgWidth" :height="svgHeight" id="gantt-svg">
+      <defs>
+        <marker id="arrowhead" markerWidth="7" markerHeight="4" refX="7" refY="2" orient="auto"
+          markerUnits="strokeWidth">
+          <path d="M0,0 L10,3.5 L0,7 Z" fill="#333" />
+        </marker>
+      </defs>
 
-        <g class="gantt-items-group">
-          <GanttItem 
-            v-for="(item, index) in flattenedItems" 
-            :key="item.id"
-            :item="item" 
-            :row-index="index"
-            :row-height="rowHeight"
-            :project-data="projectData"
-            :critical-path-index="criticalPathIndex"
-            :calendar-start-date="calendarLimits.calendarStartDate"
-            :scale="scale"
-          />
-        </g>
+      <g class="gantt-items-group">
+        <GanttItem v-for="(item, index) in flattenedItems" :key="item.id" :item="item" :row-index="index"
+          :row-height="rowHeight" :project-data="projectData" :critical-path-index="criticalPathIndex"
+          :calendar-start-date="calendarLimits.calendarStartDate" :scale="scale" />
+      </g>
 
-        <g class="gantt-arrows-group">
-          <GanttArrow v-for="(arrow, index) in arrows" :key="index" :source="arrow.source" :target="arrow.target"
-            :row-height="rowHeight" :is-critical="arrow.isCritical" />
-        </g>
-      </svg>
-    </div>
+      <g class="gantt-arrows-group">
+        <GanttArrow v-for="(arrow, index) in arrows" :key="index" :source="arrow.source" :target="arrow.target"
+          :row-height="rowHeight" :is-critical="arrow.isCritical" />
+      </g>
+    </svg>
   </div>
 </template>
 
@@ -109,10 +99,6 @@ const arrows = computed(() => {
 </script>
 
 <style scoped>
-.gantt-chart-wrapper {
-  /* El scroll ahora está en el contenedor padre */
-}
-
 .gantt-svg-container {
   min-width: 100%;
 }
