@@ -65,7 +65,20 @@ export default defineEventHandler(async (event) => {
           case 'loadFromFile': {
             const { jsonData } = data
             controller.loadProjectFromJSON(jsonData)
-            return { success: true, data: controller.getProjectData() }
+            
+            // Obtener los datos del proyecto y limpiar metadatos de BD
+            const projectData = controller.getProjectData()
+            
+            // Asignar ID temporal y limpiar metadatos para que se trate como proyecto nuevo
+            projectData.id = 'loaded'
+            delete projectData._id
+            delete projectData.ownerId
+            delete projectData.isPublic
+            delete projectData.isTemplate
+            delete projectData.createdAt
+            delete projectData.updatedAt
+            
+            return { success: true, data: projectData }
           }
 
           case 'saveTitle': {

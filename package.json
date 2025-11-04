@@ -36,6 +36,7 @@
     "@vue-final-modal/nuxt": "^1.0.3",
     "bcryptjs": "^3.0.2",
     "bootstrap": "^5.3.7",
+    "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",

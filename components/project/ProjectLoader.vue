@@ -4,7 +4,7 @@
       class="btn btn-outline-secondary btn-sm"
       @click="triggerFileInput"
     >
-      📂 Cargar Proyecto
+      <i class="bi bi-folder-open me-1"></i>Cargar Proyecto
     </button>
 
     <!-- Input oculto para cargar archivos -->
@@ -21,6 +21,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useProjectStore } from '../../stores/project';
+import { useToast } from '../../composables/useToast';
 import { navigateTo } from 'nuxt/app';
 
 const projectStore = useProjectStore();
@@ -38,11 +39,16 @@ const handleFileLoad = async (event: Event) => {
       // Llama a la acción del store para cargar el proyecto desde el archivo
       await projectStore.loadProjectFromFile(file);
 
-      // Una vez cargado, navega a la página del proyecto
-      navigateTo('/project');
+      // Mostrar toast de éxito
+      const { showSuccess } = useToast()
+      showSuccess('Proyecto Cargado', 'El archivo se ha cargado correctamente')
+      
+      // Navegar a /project/loaded para indicar que hay un proyecto cargado desde archivo
+      navigateTo('/project/loaded');
     } catch (error) {
       console.error('Error al cargar el proyecto:', error);
-      // Aquí puedes mostrar un mensaje de error al usuario, por ejemplo, con un toast o un modal.
+      const { showError } = useToast()
+      showError('Error al Cargar', 'No se pudo cargar el archivo del proyecto. Verifica que sea un archivo válido.')
     }
   }
 };

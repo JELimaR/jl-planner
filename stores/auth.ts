@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 interface User {
+  id?: string // ID del usuario (MongoDB _id)
   username: string
   name: string
   surname: string
@@ -51,6 +52,7 @@ export const useAuthStore = defineStore('auth', {
         }) as LoginResponse
 
         if (response.success && response.user && response.token) {
+          console.log('🔍 Usuario recibido del login:', response.user)
           this.user = response.user
           this.token = response.token
           this.isAuthenticated = true
@@ -112,6 +114,7 @@ export const useAuthStore = defineStore('auth', {
               this.user = JSON.parse(savedUser)
               this.tokenExpiration = expirationDate
               this.isAuthenticated = true
+              console.log('🔍 Sesión restaurada, usuario:', this.user)
             } else {
               // Token expirado, limpiar
               this.logout()

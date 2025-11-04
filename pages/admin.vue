@@ -114,7 +114,13 @@
                 <i class="bi bi-person-plus"></i>
                 Crear Usuario
               </button>
+
+
               <button class="btn btn-outline-info" disabled>
+                <i class="bi bi-graph-up"></i>
+                Ver Reportes (Próximamente)
+              </button>
+              <button class="btn btn-outline-secondary" disabled>
                 <i class="bi bi-graph-up"></i>
                 Ver Reportes (Próximamente)
               </button>
@@ -233,6 +239,142 @@
                         <span v-else class="badge bg-secondary" title="Administrador principal protegido">
                           Protegido
                         </span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Gestión de Proyectos -->
+      <div class="col-md-12 mt-4">
+        <div class="card">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title mb-0">
+                <i class="bi bi-folder"></i>
+                Gestión de Proyectos
+              </h5>
+              <button class="btn btn-primary btn-sm" @click="loadAllProjects">
+                <i class="bi bi-arrow-clockwise"></i>
+                Actualizar
+              </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="row g-2">
+              <div class="col-md-4">
+                <input v-model="projectFilters.search" type="text" class="form-control form-control-sm"
+                  placeholder="Buscar por título..." @input="filterProjects">
+              </div>
+              <div class="col-md-3">
+                <select v-model="projectFilters.owner" class="form-select form-select-sm" @change="filterProjects">
+                  <option value="">Todos los usuarios</option>
+                  <option v-for="owner in uniqueOwners" :key="owner.ownerId" :value="owner.ownerId">
+                    {{ owner.displayName }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <select v-model="projectFilters.status" class="form-select form-select-sm" @change="filterProjects">
+                  <option value="">Todos</option>
+                  <option value="public">Públicos</option>
+                  <option value="private">Privados</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <select v-model="projectFilters.type" class="form-select form-select-sm" @change="filterProjects">
+                  <option value="">Todos</option>
+                  <option value="project">Proyectos</option>
+                  <option value="template">Plantillas</option>
+                </select>
+              </div>
+              <div class="col-md-1">
+                <button class="btn btn-outline-secondary btn-sm w-100" @click="clearFilters">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div v-if="loadingProjects" class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando proyectos...</span>
+              </div>
+            </div>
+            <div v-else-if="filteredProjects.length === 0" class="text-center py-3 text-muted">
+              {{ allProjects.length === 0 ? 'No hay proyectos en el sistema' : 'No hay proyectos que coincidan con los filtros' }}
+            </div>
+            <div v-else class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Título</th>
+                    <th>Propietario</th>
+                    <th>Estado</th>
+                    <th>Tipo</th>
+                    <th>Actualizado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="project in filteredProjects" :key="project.id">
+                    <td>
+                      <strong>{{ project.title }}</strong>
+                      <br>
+                      <small class="text-muted" v-if="project.subtitle">{{ project.subtitle }}</small>
+                    </td>
+                    <td>
+                      <div v-if="project.owner">
+                        <strong>{{ project.owner.name }} {{ project.owner.surname }}</strong>
+                        <br>
+                        <small class="text-muted">({{ project.owner.username }})</small>
+                      </div>
+                      <div v-else>
+                        <code class="small text-muted">{{ project.ownerId }}</code>
+                        <br>
+                        <small class="text-muted">Usuario no encontrado</small>
+                      </div>
+                    </td>
+                    <td>
+                      <span :class="['badge', project.isPublic ? 'bg-success' : 'bg-secondary']">
+                        <i :class="project.isPublic ? 'bi bi-globe' : 'bi bi-lock'"></i>
+                        {{ project.isPublic ? 'Público' : 'Privado' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span v-if="project.isTemplate" class="badge bg-info">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Plantilla
+                      </span>
+                      <span v-else class="badge bg-primary">
+                        <i class="bi bi-folder"></i>
+                        Proyecto
+                      </span>
+                    </td>
+                    <td>
+                      <small class="text-muted">
+                        {{ formatDate(project.updatedAt) }}
+                      </small>
+                    </td>
+                    <td>
+                      <div class="d-flex gap-1">
+                        <button class="btn btn-outline-primary btn-sm" @click="openProject(project.id)"
+                          title="Ver proyecto">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        <button
+                          :class="['btn', 'btn-sm', project.isPublic ? 'btn-outline-secondary' : 'btn-outline-success']"
+                          @click="toggleProjectPublic(project)"
+                          :title="project.isPublic ? 'Marcar como privado' : 'Marcar como público'">
+                          <i :class="project.isPublic ? 'bi bi-lock' : 'bi bi-globe'"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" @click="deleteProjectAdmin(project)"
+                          title="Eliminar proyecto">
+                          <i class="bi bi-trash"></i>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -446,11 +588,12 @@ import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
 import { useToast } from '../composables/useToast'
 
-// Middleware de autenticación
-// @ts-ignore - definePageMeta es una función global de Nuxt
+// Middleware de administrador
 definePageMeta({
-  middleware: 'admin-auth'
+  middleware: 'admin'
 })
+
+// Middleware de autenticación eliminado (duplicado)
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -466,6 +609,19 @@ const stats = ref({
 const users = ref([] as any[])
 const loadingUsers = ref(false)
 const resettingUsers = ref(false)
+
+// Estado para gestión de proyectos
+const allProjects = ref([] as any[])
+const filteredProjects = ref([] as any[])
+const loadingProjects = ref(false)
+
+// Filtros para proyectos
+const projectFilters = ref({
+  search: '',
+  owner: '',
+  status: '',
+  type: ''
+})
 
 // Estado para crear usuario
 const showCreateUserModal = ref(false)
@@ -511,6 +667,7 @@ onMounted(() => {
   // Cargar datos iniciales
   loadStats()
   loadUsers()
+  loadAllProjects()
 })
 
 const loadStats = () => {
@@ -530,7 +687,8 @@ const handleLogout = () => {
 }
 
 const goToProject = () => {
-  router.push('/project')
+  // Navegar a /project/new para crear un nuevo proyecto
+  router.push('/project/new')
 }
 
 // Funciones para gestión de usuarios
@@ -613,7 +771,7 @@ const formatDate = (dateString: string) => {
 
 const formatTokenExpiration = () => {
   if (!authStore.tokenExpiration) return 'No disponible'
-  
+
   return authStore.tokenExpiration.toLocaleString('es-ES', {
     day: '2-digit',
     month: '2-digit',
@@ -754,6 +912,197 @@ const closeDeleteConfirmModal = () => {
   userToDelete.value = null
   deleteUserError.value = ''
 }
+
+// Funciones para gestión de proyectos
+const loadAllProjects = async () => {
+  loadingProjects.value = true
+  try {
+    const response = await $fetch('/api/admin/projects', {
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      }
+    }) as any
+
+    if (response.success) {
+      allProjects.value = response.projects
+      // Actualizar estadísticas
+      stats.value.totalProjects = response.projects.length
+      // Aplicar filtros
+      filterProjects()
+    }
+  } catch (error) {
+    console.error('Error cargando proyectos:', error)
+    const { showError } = useToast()
+    showError('Error', 'No se pudieron cargar los proyectos')
+  } finally {
+    loadingProjects.value = false
+  }
+}
+
+const toggleProjectPublic = async (project: any) => {
+  const newState = !project.isPublic
+  const action = newState ? 'público' : 'privado'
+
+  if (!confirm(`¿Marcar el proyecto "${project.title}" como ${action}?`)) {
+    return
+  }
+
+  try {
+    const response = await $fetch('/api/admin/toggle-project-public', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      },
+      body: {
+        projectId: project.id,
+        isPublic: newState
+      }
+    }) as any
+
+    if (response.success) {
+      // Actualizar el proyecto en la lista local
+      const projectIndex = allProjects.value.findIndex(p => p.id === project.id)
+      if (projectIndex !== -1) {
+        allProjects.value[projectIndex].isPublic = newState
+      }
+
+      // Actualizar filtros
+      filterProjects()
+
+      const { showSuccess } = useToast()
+      showSuccess('Proyecto Actualizado', response.message)
+    }
+  } catch (error) {
+    console.error('Error cambiando estado público:', error)
+    const { showError } = useToast()
+    showError('Error', 'No se pudo cambiar el estado del proyecto')
+  }
+}
+
+const openProject = async (projectId: string) => {
+  await router.push(`/project/${projectId}`)
+}
+
+// Computed para obtener propietarios únicos
+const uniqueOwners = computed(() => {
+  const owners = new Map()
+
+  allProjects.value.forEach(project => {
+    if (project.owner && !owners.has(project.ownerId)) {
+      owners.set(project.ownerId, {
+        ownerId: project.ownerId,
+        displayName: project.owner.displayName
+      })
+    }
+  })
+
+  return Array.from(owners.values()).sort((a, b) => a.displayName.localeCompare(b.displayName))
+})
+
+// Función para filtrar proyectos
+const filterProjects = () => {
+  let filtered = [...allProjects.value]
+
+  // Filtro por búsqueda de texto
+  if (projectFilters.value.search) {
+    const search = projectFilters.value.search.toLowerCase()
+    filtered = filtered.filter(project =>
+      project.title.toLowerCase().includes(search) ||
+      (project.subtitle && project.subtitle.toLowerCase().includes(search))
+    )
+  }
+
+  // Filtro por propietario
+  if (projectFilters.value.owner) {
+    filtered = filtered.filter(project => project.ownerId === projectFilters.value.owner)
+  }
+
+  // Filtro por estado (público/privado)
+  if (projectFilters.value.status) {
+    const isPublic = projectFilters.value.status === 'public'
+    filtered = filtered.filter(project => project.isPublic === isPublic)
+  }
+
+  // Filtro por tipo (proyecto/plantilla)
+  if (projectFilters.value.type) {
+    const isTemplate = projectFilters.value.type === 'template'
+    filtered = filtered.filter(project => project.isTemplate === isTemplate)
+  }
+
+  filteredProjects.value = filtered
+}
+
+// Función para limpiar filtros
+const clearFilters = () => {
+  projectFilters.value = {
+    search: '',
+    owner: '',
+    status: '',
+    type: ''
+  }
+  filterProjects()
+}
+
+// Función para eliminar proyecto (admin)
+const deleteProjectAdmin = async (project: any) => {
+  const { showSuccess, showError } = useToast()
+
+  if (!confirm(`¿Estás seguro de que quieres eliminar el proyecto "${project.title}"?\n\nEsta acción no se puede deshacer. El proyecto se descargará automáticamente antes de eliminarse.`)) {
+    return
+  }
+
+  try {
+    // Primero descargar el proyecto como respaldo
+    const downloadResponse = await $fetch(`/api/projects/${project.id}`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      }
+    })
+
+    if ((downloadResponse as any).project) {
+      // Crear y descargar el archivo
+      const dataStr = JSON.stringify((downloadResponse as any).project, null, 2)
+      const dataBlob = new Blob([dataStr], { type: 'application/json' })
+      const url = URL.createObjectURL(dataBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${project.title || 'proyecto'}.prj`
+      link.click()
+      URL.revokeObjectURL(url)
+    }
+
+    // Luego eliminar de la base de datos
+    const deleteResponse = await $fetch(`/api/projects/${project.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      }
+    })
+
+    if ((deleteResponse as any).success) {
+      showSuccess('Proyecto Eliminado', 'El proyecto ha sido eliminado correctamente. Se ha descargado una copia de respaldo.')
+
+      // Recargar la lista de proyectos
+      await loadAllProjects()
+    }
+  } catch (error: any) {
+    console.error('❌ Error eliminando proyecto:', error)
+
+    if (error.statusCode === 403) {
+      showError('Sin Permisos', 'No tienes permisos para eliminar este proyecto')
+    } else if (error.statusCode === 404) {
+      showError('No Encontrado', 'El proyecto no existe o ya fue eliminado')
+    } else {
+      showError('Error', 'No se pudo eliminar el proyecto')
+    }
+  }
+}
+
+
+
+
+
+
 </script>
 
 <style scoped>

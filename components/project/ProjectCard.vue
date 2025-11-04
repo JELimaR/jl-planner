@@ -31,10 +31,8 @@ const projectStore = useProjectStore();
 
 // Método para manejar el clic en el proyecto
 const handleTemplateClick = async () => {
-  // Cargar el proyecto basado en el ID de la plantilla
-  await projectStore.getTemplate(props.project.id);
-  // Navegar a la página del proyecto
-  navigateTo('/project');
+  // Navegar directamente usando el ID del proyecto/plantilla
+  navigateTo(`/project/${props.project.id}`);
 };
 </script>
 

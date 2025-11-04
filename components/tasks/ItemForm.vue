@@ -23,6 +23,8 @@
       <textarea class="form-control" id="addItemDetail" rows="3" v-model="formItemStore.form.detail"></textarea>
     </div>
 
+    <!-- SECCIÓN DE GASTOS COMENTADA TEMPORALMENTE -->
+    <!-- 
     <div v-if="formItemStore.form.type === 'process'">
       <div class="mb-3">
         <div class="form-check">
@@ -56,6 +58,7 @@
       <input type="number" class="form-control" id="addItemCost" v-model.number="formItemStore.form.cost" min="0"
         step="0.01" />
     </div>
+    -->
 
     <div id="addItemSpecificFields">
       <div v-if="formItemStore.form.type === 'task'">

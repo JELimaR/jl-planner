@@ -1,16 +1,18 @@
 import { defineStore } from 'pinia'
-import type { IProjectData, IProjectHeader } from '../src/models/Project'
+import type { IProjectData, IProjectDataDB, IProjectHeader } from '../src/models/Project'
 import type { IItemData } from '../src/models/Item'
 import { formatDateToDisplay, TDateString } from '../src/models/dateFunc'
 import { Scale } from '../components/gantt/ganttHelpers'
 import { SpendingMethod } from '../src/controllers/ProjectController'
 import { IProcessData } from '../src/models/Process' // ✅ Importación movida a la parte superior
 import { useToast } from '../composables/useToast'
+import { useAuthStore } from './auth'
+import { useUIStore } from './ui'
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
     templates: [] as IProjectHeader[],
-    projectData: null as IProjectData | null,
+    projectData: null as IProjectDataDB | null,
 
     currentScale: 'week' as Scale,
     itemToDelete: null as IItemData | null,
@@ -30,6 +32,65 @@ export const useProjectStore = defineStore('project', {
     projectEndDate: (state) => state.projectData?.endDate,
     projectItems: (state) => state.projectData?.items || [],
     criticalPaths: (state) => state.projectData?.criticalPaths || [],
+
+    // Nuevos getters para permisos de edición
+    canEdit(): boolean {
+      const authStore = useAuthStore()
+
+      // Si no hay proyecto cargado, no puede editar
+      if (!this.projectData) {
+        return false
+      }
+
+      // Si no hay usuario logueado, no puede editar (solo visualizar)
+      if (!authStore.isAuthenticated || !authStore.user) {
+        return false
+      }
+
+      const projectId = this.projectData.id
+      const user = authStore.user
+
+      // Admin puede editar cualquier proyecto
+      if (user.role === 'admin') {
+        return true
+      }
+
+      // Proyectos temporales (loaded, new, o con prefijo 'p') se pueden editar
+      if (projectId === 'loaded' || projectId === 'new' || projectId.startsWith('p')) {
+        return true
+      }
+
+      // Templates se pueden editar (para crear nuevos proyectos basados en ellos)
+      if (projectId.startsWith('t')) {
+        return true
+      }
+
+      // Para proyectos guardados en BD, verificar ownership
+      if (this.projectData.ownerId) {
+        // Obtener userId del token JWT (más confiable que user.id del frontend)
+        let userIdFromToken = null
+        if (authStore.token) {
+          try {
+            // Decodificar el token para obtener el userId
+            const tokenPayload = JSON.parse(atob(authStore.token.split('.')[1]))
+            userIdFromToken = tokenPayload.userId
+          } catch (error) {
+            console.error('Error decodificando token:', error)
+          }
+        }
+
+        // Verificar ownership usando el userId del token (más confiable)
+        const isOwner = this.projectData.ownerId === userIdFromToken
+        return isOwner
+      }
+
+      // Si no tiene ownerId, es un proyecto no guardado, permitir edición
+      return true
+    },
+
+    isReadOnly(): boolean {
+      return !this.canEdit
+    }
   },
 
   actions: {
@@ -72,7 +133,7 @@ export const useProjectStore = defineStore('project', {
       this.$reset()
       this.setLoading(true)
       this.setError(null)
-      console.log('🔍 Estado inicial del projectData:', this.projectData)
+
 
       try {
         const response = await $fetch('/api/project', {
@@ -154,7 +215,7 @@ export const useProjectStore = defineStore('project', {
     async changeOrder(itemId: number, sense: 'up' | 'down') {
       console.log('🔄 Acción: changeOrder - Cambiando orden del ítem:', itemId, sense)
       this.setLoading(true)
-      console.log('🔍 Estado actual del projectData:', this.projectData)
+
 
       try {
         const response = await $fetch('/api/project', {
@@ -166,7 +227,7 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          this.projectData = (response as { data: IProjectData }).data
+          this.updateProjectDataPreservingMetadata((response as { data: IProjectData }).data)
           console.log('✅ changeOrder - Orden actualizada. Nuevo proyecto:', this.projectData?.items.map(item => item.id))
         }
       } catch (error) {
@@ -192,7 +253,7 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          this.projectData = (response as { data: IProjectData }).data
+          this.updateProjectDataPreservingMetadata((response as { data: IProjectData }).data)
           console.log('✅ Fechas reseteadas:', this.projectData?.items.map(item => ({ id: item.id, startDate: item.startDate })))
           this.showSuccess('Fechas Reseteadas', 'Las fechas manuales han sido reseteadas exitosamente')
         }
@@ -224,7 +285,9 @@ export const useProjectStore = defineStore('project', {
 
         if ((response as { success: boolean }).success) {
           this.projectData = (response as { data: IProjectData }).data
-          // ❌ Eliminado: this.isInitialized = true
+
+
+
           console.log('✅ Proyecto cargado desde archivo:', this.projectData?.title)
           this.showSuccess('Proyecto Cargado', `El proyecto "${this.projectData?.title}" se ha cargado correctamente`)
         }
@@ -280,7 +343,7 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          this.projectData = (response as { data: IProjectData }).data
+          this.updateProjectDataPreservingMetadata((response as { data: IProjectData }).data)
           console.log('✅ Fecha de inicio cambiada. Nueva fecha:', this.projectData?.startDate)
           this.showSuccess('Fecha Actualizada', 'La fecha de inicio del proyecto se ha actualizado correctamente')
         } else {
@@ -310,7 +373,7 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          this.projectData = (response as { data: IProjectData }).data
+          this.updateProjectDataPreservingMetadata((response as { data: IProjectData }).data)
           console.log('✅ Ítem añadido. Total de ítems:', this.projectData?.items.length)
           this.showSuccess('Ítem Añadido', 'El nuevo ítem se ha agregado al proyecto exitosamente')
         }
@@ -337,7 +400,7 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          this.projectData = (response as { data: IProjectData }).data
+          this.updateProjectDataPreservingMetadata((response as { data: IProjectData }).data)
           console.log('✅ Ítem editado:', this.projectData?.items.find(item => item.id === data.id)?.name)
           this.showSuccess('Ítem Editado', 'Los cambios se han guardado correctamente')
         }
@@ -366,7 +429,7 @@ export const useProjectStore = defineStore('project', {
         })
 
         if ((response as { success: boolean }).success) {
-          this.projectData = (response as { data: IProjectData }).data
+          this.updateProjectDataPreservingMetadata((response as { data: IProjectData }).data)
           console.log('✅ Ítem eliminado. Total de ítems restantes:', this.projectData?.items.length)
           this.showSuccess('Ítem Eliminado', 'El ítem se ha eliminado del proyecto exitosamente')
           this.itemToDelete = null
@@ -401,44 +464,25 @@ export const useProjectStore = defineStore('project', {
       this.showSuccess('Proyecto Guardado', 'El archivo del proyecto se ha descargado correctamente')
     },
 
-    async downloadProject() {
-      console.log('🔄 Acción: downloadProject - Solicitando descarga desde el servidor')
-      try {
-        const response = await fetch('/api/project?type=download')
-        if (response.ok) {
-          const blob = await response.blob()
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `${this.projectTitle || 'proyecto'}.prj`
-          link.click()
-          URL.revokeObjectURL(url)
-          console.log('✅ Descarga desde servidor iniciada.')
-        } else {
-          console.error('❌ Error al descargar el proyecto desde el servidor. Respuesta no OK.')
-          this.setError('Error al descargar el proyecto')
-        }
-      } catch (error) {
-        console.error('❌ Error downloading project:', error)
-        this.setError('Error al descargar el proyecto')
-      }
-    },
+
 
     setupItemForEdit(item: IItemData | null) {
       this.itemToEdit = item;
-      console.log('🔍 Ítem configurado para editar:', item ? item.id : 'null')
+
     },
 
     setupItemForDelete(item: IItemData | null) {
       this.itemToDelete = item;
-      console.log('🔍 Ítem configurado para eliminar:', item ? item.id : 'null')
+
     },
 
     async exportPDF() {
       this.showInfo('Función no disponible', 'La generación de PDF está temporalmente deshabilitada')
     },
 
-    // Métodos de Toast
+
+
+    // Métodos de Toast helper
     showSuccess(title: string, message: string) {
       const { showSuccess } = useToast()
       return showSuccess(title, message)
@@ -449,15 +493,314 @@ export const useProjectStore = defineStore('project', {
       return showError(title, message)
     },
 
-    showInfo(title: string, message: string) {
-      const { showInfo } = useToast()
-      return showInfo(title, message)
-    },
-
     showWarning(title: string, message: string) {
       const { showWarning } = useToast()
       return showWarning(title, message)
     },
+
+    // Helper para preservar metadatos al actualizar projectData
+    updateProjectDataPreservingMetadata(newData: IProjectData) {
+      if (!this.projectData) {
+        this.projectData = newData
+        return
+      }
+
+      // Si el proyecto actual tiene un ID de MongoDB, preservar metadatos
+      const isCurrentProjectFromDB = /^[0-9a-fA-F]{24}$/.test(this.projectData.id)
+
+      if (isCurrentProjectFromDB) {
+        // Preservar metadatos de BD
+        const metadata = {
+          id: this.projectData.id, // Mantener el ID de MongoDB
+          _id: this.projectData._id,
+          ownerId: this.projectData.ownerId,
+          isPublic: this.projectData.isPublic,
+          isTemplate: this.projectData.isTemplate,
+          createdAt: this.projectData.createdAt,
+          updatedAt: this.projectData.updatedAt
+        }
+
+        // Actualizar con nuevos datos
+        this.projectData = { ...newData, ...metadata }
+      } else {
+        // Proyecto temporal, actualizar normalmente
+        this.projectData = newData
+      }
+    },
+
+    // Nuevos métodos para el sistema de base de datos
+    async loadProjectById(projectId: string) {
+      this.setLoading(true)
+      this.setError(null)
+
+      const authStore = useAuthStore()
+
+      try {
+        const headers: Record<string, string> = {}
+
+        // Agregar token si está disponible (para proyectos privados)
+        if (authStore.isAuthenticated && authStore.token) {
+          headers['Authorization'] = `Bearer ${authStore.token}`
+        }
+
+        const response = await $fetch(`/api/projects/${projectId}`, {
+          headers
+        })
+
+        if ((response as any).project) {
+          this.projectData = (response as any).project
+          console.log('✅ Proyecto cargado desde BD:', this.projectData?.title)
+
+          // 🔧 SINCRONIZAR con el ProjectController del servidor
+          // Preservar metadatos importantes antes de sincronizar
+          const originalMetadata = {
+            _id: this.projectData._id,
+            ownerId: this.projectData.ownerId,
+            isPublic: this.projectData.isPublic,
+            isTemplate: this.projectData.isTemplate,
+            createdAt: this.projectData.createdAt,
+            updatedAt: this.projectData.updatedAt
+          }
+
+          try {
+            await $fetch('/api/project', {
+              method: 'POST',
+              body: {
+                action: 'loadFromFile',
+                data: { jsonData: this.projectData }
+              }
+            })
+            console.log('✅ Proyecto sincronizado con el servidor')
+
+            // Restaurar metadatos después de la sincronización
+            Object.assign(this.projectData, originalMetadata)
+          } catch (syncError) {
+            console.error('⚠️ Error sincronizando con servidor:', syncError)
+            // No lanzar error, el proyecto se cargó correctamente en el frontend
+          }
+
+          this.showSuccess('Proyecto Cargado', `Proyecto "${this.projectData?.title}" cargado exitosamente`)
+        } else {
+          throw new Error('Proyecto no encontrado')
+        }
+      } catch (error: any) {
+        console.error('❌ Error loading project from DB:', error)
+
+        if (error.statusCode === 401) {
+          this.showError('No Autorizado', 'Este proyecto requiere autenticación')
+        } else if (error.statusCode === 404) {
+          this.showError('No Encontrado', 'El proyecto no existe o no tienes acceso')
+        }
+
+        throw error // Re-lanzar para que el componente pueda manejarlo
+      } finally {
+        this.setLoading(false)
+      }
+    },
+
+    async createTemporaryProject(projectId: string) {
+      console.log('🔄 Creando proyecto temporal con ID:', projectId)
+      this.setLoading(true)
+      this.setError(null)
+
+      try {
+        // Crear un proyecto temporal usando la API existente
+        const response = await $fetch('/api/project', {
+          method: 'POST',
+          body: {
+            action: 'newProject',
+            data: { startDate: formatDateToDisplay(new Date()) }
+          }
+        })
+
+        if ((response as { success: boolean }).success) {
+          this.projectData = (response as { data: IProjectData }).data
+
+          // Cambiar el ID al solicitado
+          if (this.projectData) {
+            this.projectData.id = projectId
+          }
+
+          console.log('✅ Proyecto temporal creado:', this.projectData?.title)
+          this.showInfo(
+            'Proyecto Temporal',
+            'Se ha creado un borrador temporal. Guárdalo para que aparezca en tu lista de proyectos.'
+          )
+        }
+      } catch (error) {
+        console.error('❌ Error creating temporary project:', error)
+        this.setError('Error al crear proyecto temporal')
+        this.showError('Error', 'No se pudo crear el proyecto temporal')
+      } finally {
+        this.setLoading(false)
+      }
+    },
+
+    async saveToDatabase(isPublic = false, isTemplate = false) {
+      if (!this.projectData) {
+        this.showError('Error', 'No hay proyecto para guardar')
+        return false
+      }
+
+      const authStore = useAuthStore()
+      if (!authStore.isAuthenticated || !authStore.token) {
+        this.showError('No Autorizado', 'Debes iniciar sesión para guardar proyectos')
+        return false
+      }
+
+      // Detectar si es un proyecto existente basado en el ID
+      const isMongoId = /^[0-9a-fA-F]{24}$/.test(this.projectData.id)
+      const isExistingProject = isMongoId && this.projectData.ownerId
+
+
+
+      if (isExistingProject) {
+        // Verificar si el usuario es el propietario o admin
+        // Usar el mismo método que canEdit para obtener userId del token
+        let userIdFromToken = null
+        if (authStore.token) {
+          try {
+            const tokenPayload = JSON.parse(atob(authStore.token.split('.')[1]))
+            userIdFromToken = tokenPayload.userId
+          } catch (error) {
+            console.error('Error decodificando token:', error)
+          }
+        }
+
+        const isOwner = this.projectData.ownerId === userIdFromToken
+        const isAdmin = authStore.user?.role === 'admin'
+
+        let confirmMessage = ''
+        if (isOwner) {
+          confirmMessage = `¿Estás seguro de que quieres actualizar el proyecto "${this.projectData.title}"?\n\nEsta acción sobrescribirá la versión guardada en la base de datos con los cambios actuales.`
+        } else if (isAdmin) {
+          confirmMessage = `⚠️ ADMINISTRADOR: Estás modificando un proyecto que no es tuyo.\n\nProyecto: "${this.projectData.title}"\nPropietario: ${this.projectData.ownerId}\n\n¿Estás seguro de que quieres actualizar este proyecto como administrador?`
+        } else {
+          this.showError('Sin Permisos', 'No tienes permisos para modificar este proyecto')
+          return false
+        }
+        // Usar modal de confirmación en lugar de confirm()
+        return new Promise((resolve) => {
+          const { openConfirmModal } = useUIStore()
+
+          openConfirmModal({
+            title: isAdmin && !isOwner ? 'Confirmar Modificación como Administrador' : 'Confirmar Actualización',
+            message: confirmMessage,
+            type: isAdmin && !isOwner ? 'warning' : 'info',
+            confirmText: 'Actualizar Proyecto',
+            onConfirm: () => {
+              this.performSaveToDatabase(isPublic, isTemplate, isExistingProject).then(resolve)
+            }
+          })
+        })
+      } else {
+        // Proyecto nuevo, proceder directamente
+        return this.performSaveToDatabase(isPublic, isTemplate, isExistingProject)
+      }
+    },
+
+    async performSaveToDatabase(isPublic = false, isTemplate = false, isExistingProject = false) {
+      console.log('🔄 Guardando proyecto:', this.projectData?.title)
+
+      const authStore = useAuthStore()
+      this.setLoading(true)
+      this.setError(null)
+
+      try {
+        // Excluir criticalPaths al guardar (se calculan dinámicamente)
+        const { criticalPaths, ...projectDataToSave } = this.projectData
+
+
+        const response = await $fetch('/api/projects', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authStore.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: {
+            projectData: projectDataToSave,
+            isPublic,
+            isTemplate
+          }
+        })
+
+        if ((response as any).success) {
+          const savedProject = (response as any).project
+          console.log('✅ Proyecto guardado:', savedProject.id)
+
+          // Actualizar el projectData con el ID de MongoDB si es un proyecto nuevo
+          if (savedProject.id && !isExistingProject) {
+            this.projectData.id = savedProject.id
+            this.projectData._id = savedProject.id
+            this.projectData.ownerId = savedProject.ownerId
+          }
+
+          const actionText = isExistingProject ? 'actualizado' : 'guardado'
+          this.showSuccess(
+            `Proyecto ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}`,
+            (response as any).message || `El proyecto se ha ${actionText} correctamente en la base de datos`
+          )
+          return savedProject
+        } else {
+          throw new Error('Respuesta no exitosa del servidor')
+        }
+      } catch (error: any) {
+        console.error('❌ Error saving project to database:', error)
+
+        if (error.statusCode === 401) {
+          this.showError('No Autorizado', 'Tu sesión ha expirado. Inicia sesión nuevamente')
+          authStore.logout()
+        } else if (error.statusCode === 403) {
+          this.showError('Sin Permisos', 'No tienes permisos para modificar este proyecto')
+        } else {
+          this.showError('Error al Guardar', 'No se pudo guardar el proyecto en la base de datos')
+        }
+        return false
+      } finally {
+        this.setLoading(false)
+      }
+    },
+
+    async getUserProjects() {
+      console.log('🔄 Obteniendo proyectos del usuario')
+      this.setLoading(true)
+      this.setError(null)
+
+      const authStore = useAuthStore()
+      if (!authStore.isAuthenticated || !authStore.token) {
+        this.showError('No Autorizado', 'Debes iniciar sesión para ver tus proyectos')
+        return []
+      }
+
+      try {
+        const response = await $fetch('/api/projects', {
+          headers: {
+            'Authorization': `Bearer ${authStore.token}`
+          }
+        })
+
+        if ((response as any).success) {
+          console.log('✅ Proyectos obtenidos:', (response as any).projects.length)
+          return (response as any).projects
+        } else {
+          throw new Error('Respuesta no exitosa del servidor')
+        }
+      } catch (error: any) {
+        console.error('❌ Error getting user projects:', error)
+
+        if (error.statusCode === 401) {
+          this.showError('No Autorizado', 'Tu sesión ha expirado. Inicia sesión nuevamente')
+          authStore.logout()
+        } else {
+          this.showError('Error', 'No se pudieron obtener los proyectos')
+        }
+        return []
+      } finally {
+        this.setLoading(false)
+      }
+    },
+
+
   }
 })
 

@@ -8,7 +8,7 @@ import { Task } from './Task';
 import { itemDataToItem } from '../controllers/dataHelpers';
 
 export interface IProjectHeader {
-  id: string;
+  id: string; // Será el _id de MongoDB o "new"/"loaded" para temporales
   title: string;
   subtitle: string;
   startDate: TDateString;
@@ -18,7 +18,17 @@ export interface IProjectHeader {
 export interface IProjectData extends IProjectHeader {
   items: IItemData[];
   criticalPaths: ICriticalPathData[];
+  // Campos de base de datos integrados
+  _id?: string; // MongoDB ObjectId como string
+  ownerId?: string;
+  isPublic?: boolean;
+  isTemplate?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
+
+// Alias para compatibilidad (ahora IProjectData incluye todo)
+export interface IProjectDataDB extends IProjectData {}
 
 export class Project {
   private id: string;

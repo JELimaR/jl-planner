@@ -4,11 +4,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: [
     'bootstrap/dist/css/bootstrap.min.css',
+    'bootstrap-icons/font/bootstrap-icons.css',
     '~/assets/css/style.css',
     'vue-final-modal/style.css',
   ],
   plugins: [
-    '~/plugins/bootstrap.client.ts'
+    '~/plugins/bootstrap.client.ts',
+    '~/plugins/api.client.ts'
   ],
   modules: [
     '@pinia/nuxt',

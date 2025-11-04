@@ -37,14 +37,14 @@
                   @click="changeOrder(item, 'up')"
                   :disabled="!canMoveUp(item)"
                 >
-                  ⬆️
+                  <i class="bi bi-arrow-up"></i>
                 </button>
                 <button
                   class="btn btn-sm btn-light"
                   @click="changeOrder(item, 'down')"
                   :disabled="!canMoveDown(item)"
                 >
-                  ⬇️
+                  <i class="bi bi-arrow-down"></i>
                 </button>
                 <!-- <button
                   class="btn btn-sm btn-primary"
@@ -63,7 +63,7 @@
 
     <div class="my-3">
       <button class="btn btn-success" @click="addItem()">
-        ➕ Agregar Item
+        <i class="bi bi-plus-circle me-1"></i>Agregar Item
       </button>
     </div>
   </div>

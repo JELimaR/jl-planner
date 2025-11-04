@@ -71,6 +71,7 @@ userSchema.methods.comparePassword = async function(candidatePassword: string): 
 // Método para obtener datos públicos (sin contraseña)
 userSchema.methods.toPublicJSON = function() {
   return {
+    id: this._id.toString(),
     username: this.username,
     name: this.name,
     surname: this.surname,

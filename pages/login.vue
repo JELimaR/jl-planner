@@ -3,8 +3,8 @@
     <div class="login-card">
       <div class="login-header">
         <h2 class="text-center mb-4">
-          <i class="bi bi-shield-lock"></i>
-          Acceso Administrativo
+          <i class="bi bi-box-arrow-in-right"></i>
+          Iniciar Sesión
         </h2>
       </div>
 
@@ -39,7 +39,7 @@
       <div class="login-footer mt-4 text-center">
         <small class="text-muted">
           <i class="bi bi-info-circle"></i>
-          Acceso restringido solo para administradores
+          Ingresa con tu usuario y contraseña
         </small>
       </div>
     </div>
@@ -68,8 +68,13 @@ const isLoading = ref(false)
 // Verificar si ya está autenticado
 onMounted(() => {
   authStore.restoreSession()
-  if (authStore.isAuthenticated && authStore.isAdmin) {
-    router.push('/admin')
+  if (authStore.isAuthenticated) {
+    // Redirigir según el rol del usuario
+    if (authStore.isAdmin) {
+      router.push('/admin')
+    } else {
+      router.push('/projects')
+    }
   }
 })
 
@@ -81,11 +86,11 @@ const handleLogin = async () => {
     const result = await authStore.login(username.value, password.value)
 
     if (result.success) {
+      // Redirigir según el rol del usuario
       if (authStore.isAdmin) {
         await router.push('/admin')
       } else {
-        error.value = 'Acceso denegado. Solo administradores pueden acceder.'
-        authStore.logout()
+        await router.push('/projects')
       }
     } else {
       error.value = result.error || 'Error de autenticación'
