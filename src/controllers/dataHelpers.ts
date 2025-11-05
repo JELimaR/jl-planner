@@ -34,7 +34,11 @@ export function itemDataToItem(id: number, data: IItemData, project: Project): I
         // Manejar actualStartDate si está presente
         if (taskData.actualStartDate) {
           item.setActualStartDate(displayStringToDate(taskData.actualStartDate));
-        }        
+        }
+        // Manejar delay si está presente - se hace despues porque tendrá prioridad
+        if (taskData.delay) {
+          item.setActualDelay(taskData.delay);
+        }      
         // Manejar manualDuration si está presente
         if (taskData.manualDuration !== undefined) {
           (item as Task).setManualDuration(taskData.manualDuration);
@@ -55,6 +59,10 @@ export function itemDataToItem(id: number, data: IItemData, project: Project): I
         if (milestoneData.actualStartDate) {
           item.setActualStartDate(displayStringToDate(milestoneData.actualStartDate));
         }
+        // Manejar delay si está presente - se hace despues porque tendrá prioridad
+        if (milestoneData.delay) {
+          item.setActualDelay(milestoneData.delay);
+        }      
         break;
       }
       

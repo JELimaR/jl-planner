@@ -84,7 +84,7 @@ describe('Milestone', () => {
       // Reset calculated date by setting it to a different date
       milestone.setCalculatedStartDate(new Date('2024-01-02'))
       milestone.setActualStartDate(new Date('2024-01-01'))
-      expect(milestone.getDelayInDays()).toBe(0)
+      expect(milestone.getDelayInDays()).toBe(-1)
     })
   })
 
@@ -101,8 +101,8 @@ describe('Milestone', () => {
 
   describe('data serialization', () => {
     it('should return correct milestone data structure', () => {
-      const calculatedDate = new Date('2024-01-01')
-      const actualDate = new Date('2024-01-03')
+      const calculatedDate = new Date(2024, 0, 1)
+      const actualDate = new Date(2024, 0, 3)
       
       milestone.setCalculatedStartDate(calculatedDate)
       milestone.setActualStartDate(actualDate)

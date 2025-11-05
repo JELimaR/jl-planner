@@ -8,6 +8,7 @@ export interface ITaskData extends IItemData {
   duration: number;
   actualStartDate?: TDateString;
   calculatedStartDate?: TDateString;
+  delay?: number;
   manualDuration?: number;
 }
 
@@ -54,10 +55,11 @@ export class Task extends Item {
     }
   }
 
-  private calculatedStartDate?: Date;
-  private actualStartDate?: Date;
-  private calculatedDuration: number;
-  private manualDuration?: number;
+  private _calculatedStartDate?: Date;
+  private _actualStartDate?: Date;
+  private _delay?: number;
+  private _calculatedDuration: number;
+  private manualDuration?: number; // Borrar?
   _type: 'task' = 'task';
 
   constructor(
@@ -69,7 +71,7 @@ export class Task extends Item {
     cost: number = 0 // Agregar cost al constructor
   ) {
     super(id, 'task', name, parent, detail, cost);
-    this.calculatedDuration = duration;
+    this._calculatedDuration = duration;
   }
 
 
@@ -103,7 +105,7 @@ export class Task extends Item {
 
   /** Fecha mostrada (actual o planificada) */
   getStartDate(): Date | undefined {
-    return this.actualStartDate || this.calculatedStartDate;
+    return this._actualStartDate || this._calculatedStartDate;
   }
 
   /** Fecha mostrada de fin (calculada a partir de duración y start) */
@@ -117,11 +119,11 @@ export class Task extends Item {
 
   /** Duración efectiva, prioriza la manual si está definida */
   get duration(): number {
-    return this.manualDuration ?? this.calculatedDuration;
+    return this.manualDuration ?? this._calculatedDuration;
   }
 
   setDuration(days: number): void {
-    this.calculatedDuration = days > 0 ? days : 1;
+    this._calculatedDuration = days > 0 ? days : 1;
   }
 
   /** Establece una duración manual (por ejemplo si se modifica en campo) */
@@ -131,37 +133,47 @@ export class Task extends Item {
 
   /** Establece una fecha real/actual de inicio (por ejemplo si hay un atraso) */
   setActualStartDate(date: Date | undefined): void {
-    this.actualStartDate = date;
+    this._actualStartDate = date;
+  }
+
+   /** Establece el retardo real (manual) */
+   setActualDelay(D: number): void {
+    this._delay = Math.round(D)
+    if (this._calculatedStartDate) {
+      const actualStartDate = new Date(this._calculatedStartDate.getTime() + DAY_MS * this._delay)
+      this.setActualStartDate(actualStartDate)
+    }
+    throw new Error('Method not implemented.');
   }
 
   /** Establece la fecha calculada automáticamente por el sistema */
   setCalculatedStartDate(date: Date | undefined): void {
-    this.calculatedStartDate = date;
+    this._calculatedStartDate = date;
   }
 
   /** Devuelve la fecha calculada por el sistema */
   getCalculatedStartDate(): Date | undefined {
-    return this.calculatedStartDate;
+    return this._calculatedStartDate;
   }
 
   /** Devuelve la fecha de fin calculada automáticamente */
   getCalculatedEndDate(): Date | undefined {
-    if (!this.calculatedStartDate) return undefined;
-    const end = new Date(this.calculatedStartDate);
+    if (!this._calculatedStartDate) return undefined;
+    const end = new Date(this._calculatedStartDate);
     end.setDate(end.getDate() + this.duration);
     return end;
   }
 
   /** Devuelve la diferencia entre el inicio real y el calculado */
   getDelayInDays(): number {
-    if (!this.actualStartDate || !this.calculatedStartDate) return 0;
+    if (!this._actualStartDate || !this._calculatedStartDate) return 0;
     const diff =
-      this.actualStartDate.getTime() - this.calculatedStartDate.getTime();
+      this._actualStartDate.getTime() - this._calculatedStartDate.getTime();
     return Math.ceil(diff / DAY_MS);
   }
 
   hasActualStartDate(): boolean {
-    return !!this.actualStartDate;
+    return !!this._actualStartDate;
   }
 
   /** Implementación específica para Task */
@@ -171,9 +183,9 @@ export class Task extends Item {
       type: 'task',
       duration: this.duration,
       manualDuration: this.manualDuration,
-
-      actualStartDate: this.actualStartDate ? formatDateToDisplay(this.actualStartDate) : undefined,
-      calculatedStartDate: this.calculatedStartDate ? formatDateToDisplay(this.calculatedStartDate) : undefined,
+      delay: this._delay,
+      actualStartDate: this._actualStartDate ? formatDateToDisplay(this._actualStartDate) : undefined,
+      calculatedStartDate: this._calculatedStartDate ? formatDateToDisplay(this._calculatedStartDate) : undefined,
     };
   }
 }

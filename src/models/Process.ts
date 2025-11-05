@@ -26,22 +26,22 @@ export class Process extends Item {
     const cost = this.getTotalCost();
     const startDate = this.getStartDate();
     const endDate = this.getEndDate();
-  
+
     // Si no hay fechas definidas, no se puede calcular el costo.
     if (!startDate || !endDate) {
       throw new Error('Start date and end date must be defined to calculate daily cost');
     }
-  
+
     // Si la fecha está fuera del rango del proceso, el costo es 0.
     // Usamos el getTime() para comparar las fechas correctamente, ignorando la hora.
     const isDateInRange = date.getTime() >= startDate.getTime() && date.getTime() <= endDate.getTime();
     if (!isDateInRange) {
       return 0;
     }
-  
+
     // Calcular la duración en días, asegurando que no sea cero.
     const durationInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / DAY_MS);
-  
+
     switch (method) {
       case 'finished':
         // Se paga el costo total solo si la fecha actual es el día de finalización.
@@ -49,23 +49,23 @@ export class Process extends Item {
           return cost;
         }
         return 0;
-  
+
       case 'started':
         // Se paga el costo total solo si la fecha actual es el día de inicio.
         if (date.getTime() === startDate.getTime()) {
           return cost;
         }
         return 0;
-  
+
       case 'linear':
         // Si la duración es 0 o 1 día, se paga todo el costo en la fecha de inicio.
         if (durationInDays <= 1) {
           return date.getTime() === startDate.getTime() ? cost : 0;
         }
-        
+
         // Se divide el costo total de manera uniforme a lo largo de la duración.
         return cost / durationInDays;
-  
+
       default:
         throw new Error('Invalid spending method');
     }
@@ -87,9 +87,9 @@ export class Process extends Item {
   _type: 'process' = 'process';
 
   constructor(
-    id: number, 
-    name: string, 
-    parent?: Process, 
+    id: number,
+    name: string,
+    parent?: Process,
     detail?: string,
     cost: number = 0,
     useManualCost: boolean = false // Agregar parámetro para usar costo manual
@@ -234,6 +234,13 @@ export class Process extends Item {
     console.log(this);
     throw new Error('No se puede asignar una fecha manual a un proceso.');
   }
+
+  /** Establece el retardo real (manual) */
+  setActualDelay(D: number): void {
+    console.log(this)
+    throw new Error('No se puede asignar un retraso manual a un proceso.');
+  }
+
 
   setCalculatedStartDate(_: Date | undefined): void {
     console.log(this);

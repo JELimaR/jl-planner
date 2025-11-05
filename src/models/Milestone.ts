@@ -8,9 +8,11 @@ export interface IMilestoneData extends IItemData {
   type: 'milestone';
   calculatedStartDate?: TDateString;
   actualStartDate?: TDateString;
+  delay?: number;
 }
 
 export class Milestone extends Item {
+  
   getDailyCost(date: Date, method: SpendingMethod): number {
     const cost = this.getTotalCost();
     const startDate = this.getStartDate();
@@ -27,6 +29,7 @@ export class Milestone extends Item {
   }
   private _calculatedStartDate?: Date;
   private _actualStartDate?: Date;
+  private _delay?: number;
   _type: 'milestone' = 'milestone';
 
   constructor(
@@ -69,6 +72,16 @@ export class Milestone extends Item {
     this._actualStartDate = date;
   }
 
+  /** Establece el retardo real (manual) */
+  setActualDelay(D: number): void {
+    this._delay = Math.round(D)
+    if (this._calculatedStartDate) {
+      const actualStartDate = new Date(this._calculatedStartDate.getTime() + DAY_MS * this._delay)
+      this.setActualStartDate(actualStartDate)
+    }
+    throw new Error('Method not implemented.');
+  }
+
   /** Establece la fecha calculada automáticamente */
   setCalculatedStartDate(date: Date): void {
     this._calculatedStartDate = date;
@@ -97,6 +110,7 @@ export class Milestone extends Item {
     return {
       ...super.data,
       type: 'milestone',
+      delay: this._delay,
       actualStartDate: this._actualStartDate ? formatDateToDisplay(this._actualStartDate) : undefined,
       calculatedStartDate: this._calculatedStartDate ? formatDateToDisplay(this._calculatedStartDate) : undefined,
     };

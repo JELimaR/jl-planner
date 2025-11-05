@@ -241,6 +241,7 @@ export class Project {
    * @returns Un array de caminos críticos, donde cada camino es un array de Items.
    */
   getCriticalPaths(): CriticalPath[] {
+    this.calculateItemDates()
     this.allItemsMap.forEach((item) => item.resetCritical());
     // Paso 1: construir grafo de dependencias con solo tareas e hitos
     const graph = DependencyGraph.fromProject(this);

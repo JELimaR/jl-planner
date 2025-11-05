@@ -270,7 +270,7 @@ describe('Project', () => {
       const criticalPaths = project.getCriticalPaths()
       expect(criticalPaths).toBeDefined()
       expect(Array.isArray(criticalPaths)).toBe(true)
-      expect(criticalPaths.length).toBeGreaterThanOrEqual(2) // Should have at least 2 critical paths
+      expect(criticalPaths.length).toBe(2) // Should have at least 2 critical paths
       
       // Check that items in critical paths are marked as critical
       criticalPaths.forEach(path => {

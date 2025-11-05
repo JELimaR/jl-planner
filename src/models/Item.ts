@@ -142,6 +142,7 @@ export abstract class Item {
 
   /** */
   abstract setActualStartDate(date: Date | undefined): void;
+  abstract setActualDelay(D: number): void;
 
   /** */
   abstract hasActualStartDate(): boolean;
