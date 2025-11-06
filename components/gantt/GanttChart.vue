@@ -81,7 +81,7 @@ const arrows = computed(() => {
           const sourcePos = itemPositions.get(pred.id);
           const targetPos = itemPositions.get(item.id);
 
-          if (sourcePos && targetPos) {
+          if (sourcePos && targetPos && pred.type != 'process' && item.type != 'process') {
             const isCrit = isCriticalArrow(projectData.value, pred, item, uiStore.criticalPathIndex);
             arrowsData.push({
               source: { x: sourcePos.endX, y: sourcePos.y },
