@@ -20,16 +20,11 @@
               </a>
             </li>
             <li class="nav-item">
-              <a 
-                class="nav-link" 
-                :class="{ 
-                  active: currentView === 'spending',
-                  disabled: isSpendingDisabled
-                }"
-                @click.prevent="!isSpendingDisabled && (currentView = 'spending')" 
-                href="#"
-                :style="{ cursor: isSpendingDisabled ? 'not-allowed' : 'pointer', opacity: isSpendingDisabled ? 0.5 : 1 }"
-              >
+              <a class="nav-link" :class="{
+                active: currentView === 'spending',
+                disabled: isSpendingDisabled
+              }" @click.prevent="!isSpendingDisabled && (currentView = 'spending')" href="#"
+                :style="{ cursor: isSpendingDisabled ? 'not-allowed' : 'pointer', opacity: isSpendingDisabled ? 0.5 : 1 }">
                 Gastos
               </a>
             </li>
@@ -42,9 +37,7 @@
           </div>
 
           <div v-if="currentView === 'ganttAndCriticalPaths'">
-            <div class="page-break"></div>
             <GanttProject2 />
-            <div class="page-break"></div>
             <CriticalPaths />
           </div>
 
@@ -65,6 +58,11 @@
     <!-- Modales de edición (solo si puede editar) -->
     <AddItemModal v-if="projectStore.canEdit" />
     <DeleteModal v-if="projectStore.canEdit" />
+
+    <!-- Componente PDF oculto -->
+    <div style="display: none;">
+      <PdfProjectReport ref="pdfReportRef" />
+    </div>
   </div>
 </template>
 
@@ -73,6 +71,7 @@ import { ref, onMounted, computed } from 'vue'
 import { onBeforeRouteLeave, useRoute, useHead, navigateTo } from 'nuxt/app'
 import { useProjectStore } from '../../stores/project'
 import { useAuthStore } from '../../stores/auth'
+import PdfProjectReport from '../../components/pdf/ProjectReport.vue'
 
 const projectStore = useProjectStore()
 const authStore = useAuthStore()
@@ -80,6 +79,7 @@ const route = useRoute()
 
 const currentView = ref('details')
 const isSpendingDisabled = ref(true)
+const pdfReportRef = ref()
 
 const projectId = route.params.id as string
 
@@ -130,7 +130,7 @@ onMounted(async () => {
     await projectStore.loadProjectById(projectId)
   } catch (error) {
     console.error('Error al cargar proyecto:', error)
-    
+
     // Si el proyecto no existe y hay usuario logueado, crear borrador temporal
     if (authStore.isAuthenticated) {
       console.log('Proyecto no encontrado, creando borrador temporal...')
@@ -156,15 +156,15 @@ onBeforeRouteLeave((to, from, next) => {
 
 // Meta tags dinámicos
 useHead({
-  title: computed(() => 
-    projectStore.projectTitle 
+  title: computed(() =>
+    projectStore.projectTitle
       ? `${projectStore.projectTitle} - Proyecto`
       : 'Proyecto'
   ),
   meta: [
-    { 
-      name: 'description', 
-      content: computed(() => 
+    {
+      name: 'description',
+      content: computed(() =>
         projectStore.projectSubtitle || 'Visualiza y gestiona este proyecto'
       )
     }

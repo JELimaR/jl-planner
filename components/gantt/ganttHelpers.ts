@@ -12,7 +12,7 @@ export const itemPositionRight: Map<number, IPosition> = new Map();
 export const SCALE_OPTIONS = {
   day: { label: 'Día', pxPerDay: 32 },
   week: { label: 'Semana', pxPerDay: 9 },
-  month: { label: 'Mes', pxPerDay: 3 },
+  month: { label: 'Mes', pxPerDay: 2 },
 } as const;
 
 // Calcula cuántas unidades de tiempo hay entre dos fechas según la escala

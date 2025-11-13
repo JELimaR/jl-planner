@@ -477,7 +477,17 @@ export const useProjectStore = defineStore('project', {
     },
 
     async exportPDF() {
-      this.showInfo('Función no disponible', 'La generación de PDF está temporalmente deshabilitada')
+      try {
+        // Emitir evento para que el componente PDF se active
+        if (import.meta.client) {
+          window.dispatchEvent(new CustomEvent('generate-pdf'))
+        }
+
+        this.showSuccess('PDF', 'Generando reporte...')
+      } catch (error) {
+        console.error('Error al generar PDF:', error)
+        this.showError('Error', 'Error al generar PDF')
+      }
     },
 
 
