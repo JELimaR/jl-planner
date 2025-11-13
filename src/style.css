@@ -4,6 +4,7 @@
   border-bottom: 2px solid #ccc;
   background-color: #fafafa;
 }
+
 .custom_table {
   border-collapse: collapse;
   width: 100%;
@@ -30,8 +31,10 @@
 
 .custom_table td {
   /*white-space: nowrap; /* ← que no se haga multilinea */
-  overflow: hidden; /* ← oculta texto que se sale */
-  text-overflow: ellipsis; /* ← muestra puntos suspensivos */
+  overflow: hidden;
+  /* ← oculta texto que se sale */
+  text-overflow: ellipsis;
+  /* ← muestra puntos suspensivos */
   /*max-width: 250px; /* ← opcional: evita columnas gigantes */
 }
 
@@ -156,8 +159,8 @@ svg {
 }
 
 /* Para evitar doble borde entre filas */
-.label-row + .label-row,
-.date-tick + .date-tick {
+.label-row+.label-row,
+.date-tick+.date-tick {
   border-top: none;
 }
 
@@ -176,6 +179,7 @@ svg {
 td.action-buttons {
   white-space: nowrap;
 }
+
 td.action-buttons button {
   margin-right: 4px;
 }
@@ -189,118 +193,13 @@ td.action-buttons button {
   font-size: 12px;
 }
 
-/* ========== Reporte: Ocultar elementos no deseados ========== */
-.report-mode .btn,
-.report-mode .form-control,
-.report-mode #scale-selector,
-.report-mode #add-item-container,
-.report-mode #project-start-date,
-.report-mode #load-project-button,
-.report-mode #save-project-button,
-.report-mode #export-pdf-button,
-.report-mode #new-project-button,
-.report-mode #reset-actual-start-dates,
-.report-mode #change-start-date-button,
-.report-mode #new-start-date-input,
-.report-mode .modal,
-.report-mode .btn-close {
-  display: none !important;
-}
 
-/* ========== Estilo de impresión ========== */
-.print-mode .btn,
-.print-mode .form-control,
-.print-mode select,
-.print-mode input,
-.print-mode .modal,
-.print-mode .btn-close {
-  display: none !important;
-}
 
-.print-mode .container,
-.print-mode .card,
-.print-mode .modal-content {
-  box-shadow: none !important;
-  border: none !important;
-}
 
-/* Espaciado para impresión y PDF 
-.report-mode #task-table-container,
-.report-mode #gantt,
-.report-mode #critical-paths,
-.print-mode #task-table-container,
-.print-mode #gantt,
-.print-mode #critical-paths {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-}
-*/
-/* Gantt limpio para exportación/impresión */
-.report-mode #gantt-container,
-.report-mode #gantt_here,
-.print-mode #gantt-container,
-.print-mode #gantt_here {
-  background-color: #fff !important;
-  border: 1px solid #ccc;
-  padding: 1rem;
-  overflow: hidden;
-}
 
-/* Títulos */
-.report-mode h2,
-.print-mode h2 {
-  font-size: 16px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 4px;
-  margin-top: 20px;
-}
 
-/* Camino crítico en impresión */
-.print-mode #critical-paths .badge,
-.report-mode #critical-paths .badge {
-  font-size: 13px;
-  background-color: #000;
-}
 
-/* Forzar saltos de página */
-.page-break {
-  page-break-after: always;
-}
 
-/* ========== Estilos específicos para impresión física ========== */
-@media print {
-  /*body {
-    background: white;
-    color: black;
-  }*/
-
-  .btn,
-  select,
-  input,
-  .form-control,
-  .modal,
-  .btn-close {
-    display: none !important;
-  }
-
-  #gantt-container,
-  #gantt_here {
-    page-break-inside: avoid;
-  }
-
-  .page-break {
-    page-break-after: always;
-  }
-
-  @page {
-    size: A4 landscape;
-    margin: 1cm;
-  }
-}
-
-.page-break {
-  page-break-after: always;
-}
 
 #project-header h1 {
   font-size: 2rem;

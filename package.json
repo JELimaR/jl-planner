@@ -31,6 +31,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@i2d/nuxt-pdf-frame": "^0.6.1",
     "@pinia/nuxt": "^0.11.2",
     "@types/bootstrap": "^5.2.10",
     "@types/jsonwebtoken": "^9.0.10",
@@ -40,6 +41,8 @@
     "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.0",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "marked": "^16.4.1",
     "mongoose": "^8.19.2",
     "pinia": "^3.0.3",
